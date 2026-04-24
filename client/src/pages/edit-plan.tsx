@@ -27,6 +27,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useLocation, Link } from "wouter";
 import { BackButton } from "@/components/BackButton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { PushConsentDialog } from "@/components/push-consent-dialog";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
 
 interface Exercise {
   exerciseId: string;
@@ -109,6 +111,8 @@ export default function EditPlan() {
   
   // Reminders
   const [reminders, setReminders] = useState<PlanReminder[]>([]);
+  const [showReminderPushConsent, setShowReminderPushConsent] = useState(false);
+  const { isSubscribed: isPushSubscribed } = usePushNotifications();
 
   // Helper function to determine exercise week based on order (distribute evenly across 4 weeks)
   const getExerciseWeek = (exercises: SelectedExercise[], exerciseIndex: number): number => {
@@ -185,6 +189,42 @@ export default function EditPlan() {
       }
     }
   }, [existingPlan]);
+
+  // Load existing plan reminders
+  const { data: existingReminders = [] } = useQuery<any[]>({
+    queryKey: ['api', 'fitness-plans', planId, 'reminders'],
+    queryFn: async () => {
+      const res = await fetch(`/api/fitness-plans/${planId}/reminders`, { credentials: 'include' });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!planId,
+  });
+
+  useEffect(() => {
+    if (existingReminders && existingReminders.length > 0) {
+      setReminders(existingReminders.map((r: any) => ({ dayOfWeek: r.dayOfWeek, time: r.time })));
+    }
+  }, [existingReminders]);
+
+  // Reminder handlers
+  const addReminder = () => {
+    if (!isPushSubscribed && reminders.length === 0) {
+      setShowReminderPushConsent(true);
+    } else {
+      setReminders(prev => [...prev, { dayOfWeek: 'monday', time: '09:00' }]);
+    }
+  };
+
+  const updateReminder = (index: number, field: 'dayOfWeek' | 'time', value: string) => {
+    setReminders(prev =>
+      prev.map((r, i) => i === index ? { ...r, [field]: value } : r)
+    );
+  };
+
+  const removeReminder = (index: number) => {
+    setReminders(prev => prev.filter((_, i) => i !== index));
+  };
 
   // Fetch favorite exercises
   const { data: favoriteExercises = [] } = useQuery({
@@ -307,6 +347,14 @@ export default function EditPlan() {
         }
 
         await apiRequest('POST', `/api/fitness-plans/${planId}/exercises`, exerciseData);
+      }
+
+      // Replace reminders: delete existing then add new
+      for (const existing of (existingReminders || [])) {
+        try { await apiRequest('DELETE', `/api/fitness-plan-reminders/${existing.id}`); } catch {}
+      }
+      for (const reminder of reminders) {
+        await apiRequest('POST', `/api/fitness-plans/${planId}/reminders`, reminder);
       }
 
       return { id: planId };
@@ -679,6 +727,50 @@ export default function EditPlan() {
               )}
             </CardContent>
           </Card>
+
+        {/* Workout Reminders */}
+        <Card className="bg-ministry-gold text-black">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bell className="h-5 w-5" />
+              Workout Reminders
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {reminders.map((reminder, index) => (
+              <div key={index} className="flex items-center gap-2 flex-wrap">
+                <Select value={reminder.dayOfWeek} onValueChange={(v) => updateReminder(index, 'dayOfWeek', v)}>
+                  <SelectTrigger className="flex-1 min-w-[130px] bg-black/20 text-black border-black/30">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].map(d => (
+                      <SelectItem key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  type="time"
+                  value={reminder.time}
+                  onChange={(e) => updateReminder(index, 'time', e.target.value)}
+                  className="w-32 bg-black/20 text-black border-black/30"
+                />
+                <button onClick={() => removeReminder(index)} className="text-black/60 hover:text-red-600">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={addReminder}
+              className="w-full border-black/30 text-black hover:bg-black/10"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Reminder
+            </Button>
+          </CardContent>
+        </Card>
 
         {/* Update Plan Button */}
         <Button
@@ -1074,6 +1166,19 @@ export default function EditPlan() {
           </Card>
         </div>
       )}
+
+      {/* Push consent for workout reminders */}
+      <PushConsentDialog
+        open={showReminderPushConsent}
+        onOpenChange={setShowReminderPushConsent}
+        reason="Enable push notifications so you never miss a scheduled workout."
+        onAllowed={() => {
+          setReminders(prev => [...prev, { dayOfWeek: 'monday', time: '09:00' }]);
+        }}
+        onDeclined={() => {
+          setReminders(prev => [...prev, { dayOfWeek: 'monday', time: '09:00' }]);
+        }}
+      />
       </div>
     </div>
   );

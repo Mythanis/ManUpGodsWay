@@ -770,6 +770,9 @@ export const notificationPreferences = pgTable("notification_preferences", {
   liveStreamNotifications: boolean("live_stream_notifications").default(true),
   warRoomNotifications: boolean("war_room_notifications").default(true),
   underFireNotifications: boolean("under_fire_notifications").default(true),
+  fitnessPlanReminderNotifications: boolean("fitness_plan_reminder_notifications").default(true),
+  fitnessCommunityNotifications: boolean("fitness_community_notifications").default(true),
+  mealReminderNotifications: boolean("meal_reminder_notifications").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -2788,6 +2791,57 @@ export const insertFitnessPostSchema = createInsertSchema(fitnessPosts).omit({
 
 export type FitnessPost = typeof fitnessPosts.$inferSelect;
 export type InsertFitnessPost = z.infer<typeof insertFitnessPostSchema>;
+
+// Fitness Community — Oh Me reactions (separate from Amen/likes)
+export const fitnessPostOhMes = pgTable("fitness_post_oh_mes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  postId: varchar("post_id").notNull().references(() => fitnessPosts.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  unique().on(table.postId, table.userId),
+]);
+
+// Fitness Community — Comments (flat list with optional parentCommentId for one level of replies)
+export const fitnessPostComments = pgTable("fitness_post_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  postId: varchar("post_id").notNull().references(() => fitnessPosts.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  content: text("content").notNull(),
+  parentCommentId: varchar("parent_comment_id"), // null = top-level, set = reply
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertFitnessPostCommentSchema = createInsertSchema(fitnessPostComments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type FitnessPostComment = typeof fitnessPostComments.$inferSelect;
+export type InsertFitnessPostComment = z.infer<typeof insertFitnessPostCommentSchema>;
+
+// ─── Meal Reminders ────────────────────────────────────────────────────────────
+
+export const mealReminders = pgTable("meal_reminders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  time: varchar("time").notNull(), // "HH:MM" 24-hour
+  label: varchar("label", { length: 100 }).default(''), // optional label e.g. "Breakfast"
+  isActive: boolean("is_active").notNull().default(true),
+  lastSent: timestamp("last_sent"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertMealReminderSchema = createInsertSchema(mealReminders).omit({
+  id: true,
+  lastSent: true,
+  createdAt: true,
+});
+
+export type MealReminder = typeof mealReminders.$inferSelect;
+export type InsertMealReminder = z.infer<typeof insertMealReminderSchema>;
 
 // ─── Bible Reading Plans ──────────────────────────────────────────────────────
 

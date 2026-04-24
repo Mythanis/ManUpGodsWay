@@ -7,6 +7,7 @@ import { fitnessReminderService } from "./fitnessReminderService";
 import { warGroupsGeocodingService } from "./warGroupsGeocodingService";
 import { challengeNotificationService } from "./challengeNotificationService";
 import { prayerReminderService } from "./prayerReminderService";
+import { mealReminderService } from "./mealReminderService";
 import { dailyReminderService } from "./dailyReminderService";
 import { conversionNudgeService } from "./conversionNudgeService";
 import { startAuditJob, isAuditJobRunning } from "./exerciseAuditJob";
@@ -136,6 +137,9 @@ app.use((req, res, next) => {
     
     // Start the prayer reminder service
     prayerReminderService.start();
+
+    // Start the meal reminder service
+    mealReminderService.start();
     
     // Start the daily app reminder service
     dailyReminderService.start();

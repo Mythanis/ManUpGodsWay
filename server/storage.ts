@@ -210,6 +210,13 @@ import {
   type InsertNutritionProfile,
   vatmebopChecks,
   type VatmebopCheck,
+  mealReminders,
+  type MealReminder,
+  type InsertMealReminder,
+  fitnessPostComments,
+  type FitnessPostComment,
+  type InsertFitnessPostComment,
+  fitnessPostOhMes,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt, ne, gt } from "drizzle-orm";
@@ -649,6 +656,13 @@ export interface IStorage {
   addFoodIntakeEntry(entry: InsertFoodIntakeEntry): Promise<FoodIntakeEntry>;
   getFoodIntakeEntries(userId: string, startDate: string, endDate: string): Promise<FoodIntakeEntry[]>;
   deleteFoodIntakeEntry(id: string, userId: string): Promise<void>;
+
+  // Meal reminder operations
+  getMealReminders(userId: string): Promise<MealReminder[]>;
+  getAllActiveMealReminders(): Promise<MealReminder[]>;
+  addMealReminder(reminder: InsertMealReminder): Promise<MealReminder>;
+  deleteMealReminder(id: string, userId: string): Promise<void>;
+  markMealReminderSent(id: string): Promise<void>;
 
   // VATMEBOP accountability chart
   getVatmebopChart(userId: string, year: number): Promise<VatmebopCheck[]>;
@@ -8084,6 +8098,41 @@ export class DatabaseStorage implements IStorage {
       .from(vatmebopChecks)
       .where(and(eq(vatmebopChecks.userId, userId), eq(vatmebopChecks.year, year)))
       .orderBy(asc(vatmebopChecks.week));
+  }
+
+  // ─── Meal Reminders ────────────────────────────────────────────────────────
+
+  async getMealReminders(userId: string): Promise<MealReminder[]> {
+    return db
+      .select()
+      .from(mealReminders)
+      .where(eq(mealReminders.userId, userId))
+      .orderBy(asc(mealReminders.time));
+  }
+
+  async getAllActiveMealReminders(): Promise<MealReminder[]> {
+    return db
+      .select()
+      .from(mealReminders)
+      .where(eq(mealReminders.isActive, true));
+  }
+
+  async addMealReminder(reminder: InsertMealReminder): Promise<MealReminder> {
+    const [row] = await db.insert(mealReminders).values(reminder).returning();
+    return row;
+  }
+
+  async deleteMealReminder(id: string, userId: string): Promise<void> {
+    await db
+      .delete(mealReminders)
+      .where(and(eq(mealReminders.id, id), eq(mealReminders.userId, userId)));
+  }
+
+  async markMealReminderSent(id: string): Promise<void> {
+    await db
+      .update(mealReminders)
+      .set({ lastSent: new Date() })
+      .where(eq(mealReminders.id, id));
   }
 
   async upsertVatmebopCheck(

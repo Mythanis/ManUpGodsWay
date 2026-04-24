@@ -7568,7 +7568,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'communityNotifications',
         'liveStreamNotifications',
         'warRoomNotifications',
-        'underFireNotifications'
+        'underFireNotifications',
+        'fitnessPlanReminderNotifications',
+        'fitnessCommunityNotifications',
+        'mealReminderNotifications',
       ];
       
       const filteredUpdates: any = {};
@@ -11960,10 +11963,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(eq(schema.fitnessPostLikes.userId, userId));
       const likedSet = new Set(likedRows.map(r => r.postId));
 
+      // Get user's Oh Me reactions
+      const ohMeRows = await db
+        .select({ postId: schema.fitnessPostOhMes.postId })
+        .from(schema.fitnessPostOhMes)
+        .where(eq(schema.fitnessPostOhMes.userId, userId));
+      const ohMeSet = new Set(ohMeRows.map(r => r.postId));
+
+      // Get oh-me counts per post
+      const ohMeCounts = await db
+        .select({ postId: schema.fitnessPostOhMes.postId, cnt: count(schema.fitnessPostOhMes.id) })
+        .from(schema.fitnessPostOhMes)
+        .groupBy(schema.fitnessPostOhMes.postId);
+      const ohMeCountMap = new Map(ohMeCounts.map(r => [r.postId, Number(r.cnt)]));
+
+      // Get comment counts per post
+      const commentCounts = await db
+        .select({ postId: schema.fitnessPostComments.postId, cnt: count(schema.fitnessPostComments.id) })
+        .from(schema.fitnessPostComments)
+        .groupBy(schema.fitnessPostComments.postId);
+      const commentCountMap = new Map(commentCounts.map(r => [r.postId, Number(r.cnt)]));
+
       const result = posts.map(p => ({
         ...p,
         authorName: `${p.authorName || ''} ${p.authorLastName || ''}`.trim() || 'Member',
         likedByMe: likedSet.has(p.id),
+        ohMeByMe: ohMeSet.has(p.id),
+        ohMeCount: ohMeCountMap.get(p.id) || 0,
+        commentCount: commentCountMap.get(p.id) || 0,
       }));
       res.json(result);
     } catch (error) {
@@ -12044,6 +12071,192 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       console.error('Error deleting fitness community post:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // ─── Fitness Community — Oh Me reactions ────────────────────────────────────
+
+  app.post('/api/fitness/community/posts/:id/ohme', isAuthenticated, requireFitnessAccess, async (req: any, res) => {
+    try {
+      const userId = req.fitnessUser.id;
+      const postId = req.params.id;
+
+      const existing = await db
+        .select()
+        .from(schema.fitnessPostOhMes)
+        .where(and(eq(schema.fitnessPostOhMes.postId, postId), eq(schema.fitnessPostOhMes.userId, userId)))
+        .limit(1);
+
+      if (existing.length > 0) {
+        await db.delete(schema.fitnessPostOhMes).where(
+          and(eq(schema.fitnessPostOhMes.postId, postId), eq(schema.fitnessPostOhMes.userId, userId))
+        );
+        return res.json({ ohMe: false });
+      } else {
+        await db.insert(schema.fitnessPostOhMes).values({ postId, userId });
+        // Send notification to post author (if not self)
+        const [post] = await db.select().from(schema.fitnessPosts).where(eq(schema.fitnessPosts.id, postId)).limit(1);
+        if (post && post.userId !== userId) {
+          await storage.createNotificationWithPreferences({
+            userId: post.userId,
+            type: 'fitness',
+            title: 'Oh Me! 😩',
+            message: 'Someone reacted "Oh Me" to your fitness post.',
+            relatedId: postId,
+          });
+        }
+        return res.json({ ohMe: true });
+      }
+    } catch (error) {
+      console.error('Error toggling fitness post Oh Me:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // ─── Fitness Community — Comments ────────────────────────────────────────────
+
+  app.get('/api/fitness/community/posts/:id/comments', isAuthenticated, requireFitnessAccess, async (req: any, res) => {
+    try {
+      const comments = await db
+        .select({
+          id: schema.fitnessPostComments.id,
+          postId: schema.fitnessPostComments.postId,
+          userId: schema.fitnessPostComments.userId,
+          content: schema.fitnessPostComments.content,
+          parentCommentId: schema.fitnessPostComments.parentCommentId,
+          createdAt: schema.fitnessPostComments.createdAt,
+          authorName: schema.users.firstName,
+          authorLastName: schema.users.lastName,
+          authorProfilePicture: schema.users.profileImageUrl,
+        })
+        .from(schema.fitnessPostComments)
+        .leftJoin(schema.users, eq(schema.fitnessPostComments.userId, schema.users.id))
+        .where(eq(schema.fitnessPostComments.postId, req.params.id))
+        .orderBy(asc(schema.fitnessPostComments.createdAt));
+
+      res.json(comments.map(c => ({
+        ...c,
+        authorName: `${c.authorName || ''} ${c.authorLastName || ''}`.trim() || 'Member',
+      })));
+    } catch (error) {
+      console.error('Error fetching fitness post comments:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.post('/api/fitness/community/posts/:id/comments', isAuthenticated, requireFitnessAccess, strictWriteLimiter, async (req: any, res) => {
+    try {
+      const userId = req.fitnessUser.id;
+      const postId = req.params.id;
+      const { content, parentCommentId } = req.body;
+
+      if (!content || !content.trim()) {
+        return res.status(400).json({ message: 'Content is required' });
+      }
+
+      const [comment] = await db
+        .insert(schema.fitnessPostComments)
+        .values({ postId, userId, content: content.trim(), parentCommentId: parentCommentId || null })
+        .returning();
+
+      // Notify post author (if not commenter)
+      const [post] = await db.select().from(schema.fitnessPosts).where(eq(schema.fitnessPosts.id, postId)).limit(1);
+      if (post && post.userId !== userId) {
+        const prefs = await storage.getNotificationPreferences(post.userId);
+        if (!prefs || prefs.fitnessCommunityNotifications !== false) {
+          await storage.createNotificationWithPreferences({
+            userId: post.userId,
+            type: 'fitness',
+            title: '💬 New Comment',
+            message: 'Someone commented on your fitness post.',
+            relatedId: postId,
+          });
+        }
+      }
+
+      // Notify other commenters on this post (excluding author + commenter)
+      const priorCommenters = await db
+        .selectDistinct({ userId: schema.fitnessPostComments.userId })
+        .from(schema.fitnessPostComments)
+        .where(and(eq(schema.fitnessPostComments.postId, postId)));
+      const notified = new Set<string>([userId, post?.userId ?? '']);
+      for (const { userId: commenterId } of priorCommenters) {
+        if (!notified.has(commenterId)) {
+          notified.add(commenterId);
+          const prefs = await storage.getNotificationPreferences(commenterId);
+          if (!prefs || prefs.fitnessCommunityNotifications !== false) {
+            await storage.createNotificationWithPreferences({
+              userId: commenterId,
+              type: 'fitness',
+              title: '💬 New Reply',
+              message: 'Someone replied on a fitness post you commented on.',
+              relatedId: postId,
+            });
+          }
+        }
+      }
+
+      res.json(comment);
+    } catch (error) {
+      console.error('Error creating fitness post comment:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.delete('/api/fitness/community/comments/:id', isAuthenticated, requireFitnessAccess, async (req: any, res) => {
+    try {
+      const user = req.fitnessUser;
+      const [comment] = await db
+        .select()
+        .from(schema.fitnessPostComments)
+        .where(eq(schema.fitnessPostComments.id, req.params.id))
+        .limit(1);
+      if (!comment) return res.status(404).json({ message: 'Comment not found' });
+      if (comment.userId !== user.id && !isAdmin(user)) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      await db.delete(schema.fitnessPostComments).where(eq(schema.fitnessPostComments.id, req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting fitness post comment:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // ─── Meal Reminders ─────────────────────────────────────────────────────────
+
+  app.get('/api/meal-reminders', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const reminders = await storage.getMealReminders(userId);
+      res.json(reminders);
+    } catch (error) {
+      console.error('Error fetching meal reminders:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.post('/api/meal-reminders', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { time, label } = req.body;
+      if (!time) return res.status(400).json({ message: 'time is required' });
+      const reminder = await storage.addMealReminder({ userId, time, label: label || '', isActive: true });
+      res.json(reminder);
+    } catch (error) {
+      console.error('Error adding meal reminder:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.delete('/api/meal-reminders/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      await storage.deleteMealReminder(req.params.id, userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting meal reminder:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });

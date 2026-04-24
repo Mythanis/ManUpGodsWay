@@ -1,162 +1,105 @@
 import { storage } from './storage';
+import { sendPushNotification } from './pushNotificationService';
 import { log } from './vite';
 
 class FitnessReminderService {
-  private isRunning = false;
-  private intervalId: NodeJS.Timeout | null = null;
-  private readonly CHECK_INTERVAL = 60 * 60 * 1000; // Check every hour
+  private intervalId: ReturnType<typeof setInterval> | null = null;
 
   start() {
-    if (this.isRunning) {
-      log('Fitness reminder service is already running');
+    if (this.intervalId) {
+      log('[FitnessReminder] Service already running');
       return;
     }
-
-    this.isRunning = true;
-    log('Starting fitness reminder service...');
-    
-    // Run initial check immediately
-    this.checkForDueReminders();
-    
-    // Set up periodic checks
+    log('[FitnessReminder] Service started — checking every 60s');
     this.intervalId = setInterval(() => {
-      this.checkForDueReminders();
-    }, this.CHECK_INTERVAL);
-
-    log(`Fitness reminder service started - checking every ${this.CHECK_INTERVAL / 1000 / 60} minutes`);
+      this.check().catch((e) => {
+        log(`[FitnessReminder] Check error: ${e}`);
+      });
+    }, 60_000);
   }
 
   stop() {
-    if (!this.isRunning) {
-      log('Fitness reminder service is not running');
-      return;
-    }
-
-    this.isRunning = false;
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
     }
-
-    log('Fitness reminder service stopped');
+    log('[FitnessReminder] Service stopped');
   }
 
-  private async checkForDueReminders() {
+  private async check() {
+    const now = new Date();
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const utcDay = dayNames[now.getUTCDay()];
+    const utcTime = `${now.getUTCHours().toString().padStart(2, '0')}:${now.getUTCMinutes().toString().padStart(2, '0')}`;
+
+    let dueReminders;
     try {
-      log('Checking for due fitness reminders...');
-      
-      // Get current date and day information
-      const now = new Date();
-      const currentDayOfWeekNum = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
-      const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-      const currentDayOfWeek = dayNames[currentDayOfWeekNum];
-      
-      const currentHour = now.getHours();
-      const currentMinute = now.getMinutes();
-      const currentTime = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
-      
-      // Get all active fitness plan reminders for today
-      let dueReminders;
-      try {
-        dueReminders = await storage.getDueFitnessReminders(currentDayOfWeek, currentTime);
-      } catch (dbError) {
-        log(`Error fetching fitness reminders from database: ${dbError}`);
-        return;
-      }
-      
-      if (!dueReminders || dueReminders.length === 0) {
-        log('No fitness reminders due at this time');
-        return;
-      }
-
-      log(`Found ${dueReminders.length} fitness reminder(s) due for processing`);
-
-      // Group reminders by user and fitness plan
-      const remindersByUser = new Map<string, Array<{planName: string, exercises: string[]}>>();
-      
-      for (const reminder of dueReminders) {
-        if (!reminder || !reminder.plan) {
-          log(`Skipping invalid reminder: ${JSON.stringify(reminder)}`);
-          continue;
-        }
-        
-        const userId = reminder.plan.userId;
-        
-        if (!remindersByUser.has(userId)) {
-          remindersByUser.set(userId, []);
-        }
-        
-        // Get exercises for this plan that are scheduled for today
-        const todayExercises = await storage.getTodayFitnessPlanExercises(reminder.planId, currentDayOfWeek);
-        
-        if (!todayExercises || todayExercises.length === 0) {
-          log(`No exercises scheduled for today for plan: ${reminder.plan.name}`);
-          continue;
-        }
-        
-        const exerciseNames = todayExercises.map(ex => ex.exerciseName || 'Unknown Exercise').filter(name => name);
-        
-        remindersByUser.get(userId)!.push({
-          planName: reminder.plan.name,
-          exercises: exerciseNames
-        });
-      }
-
-      // Send notifications to each user
-      if (!remindersByUser || remindersByUser.size === 0) {
-        log('No reminders to send after processing');
-        return;
-      }
-
-      for (const [userId, userReminders] of remindersByUser.entries()) {
-        try {
-          // Validate user reminders
-          if (!Array.isArray(userReminders) || userReminders.length === 0) {
-            log(`Skipping user ${userId}: no valid reminders`);
-            continue;
-          }
-
-          // Create a consolidated notification for all due workouts
-          const totalExercises = userReminders.reduce((sum: number, plan: {planName: string, exercises: string[]}) => {
-            return sum + (Array.isArray(plan?.exercises) ? plan.exercises.length : 0);
-          }, 0);
-          const planNames = userReminders
-            .filter(plan => plan && plan.planName)
-            .map((plan: {planName: string, exercises: string[]}) => plan.planName)
-            .join(', ');
-          
-          let message: string;
-          if (userReminders.length === 1) {
-            const plan = userReminders[0];
-            message = `Time for your "${plan.planName}" workout! ${plan.exercises.length} exercise${plan.exercises.length > 1 ? 's' : ''} scheduled for today.`;
-          } else {
-            message = `You have ${userReminders.length} workout plans scheduled today: ${planNames}. Total of ${totalExercises} exercises ready for you!`;
-          }
-
-          await storage.createNotificationWithPreferences({
-            userId: userId,
-            type: 'fitness',
-            title: '💪 Workout Reminder',
-            message: message,
-            relatedId: null, // No specific plan since it could be multiple
-          });
-
-          // Mark reminders as sent for today
-          for (const reminder of dueReminders) {
-            if (reminder.plan.userId === userId) {
-              await storage.markFitnessReminderSent(reminder.id);
-            }
-          }
-
-          log(`Sent fitness reminder notification to user ${userId}`);
-        } catch (error) {
-          log(`Failed to send fitness reminder to user ${userId}: ${error}`);
-        }
-      }
-
-    } catch (error) {
-      log(`Error in fitness reminder service: ${error}`);
+      dueReminders = await storage.getDueFitnessReminders(utcDay, utcTime);
+    } catch (e) {
+      log(`[FitnessReminder] DB error: ${e}`);
+      return;
     }
+
+    if (!dueReminders || dueReminders.length === 0) return;
+
+    for (const reminder of dueReminders) {
+      try {
+        await this.processReminder(reminder);
+      } catch (e) {
+        log(`[FitnessReminder] Error processing reminder ${reminder.id}: ${e}`);
+      }
+    }
+  }
+
+  private async processReminder(reminder: Awaited<ReturnType<typeof storage.getDueFitnessReminders>>[number]) {
+    const userId = reminder.plan.userId;
+
+    // Check notification preference
+    try {
+      const prefs = await storage.getNotificationPreferences(userId);
+      if (prefs && prefs.fitnessPlanReminderNotifications === false) {
+        log(`[FitnessReminder] User ${userId} has fitnessPlanReminderNotifications disabled — skipping`);
+        await storage.markFitnessReminderSent(reminder.id);
+        return;
+      }
+    } catch {
+      // If prefs can't be loaded, still send (default is true)
+    }
+
+    // Get today's exercises for the plan
+    const now = new Date();
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const dayOfWeek = dayNames[now.getUTCDay()];
+    const todayExercises = await storage.getTodayFitnessPlanExercises(reminder.planId, dayOfWeek);
+
+    const exerciseNames = todayExercises.map((ex) => ex.exerciseName || 'Exercise').filter(Boolean);
+    const exerciseCount = exerciseNames.length;
+
+    const body = exerciseCount > 0
+      ? `${exerciseCount} exercise${exerciseCount > 1 ? 's' : ''} scheduled today — let's go!`
+      : `Your "${reminder.plan.name}" workout is scheduled — time to man up!`;
+
+    // Send push notification
+    await sendPushNotification(userId, {
+      title: `💪 ${reminder.plan.name}`,
+      body,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      tag: `fitness-reminder-${reminder.planId}`,
+      url: '/fitness',
+    });
+
+    // Also create an in-app notification
+    await storage.createNotificationWithPreferences({
+      userId,
+      type: 'fitness',
+      title: '💪 Workout Reminder',
+      message: `Time for your "${reminder.plan.name}" workout! ${body}`,
+      relatedId: reminder.planId,
+    });
+
+    await storage.markFitnessReminderSent(reminder.id);
+    log(`[FitnessReminder] Sent reminder to user ${userId} for plan "${reminder.plan.name}"`);
   }
 }
 

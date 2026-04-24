@@ -61,11 +61,20 @@ import {
   Pause,
   ChevronLeft,
   FileText,
+  Bell,
+  Share2,
+  MessageCircle,
+  Copy,
+  Check,
+  Salad,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { format, isToday, isPast, isFuture } from "date-fns";
 import { Link } from "wouter";
 import seanMcManusPhoto from "@assets/531400631_10229732604879918_951068179454150284_n_1766855745199.jpeg";
+import { PushConsentDialog } from "@/components/push-consent-dialog";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface FitnessChallenge {
   id: string;
@@ -201,6 +210,98 @@ interface AdminFitnessPlan {
   isPublished: boolean;
 }
 
+function CommentsSection({
+  postId,
+  authUser,
+  addCommentMutation,
+  deleteCommentMutation,
+  commentText,
+  setCommentText,
+}: {
+  postId: string;
+  authUser: any;
+  addCommentMutation: any;
+  deleteCommentMutation: any;
+  commentText: string;
+  setCommentText: (t: string) => void;
+}) {
+  const { data: comments = [], isLoading } = useQuery<any[]>({
+    queryKey: ['/api/fitness/community/posts', postId, 'comments'],
+    queryFn: async () => {
+      const res = await fetch(`/api/fitness/community/posts/${postId}/comments`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to load comments');
+      return res.json();
+    },
+  });
+
+  const myId = (authUser as any)?.id || (authUser as any)?.claims?.sub;
+
+  return (
+    <div className="border-t border-zinc-700 bg-zinc-950 px-4 py-3 space-y-3">
+      {isLoading ? (
+        <p className="text-zinc-500 text-xs">Loading comments…</p>
+      ) : comments.length === 0 ? (
+        <p className="text-zinc-500 text-xs">No comments yet. Be the first!</p>
+      ) : (
+        <div className="space-y-2">
+          {comments.map((c: any) => (
+            <div key={c.id} className="flex items-start gap-2">
+              {c.authorProfilePicture ? (
+                <img src={c.authorProfilePicture} alt="" className="w-6 h-6 rounded-full object-cover border border-zinc-700 flex-shrink-0" />
+              ) : (
+                <div className="w-6 h-6 rounded-full bg-zinc-800 flex items-center justify-center flex-shrink-0">
+                  <User className="w-3 h-3 text-zinc-500" />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-white text-xs font-black">{c.authorName}</span>
+                  <span className="text-zinc-600 text-[10px]">{new Date(c.createdAt).toLocaleDateString()}</span>
+                </div>
+                <p className="text-zinc-300 text-xs break-words">{c.content}</p>
+              </div>
+              {c.userId === myId && (
+                <button
+                  onClick={() => deleteCommentMutation.mutate(c.id)}
+                  className="text-zinc-600 hover:text-red-400 flex-shrink-0"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      {/* Add comment input */}
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={commentText}
+          onChange={(e) => setCommentText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && commentText.trim()) {
+              addCommentMutation.mutate({ postId, content: commentText.trim() });
+            }
+          }}
+          placeholder="Write a comment…"
+          className="flex-1 bg-zinc-800 border border-zinc-700 rounded-sm text-white text-xs px-3 py-1.5 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500"
+        />
+        <button
+          onClick={() => {
+            if (commentText.trim()) {
+              addCommentMutation.mutate({ postId, content: commentText.trim() });
+            }
+          }}
+          disabled={!commentText.trim() || addCommentMutation.isPending}
+          className="bg-[#FCD000] text-black font-black text-xs px-3 py-1.5 rounded-sm disabled:opacity-50"
+        >
+          <Send className="w-3 h-3" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Fitness() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [filterCategory, setFilterCategory] = useState<string>('all');
@@ -304,6 +405,7 @@ export default function Fitness() {
   const [purchasingPlanId, setPurchasingPlanId] = useState<string | null>(null);
   const { user: authUser } = useAuth();
   const { isTourActive } = useTour();
+  const { isSubscribed: isPushSubscribed } = usePushNotifications();
 
   // Community tab state
   const [communityPostText, setCommunityPostText] = useState('');
@@ -322,6 +424,18 @@ export default function Fitness() {
   const [addIntakePrefill, setAddIntakePrefill] = useState<{ foodName: string; caloriesPerServing: number } | null>(null);
   const [intakeForm, setIntakeForm] = useState({ foodName: '', caloriesPerServing: '', servings: '1', meal: 'breakfast' as const });
   const [intakeFormMeal, setIntakeFormMeal] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('breakfast');
+
+  // Meal reminders state
+  const [showMealReminderForm, setShowMealReminderForm] = useState(false);
+  const [newMealTime, setNewMealTime] = useState('08:00');
+  const [newMealLabel, setNewMealLabel] = useState('');
+  const [showMealPushConsent, setShowMealPushConsent] = useState(false);
+  const [pendingMealReminder, setPendingMealReminder] = useState<{ time: string; label: string } | null>(null);
+
+  // Community comments state
+  const [expandedCommentPost, setExpandedCommentPost] = useState<string | null>(null);
+  const [commentText, setCommentText] = useState('');
+  const [copiedPostId, setCopiedPostId] = useState<string | null>(null);
 
   // Check fitness membership status
   const { data: membershipData, isLoading: membershipLoading } = useQuery<{ hasMembership: boolean; membership?: any }>({
@@ -384,6 +498,72 @@ export default function Fitness() {
     },
     onError: (err: any) => {
       toast({ title: 'Error', description: err.message || 'Failed to delete', variant: 'destructive' });
+    },
+  });
+
+  const ohMeMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      return await apiRequest('POST', `/api/fitness/community/posts/${postId}/ohme`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/fitness/community/posts'] });
+    },
+  });
+
+  const addCommentMutation = useMutation({
+    mutationFn: async ({ postId, content }: { postId: string; content: string }) => {
+      return await apiRequest('POST', `/api/fitness/community/posts/${postId}/comments`, { content });
+    },
+    onSuccess: (_data, { postId }) => {
+      setCommentText('');
+      queryClient.invalidateQueries({ queryKey: ['/api/fitness/community/posts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/fitness/community/posts', postId, 'comments'] });
+    },
+    onError: (err: any) => {
+      toast({ title: 'Error', description: err.message || 'Failed to comment', variant: 'destructive' });
+    },
+  });
+
+  const deleteCommentMutation = useMutation({
+    mutationFn: async (commentId: string) => {
+      return await apiRequest('DELETE', `/api/fitness/community/comments/${commentId}`);
+    },
+    onSuccess: (_data, commentId, context) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/fitness/community/posts'] });
+      if (expandedCommentPost) {
+        queryClient.invalidateQueries({ queryKey: ['/api/fitness/community/posts', expandedCommentPost, 'comments'] });
+      }
+    },
+  });
+
+  // Meal reminder mutations
+  const { data: mealReminders = [] } = useQuery<any[]>({
+    queryKey: ['/api/meal-reminders'],
+    enabled: hasMembership,
+  });
+
+  const addMealReminderMutation = useMutation({
+    mutationFn: async (data: { time: string; label: string }) => {
+      return await apiRequest('POST', '/api/meal-reminders', data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/meal-reminders'] });
+      setShowMealReminderForm(false);
+      setNewMealTime('08:00');
+      setNewMealLabel('');
+      toast({ title: 'Meal Reminder Added', description: 'You will be notified at the scheduled time.' });
+    },
+    onError: (err: any) => {
+      toast({ title: 'Error', description: err.message || 'Failed to add reminder', variant: 'destructive' });
+    },
+  });
+
+  const deleteMealReminderMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest('DELETE', `/api/meal-reminders/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/meal-reminders'] });
     },
   });
 
@@ -4233,8 +4413,9 @@ export default function Fitness() {
                         </div>
                       )}
 
-                      {/* Like bar */}
-                      <div className="px-4 py-2 border-t border-zinc-700 flex items-center gap-3">
+                      {/* Action bar */}
+                      <div className="px-4 py-2 border-t border-zinc-700 flex items-center gap-4">
+                        {/* Amen */}
                         <button
                           onClick={() => likePostMutation.mutate(post.id)}
                           className={`flex items-center gap-1 text-xs font-black uppercase transition-colors ${
@@ -4242,9 +4423,94 @@ export default function Fitness() {
                           }`}
                         >
                           <Heart className={`w-4 h-4 ${post.likedByMe ? 'fill-[#FCD000]' : ''}`} />
-                          {post.likes > 0 && <span>{post.likes}</span>}
+                          <span>Amen{post.likes > 0 ? ` ${post.likes}` : ''}</span>
                         </button>
+
+                        {/* Oh Me */}
+                        <button
+                          onClick={() => ohMeMutation.mutate(post.id)}
+                          className={`flex items-center gap-1 text-xs font-black uppercase transition-colors ${
+                            post.ohMeByMe ? 'text-red-400' : 'text-zinc-500 hover:text-red-400'
+                          }`}
+                        >
+                          <Flame className={`w-4 h-4 ${post.ohMeByMe ? 'fill-red-400' : ''}`} />
+                          <span>Oh Me{post.ohMeCount > 0 ? ` ${post.ohMeCount}` : ''}</span>
+                        </button>
+
+                        {/* Comments */}
+                        <button
+                          onClick={() => setExpandedCommentPost(expandedCommentPost === post.id ? null : post.id)}
+                          className={`flex items-center gap-1 text-xs font-black uppercase transition-colors ${
+                            expandedCommentPost === post.id ? 'text-blue-400' : 'text-zinc-500 hover:text-blue-400'
+                          }`}
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                          <span>Comment{post.commentCount > 0 ? ` ${post.commentCount}` : ''}</span>
+                        </button>
+
+                        {/* Share */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="flex items-center gap-1 text-xs font-black uppercase transition-colors text-zinc-500 hover:text-zinc-300 ml-auto">
+                              <Share2 className="w-4 h-4" />
+                              Share
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-700">
+                            <DropdownMenuItem
+                              className="text-white hover:bg-zinc-800 cursor-pointer"
+                              onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank')}
+                            >
+                              Share on Facebook
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-white hover:bg-zinc-800 cursor-pointer"
+                              onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.content.slice(0, 200))}&url=${encodeURIComponent(window.location.href)}`, '_blank')}
+                            >
+                              Share on X
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-white hover:bg-zinc-800 cursor-pointer"
+                              onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(post.content.slice(0, 200) + ' ' + window.location.href)}`, '_blank')}
+                            >
+                              Share via WhatsApp
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-white hover:bg-zinc-800 cursor-pointer"
+                              onClick={() => window.open(`mailto:?subject=Check this out&body=${encodeURIComponent(post.content.slice(0, 200))}`, '_blank')}
+                            >
+                              Share via Email
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-white hover:bg-zinc-800 cursor-pointer"
+                              onClick={() => {
+                                navigator.clipboard.writeText(window.location.href).then(() => {
+                                  setCopiedPostId(post.id);
+                                  setTimeout(() => setCopiedPostId(null), 2000);
+                                });
+                              }}
+                            >
+                              {copiedPostId === post.id ? (
+                                <><Check className="w-3 h-3 mr-1 inline" />Copied!</>
+                              ) : (
+                                <><Copy className="w-3 h-3 mr-1 inline" />Copy Link</>
+                              )}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
+
+                      {/* Expanded comments section */}
+                      {expandedCommentPost === post.id && (
+                        <CommentsSection
+                          postId={post.id}
+                          authUser={authUser}
+                          addCommentMutation={addCommentMutation}
+                          deleteCommentMutation={deleteCommentMutation}
+                          commentText={commentText}
+                          setCommentText={setCommentText}
+                        />
+                      )}
                     </div>
                   );
                 })}
@@ -4512,6 +4778,105 @@ export default function Fitness() {
                   {p === 'day' ? 'Today' : p === 'week' ? 'This Week' : 'This Month'}
                 </button>
               ))}
+            </div>
+
+            {/* Meal Reminders card */}
+            <div className="liquid-black border-2 border-zinc-700 rounded-sm overflow-hidden">
+              <div className="flex items-center px-4 py-3 border-b border-zinc-700">
+                <Bell className="w-5 h-5 text-[#FCD000] mr-2" />
+                <h3 className="text-white font-black uppercase tracking-wide text-sm flex-1">Meal Reminders</h3>
+                <button
+                  onClick={() => setShowMealReminderForm(!showMealReminderForm)}
+                  className="text-[#FCD000] hover:text-[#FCD000]/80 transition-colors"
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Add reminder form */}
+              {showMealReminderForm && (
+                <div className="px-4 py-3 border-b border-zinc-700 bg-zinc-900/50 space-y-2">
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <label className="text-zinc-400 text-[10px] font-black uppercase tracking-wide">Time</label>
+                      <input
+                        type="time"
+                        value={newMealTime}
+                        onChange={(e) => setNewMealTime(e.target.value)}
+                        className="mt-1 w-full bg-zinc-800 border border-zinc-600 rounded-sm text-white text-sm px-3 py-1.5 focus:outline-none focus:border-zinc-400"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-zinc-400 text-[10px] font-black uppercase tracking-wide">Label (optional)</label>
+                      <input
+                        type="text"
+                        value={newMealLabel}
+                        onChange={(e) => setNewMealLabel(e.target.value)}
+                        placeholder="e.g. Breakfast"
+                        className="mt-1 w-full bg-zinc-800 border border-zinc-600 rounded-sm text-white text-sm px-3 py-1.5 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-400"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        if (!newMealTime) return;
+                        if (!isPushSubscribed) {
+                          setPendingMealReminder({ time: newMealTime, label: newMealLabel });
+                          setShowMealPushConsent(true);
+                        } else {
+                          addMealReminderMutation.mutate({ time: newMealTime, label: newMealLabel });
+                        }
+                      }}
+                      disabled={!newMealTime || addMealReminderMutation.isPending}
+                      className="flex-1 bg-[#FCD000] text-black font-black text-xs uppercase py-1.5 rounded-sm disabled:opacity-50"
+                    >
+                      {addMealReminderMutation.isPending ? 'Saving…' : 'Save Reminder'}
+                    </button>
+                    <button
+                      onClick={() => setShowMealReminderForm(false)}
+                      className="bg-zinc-700 text-white font-black text-xs uppercase px-4 py-1.5 rounded-sm"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Existing reminders */}
+              {mealReminders.length === 0 && !showMealReminderForm ? (
+                <div className="px-4 py-4 text-center">
+                  <Salad className="w-8 h-8 mx-auto text-zinc-600 mb-2" />
+                  <p className="text-zinc-500 text-xs">No meal reminders yet.</p>
+                  <p className="text-zinc-600 text-[10px] mt-0.5">Tap + to add a reminder.</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-zinc-700/50">
+                  {mealReminders.map((r: any) => (
+                    <div key={r.id} className="flex items-center px-4 py-2.5 gap-3">
+                      <Bell className="w-4 h-4 text-[#FCD000]/70 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-sm font-black">
+                          {(() => {
+                            const [hh, mm] = r.time.split(':');
+                            const h = parseInt(hh, 10);
+                            const suffix = h >= 12 ? 'PM' : 'AM';
+                            const h12 = h % 12 === 0 ? 12 : h % 12;
+                            return `${h12}:${mm} ${suffix}`;
+                          })()}
+                        </p>
+                        {r.label && <p className="text-zinc-500 text-[10px]">{r.label}</p>}
+                      </div>
+                      <button
+                        onClick={() => deleteMealReminderMutation.mutate(r.id)}
+                        className="text-zinc-600 hover:text-red-400 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Recommended Daily Calorie Intake card */}
@@ -5418,6 +5783,25 @@ export default function Fitness() {
           }}
         />
       )}
+
+      {/* Meal Reminder Push Consent */}
+      <PushConsentDialog
+        open={showMealPushConsent}
+        onOpenChange={setShowMealPushConsent}
+        reason="Enable push notifications to get meal reminder alerts even when the app is closed."
+        onAllowed={() => {
+          if (pendingMealReminder) {
+            addMealReminderMutation.mutate(pendingMealReminder);
+            setPendingMealReminder(null);
+          }
+        }}
+        onDeclined={() => {
+          if (pendingMealReminder) {
+            addMealReminderMutation.mutate(pendingMealReminder);
+            setPendingMealReminder(null);
+          }
+        }}
+      />
     </div>
   );
 }

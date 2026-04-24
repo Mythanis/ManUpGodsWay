@@ -25,6 +25,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { useLocation, Link } from "wouter";
 import { BackButton } from "@/components/BackButton";
+import { PushConsentDialog } from "@/components/push-consent-dialog";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
 
 interface Exercise {
   exerciseId: string;
@@ -85,6 +87,8 @@ export default function CreatePlan() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { isSubscribed: isPushSubscribed } = usePushNotifications();
+  const [showReminderPushConsent, setShowReminderPushConsent] = useState(false);
 
   // Plan details
   const [planName, setPlanName] = useState('');
@@ -265,7 +269,12 @@ export default function CreatePlan() {
 
   // Reminder handlers
   const addReminder = () => {
-    setReminders(prev => [...prev, { dayOfWeek: 'monday', time: '09:00' }]);
+    if (!isPushSubscribed && reminders.length === 0) {
+      // Show consent dialog on first reminder add; it calls the real add on allow/decline
+      setShowReminderPushConsent(true);
+    } else {
+      setReminders(prev => [...prev, { dayOfWeek: 'monday', time: '09:00' }]);
+    }
   };
 
   const updateReminder = (index: number, field: 'dayOfWeek' | 'time', value: string) => {
@@ -855,6 +864,19 @@ export default function CreatePlan() {
           </Card>
         </div>
       )}
+
+      {/* Push consent for workout reminders */}
+      <PushConsentDialog
+        open={showReminderPushConsent}
+        onOpenChange={setShowReminderPushConsent}
+        reason="Enable push notifications so you never miss a scheduled workout."
+        onAllowed={() => {
+          setReminders(prev => [...prev, { dayOfWeek: 'monday', time: '09:00' }]);
+        }}
+        onDeclined={() => {
+          setReminders(prev => [...prev, { dayOfWeek: 'monday', time: '09:00' }]);
+        }}
+      />
     </div>
   );
 }
