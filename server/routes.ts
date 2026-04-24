@@ -12326,7 +12326,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!VALID_METRIC_TYPES.includes(type as HealthMetricType)) {
         return res.status(400).json({ message: 'Invalid metric type' });
       }
-      const entries = await storage.getHealthMetrics(userId, type, 30);
+      const rawLimit = parseInt(req.query.limit as string) || 30;
+      const limit = Math.min(Math.max(rawLimit, 1), 90);
+      const entries = await storage.getHealthMetrics(userId, type, limit);
       res.json(entries);
     } catch (error) {
       console.error('Error fetching health metrics:', error);

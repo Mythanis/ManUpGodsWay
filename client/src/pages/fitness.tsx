@@ -587,6 +587,10 @@ export default function Fitness() {
   const [healthWeightForm, setHealthWeightForm] = useState({ date: new Date().toISOString().split('T')[0], weight: '', bodyFat: '', chest: '', waist: '', hips: '', neck: '' });
   const [healthGoalFormOpen, setHealthGoalFormOpen] = useState<'steps' | 'heart_rate' | 'sleep' | 'weight' | null>(null);
   const [healthGoalInputs, setHealthGoalInputs] = useState({ steps: '', heart_rate: '', sleep: '', weight: '' });
+  const [stepsRange, setStepsRange] = useState<7 | 30 | 90>(7);
+  const [hrRange, setHrRange] = useState<7 | 30 | 90>(7);
+  const [sleepRange, setSleepRange] = useState<7 | 30 | 90>(7);
+  const [weightRange, setWeightRange] = useState<7 | 30 | 90>(7);
 
   // Community comments state
   const [expandedCommentPost, setExpandedCommentPost] = useState<string | null>(null);
@@ -742,19 +746,19 @@ export default function Fitness() {
 
   // Health metrics queries
   const { data: stepsMetrics = [] } = useQuery<HealthMetric[]>({
-    queryKey: ['/api/health-metrics?type=steps'],
+    queryKey: [`/api/health-metrics?type=steps&limit=${stepsRange}`],
     enabled: hasMembership,
   });
   const { data: hrMetrics = [] } = useQuery<HealthMetric[]>({
-    queryKey: ['/api/health-metrics?type=heart_rate'],
+    queryKey: [`/api/health-metrics?type=heart_rate&limit=${hrRange}`],
     enabled: hasMembership,
   });
   const { data: sleepMetrics = [] } = useQuery<HealthMetric[]>({
-    queryKey: ['/api/health-metrics?type=sleep'],
+    queryKey: [`/api/health-metrics?type=sleep&limit=${sleepRange}`],
     enabled: hasMembership,
   });
   const { data: weightMetrics = [] } = useQuery<HealthMetric[]>({
-    queryKey: ['/api/health-metrics?type=weight'],
+    queryKey: [`/api/health-metrics?type=weight&limit=${weightRange}`],
     enabled: hasMembership,
   });
 
@@ -807,7 +811,7 @@ export default function Fitness() {
   const createHealthMetricMutation = useMutation({
     mutationFn: async (data: CreateHealthPayload) => apiRequest('POST', '/api/health-metrics', data),
     onSuccess: (_res, vars) => {
-      queryClient.invalidateQueries({ queryKey: [`/api/health-metrics?type=${vars.metricType}`] });
+      queryClient.invalidateQueries({ predicate: (q) => typeof q.queryKey[0] === 'string' && (q.queryKey[0] as string).startsWith(`/api/health-metrics?type=${vars.metricType}`) });
       setHealthOpenForm(null);
       toast({ title: 'Entry logged', description: 'Your health metric has been saved.' });
     },
@@ -820,7 +824,7 @@ export default function Fitness() {
     mutationFn: async ({ id }: { id: string; metricType: string }) =>
       apiRequest('DELETE', `/api/health-metrics/${id}`),
     onSuccess: (_res, vars) => {
-      queryClient.invalidateQueries({ queryKey: [`/api/health-metrics?type=${vars.metricType}`] });
+      queryClient.invalidateQueries({ predicate: (q) => typeof q.queryKey[0] === 'string' && (q.queryKey[0] as string).startsWith(`/api/health-metrics?type=${vars.metricType}`) });
     },
     onError: (err: Error) => {
       toast({ title: 'Error', description: err.message || 'Failed to delete', variant: 'destructive' });
@@ -5486,6 +5490,11 @@ export default function Fitness() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
+                <div className="flex gap-1">
+                  {([7, 30, 90] as const).map(r => (
+                    <button key={r} onClick={() => setStepsRange(r)} className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-sm border transition-colors ${stepsRange === r ? 'bg-[#FCD000] text-black border-[#FCD000]' : 'border-zinc-700 text-white/40 hover:text-white hover:border-zinc-500'}`}>{r}d</button>
+                  ))}
+                </div>
                 {healthGoalFormOpen === 'steps' && (
                   <div className="bg-black border border-zinc-700 rounded-sm p-3 space-y-2">
                     <p className="text-white/60 text-[10px] uppercase font-bold">Daily Step Goal</p>
@@ -5585,7 +5594,7 @@ export default function Fitness() {
                   <div className="space-y-3">
                     <div className="h-20 w-full">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={[...stepsMetrics].reverse().slice(-7).map(m => ({ date: m.date.slice(5), value: m.primaryValue }))} margin={{ top: 4, right: 4, left: -30, bottom: 0 }}>
+                        <BarChart data={[...stepsMetrics].reverse().slice(-stepsRange).map(m => ({ date: m.date.slice(5), value: m.primaryValue }))} margin={{ top: 4, right: 4, left: -30, bottom: 0 }}>
                           <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9 }} axisLine={false} tickLine={false} />
                           <YAxis tick={false} axisLine={false} tickLine={false} />
                           <Tooltip contentStyle={{ background: '#111', border: '1px solid rgba(252,208,0,0.3)', borderRadius: 2, fontSize: 11, color: '#fff' }} labelStyle={{ color: 'rgba(255,255,255,0.5)' }} formatter={(v: number) => [v?.toLocaleString(), 'Steps']} />
@@ -5599,7 +5608,7 @@ export default function Fitness() {
                     <div className="grid grid-cols-4 text-[10px] font-bold uppercase text-white/40 px-2 pb-1 border-b border-zinc-800">
                       <span>Date</span><span className="text-right">Steps</span><span className="text-right">Calories</span><span></span>
                     </div>
-                    {stepsMetrics.slice(0, 7).map((m) => (
+                    {stepsMetrics.slice(0, stepsRange).map((m) => (
                       <div key={m.id} className="grid grid-cols-4 items-center px-2 py-1.5 hover:bg-zinc-800/40 rounded-sm">
                         <span className="text-white/60 text-xs">{m.date}</span>
                         <span className="text-right text-white font-bold text-xs">{m.primaryValue?.toLocaleString()}</span>
@@ -5652,6 +5661,11 @@ export default function Fitness() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
+                <div className="flex gap-1">
+                  {([7, 30, 90] as const).map(r => (
+                    <button key={r} onClick={() => setHrRange(r)} className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-sm border transition-colors ${hrRange === r ? 'bg-[#FCD000] text-black border-[#FCD000]' : 'border-zinc-700 text-white/40 hover:text-white hover:border-zinc-500'}`}>{r}d</button>
+                  ))}
+                </div>
                 {healthGoalFormOpen === 'heart_rate' && (
                   <div className="bg-black border border-zinc-700 rounded-sm p-3 space-y-2">
                     <p className="text-white/60 text-[10px] uppercase font-bold">Resting BPM Goal (target or below)</p>
@@ -5751,7 +5765,7 @@ export default function Fitness() {
                   <div className="space-y-3">
                     <div className="h-20 w-full">
                       <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={[...hrMetrics].reverse().slice(-7).map(m => ({ date: m.date.slice(5), value: m.primaryValue }))} margin={{ top: 4, right: 4, left: -30, bottom: 0 }}>
+                        <LineChart data={[...hrMetrics].reverse().slice(-hrRange).map(m => ({ date: m.date.slice(5), value: m.primaryValue }))} margin={{ top: 4, right: 4, left: -30, bottom: 0 }}>
                           <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9 }} axisLine={false} tickLine={false} />
                           <YAxis tick={false} axisLine={false} tickLine={false} domain={['auto', 'auto']} />
                           <Tooltip contentStyle={{ background: '#111', border: '1px solid rgba(252,208,0,0.3)', borderRadius: 2, fontSize: 11, color: '#fff' }} labelStyle={{ color: 'rgba(255,255,255,0.5)' }} formatter={(v: number) => [`${v} bpm`, 'Resting HR']} />
@@ -5767,7 +5781,7 @@ export default function Fitness() {
                     <div className="grid grid-cols-4 text-[10px] font-bold uppercase text-white/40 px-2 pb-1 border-b border-zinc-800">
                       <span>Date</span><span className="text-right">Resting</span><span className="text-right">Active</span><span></span>
                     </div>
-                    {hrMetrics.slice(0, 7).map((m) => (
+                    {hrMetrics.slice(0, hrRange).map((m) => (
                       <div key={m.id} className="grid grid-cols-4 items-center px-2 py-1.5 hover:bg-zinc-800/40 rounded-sm">
                         <span className="text-white/60 text-xs">{m.date}</span>
                         <span className="text-right text-white font-bold text-xs">{m.primaryValue} <span className="text-white/40 text-[10px]">bpm</span></span>
@@ -5820,6 +5834,11 @@ export default function Fitness() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
+                <div className="flex gap-1">
+                  {([7, 30, 90] as const).map(r => (
+                    <button key={r} onClick={() => setSleepRange(r)} className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-sm border transition-colors ${sleepRange === r ? 'bg-[#FCD000] text-black border-[#FCD000]' : 'border-zinc-700 text-white/40 hover:text-white hover:border-zinc-500'}`}>{r}d</button>
+                  ))}
+                </div>
                 {healthGoalFormOpen === 'sleep' && (
                   <div className="bg-black border border-zinc-700 rounded-sm p-3 space-y-2">
                     <p className="text-white/60 text-[10px] uppercase font-bold">Daily Sleep Goal</p>
@@ -5923,7 +5942,7 @@ export default function Fitness() {
                   <div className="space-y-3">
                     <div className="h-20 w-full">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={[...sleepMetrics].reverse().slice(-7).map(m => ({ date: m.date.slice(5), value: m.primaryValue }))} margin={{ top: 4, right: 4, left: -30, bottom: 0 }}>
+                        <BarChart data={[...sleepMetrics].reverse().slice(-sleepRange).map(m => ({ date: m.date.slice(5), value: m.primaryValue }))} margin={{ top: 4, right: 4, left: -30, bottom: 0 }}>
                           <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9 }} axisLine={false} tickLine={false} />
                           <YAxis tick={false} axisLine={false} tickLine={false} />
                           <Tooltip contentStyle={{ background: '#111', border: '1px solid rgba(252,208,0,0.3)', borderRadius: 2, fontSize: 11, color: '#fff' }} labelStyle={{ color: 'rgba(255,255,255,0.5)' }} formatter={(v: number) => [`${v} hr`, 'Sleep']} />
@@ -5939,7 +5958,7 @@ export default function Fitness() {
                     <div className="grid grid-cols-4 text-[10px] font-bold uppercase text-white/40 px-2 pb-1 border-b border-zinc-800">
                       <span>Date</span><span className="text-right">Hours</span><span className="text-right">Quality</span><span></span>
                     </div>
-                    {sleepMetrics.slice(0, 7).map((m) => (
+                    {sleepMetrics.slice(0, sleepRange).map((m) => (
                       <div key={m.id} className="grid grid-cols-4 items-center px-2 py-1.5 hover:bg-zinc-800/40 rounded-sm">
                         <span className="text-white/60 text-xs">{m.date}</span>
                         <span className="text-right text-white font-bold text-xs">{m.primaryValue} <span className="text-white/40 text-[10px]">hr</span></span>
@@ -5992,6 +6011,11 @@ export default function Fitness() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
+                <div className="flex gap-1">
+                  {([7, 30, 90] as const).map(r => (
+                    <button key={r} onClick={() => setWeightRange(r)} className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-sm border transition-colors ${weightRange === r ? 'bg-[#FCD000] text-black border-[#FCD000]' : 'border-zinc-700 text-white/40 hover:text-white hover:border-zinc-500'}`}>{r}d</button>
+                  ))}
+                </div>
                 {healthGoalFormOpen === 'weight' && (
                   <div className="bg-black border border-zinc-700 rounded-sm p-3 space-y-2">
                     <p className="text-white/60 text-[10px] uppercase font-bold">Target Weight</p>
@@ -6120,7 +6144,7 @@ export default function Fitness() {
                   <div className="space-y-3">
                     <div className="h-20 w-full">
                       <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={[...weightMetrics].reverse().slice(-7).map(m => ({ date: m.date.slice(5), value: m.primaryValue }))} margin={{ top: 4, right: 4, left: -30, bottom: 0 }}>
+                        <LineChart data={[...weightMetrics].reverse().slice(-weightRange).map(m => ({ date: m.date.slice(5), value: m.primaryValue }))} margin={{ top: 4, right: 4, left: -30, bottom: 0 }}>
                           <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9 }} axisLine={false} tickLine={false} />
                           <YAxis tick={false} axisLine={false} tickLine={false} />
                           <Tooltip contentStyle={{ background: '#111', border: '1px solid rgba(252,208,0,0.3)', borderRadius: 2, fontSize: 11, color: '#fff' }} labelStyle={{ color: 'rgba(255,255,255,0.5)' }} formatter={(v: number) => [`${v} lbs`, 'Weight']} />
@@ -6136,7 +6160,7 @@ export default function Fitness() {
                     <div className="grid grid-cols-4 text-[10px] font-bold uppercase text-white/40 px-2 pb-1 border-b border-zinc-800">
                       <span>Date</span><span className="text-right">Weight</span><span className="text-right">Body Fat</span><span></span>
                     </div>
-                    {weightMetrics.slice(0, 7).map((m) => {
+                    {weightMetrics.slice(0, weightRange).map((m) => {
                       let measurements: Record<string, number> = {};
                       try { if (m.notes) measurements = JSON.parse(m.notes); } catch {}
                       const hasMeasurements = Object.keys(measurements).length > 0;
