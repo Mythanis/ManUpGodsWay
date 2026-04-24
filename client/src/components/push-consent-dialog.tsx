@@ -39,9 +39,13 @@ export function PushConsentDialog({
     setLoading(true);
     setError(null);
     try {
-      await subscribe();
-      onAllowed();
-      onOpenChange(false);
+      const success = await subscribe();
+      if (success) {
+        onAllowed();
+        onOpenChange(false);
+      } else {
+        setError("Notifications were not enabled. Please allow notifications in your browser settings and try again.");
+      }
     } catch {
       setError("Could not enable notifications. Please check your browser settings and try again.");
     } finally {

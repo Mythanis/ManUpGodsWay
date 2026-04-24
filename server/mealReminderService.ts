@@ -90,7 +90,7 @@ class MealReminderService {
           icon: '/icon-192.png',
           badge: '/icon-192.png',
           tag: `meal-reminder-${reminder.id}`,
-          url: '/fitness?tab=intake',
+          url: '/fitness?tab=intake&openAddFood=true',
         });
 
         await storage.createNotificationWithPreferences({

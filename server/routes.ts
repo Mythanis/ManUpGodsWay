@@ -12016,16 +12016,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }).returning();
       res.json(post);
 
-      // Fan-out: notify the poster's brothers who have fitnessCommunityNotifications enabled
+      // Fan-out: notify ALL users with fitnessCommunityNotifications enabled (not the poster)
       try {
         const poster = await storage.getUser(userId);
-        const brothers = await storage.getUserBrothers(userId);
-        for (const brother of brothers) {
+        // Query users where fitnessCommunityNotifications is not explicitly false
+        const eligiblePrefs = await db
+          .select({ userId: schema.notificationPreferences.userId })
+          .from(schema.notificationPreferences)
+          .where(
+            and(
+              ne(schema.notificationPreferences.userId, userId),
+              or(
+                isNull(schema.notificationPreferences.fitnessCommunityNotifications),
+                eq(schema.notificationPreferences.fitnessCommunityNotifications, true)
+              )
+            )
+          );
+        for (const pref of eligiblePrefs) {
           try {
-            const prefs = await storage.getNotificationPreferences(brother.id);
-            if (prefs && prefs.fitnessCommunityNotifications === false) continue;
             await storage.createNotificationWithPreferences({
-              userId: brother.id,
+              userId: pref.userId,
               type: 'fitness',
               title: 'New Fitness Post',
               message: `${poster?.firstName || 'A brother'} shared something in the Fitness Community.`,

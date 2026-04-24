@@ -510,7 +510,7 @@ export default function Fitness() {
     if (typeof window === 'undefined') return 'workout';
     const params = new URLSearchParams(window.location.search);
     const t = params.get('tab');
-    return t && ['workout', 'community', 'planner', 'intake'].includes(t) ? t : 'workout';
+    return t && ['workout', 'community', 'planner', 'intake', 'nutrition', 'exercises', 'favorites', 'pre-built-plans', 'my-plans'].includes(t) ? t : 'workout';
   })();
   const [activeFitnessTab, setActiveFitnessTab] = useState<string>(initialTab);
   const [purchasingPlanId, setPurchasingPlanId] = useState<string | null>(null);
@@ -531,7 +531,10 @@ export default function Fitness() {
 
   // Intake tab state
   const [intakePeriod, setIntakePeriod] = useState<'day' | 'week' | 'month'>('day');
-  const [showAddIntakeDialog, setShowAddIntakeDialog] = useState(false);
+  const [showAddIntakeDialog, setShowAddIntakeDialog] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return new URLSearchParams(window.location.search).get('openAddFood') === 'true';
+  });
   const [addIntakePrefill, setAddIntakePrefill] = useState<{ foodName: string; caloriesPerServing: number } | null>(null);
   const [intakeForm, setIntakeForm] = useState({ foodName: '', caloriesPerServing: '', servings: '1', meal: 'breakfast' as const });
   const [intakeFormMeal, setIntakeFormMeal] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('breakfast');
