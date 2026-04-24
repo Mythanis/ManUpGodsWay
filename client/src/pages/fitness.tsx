@@ -6758,16 +6758,19 @@ function WorkoutPlayer({ plan, exercises, onClose, onExerciseComplete }: Workout
               <div className="w-48 h-48 md:w-64 md:h-64 bg-white rounded-sm border-2 border-[#FCD000] overflow-hidden mb-6">
                 {isVideo ? (
                   <video
+                    key={mediaUrl}
                     src={mediaUrl}
                     autoPlay
                     loop
                     muted
                     playsInline
+                    preload="auto"
                     className="w-full h-full object-contain"
                     data-testid="video-current-exercise"
                   />
                 ) : (
                   <img
+                    key={mediaUrl}
                     src={mediaUrl}
                     alt={currentExercise?.exerciseName ?? ''}
                     className="w-full h-full object-contain"
