@@ -512,18 +512,23 @@ export default function EditPlan() {
   }
 
   return (
-    <div className="p-4 max-w-6xl mx-auto space-y-6">
-      <BackButton fallbackPath="/fitness" />
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/fitness">
-          <Button variant="outline" size="sm" data-testid="button-back">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Fitness
-          </Button>
-        </Link>
-        <h1 className="text-2xl font-bold">Edit Fitness Plan</h1>
-      </div>
+    <div className="min-h-screen bg-black pb-20">
+      <div className="p-4 max-w-6xl mx-auto space-y-6">
+        <BackButton fallbackPath="/fitness" />
+        {/* Header */}
+        <div className="flex items-center gap-4">
+          <Link href="/fitness">
+            <Button
+              size="sm"
+              data-testid="button-back"
+              className="bg-ministry-gold hover:bg-ministry-gold/90 text-black"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Fitness
+            </Button>
+          </Link>
+          <h1 className="text-2xl font-bold text-ministry-gold">Edit Fitness Plan</h1>
+        </div>
 
       <div className="space-y-6">
         {/* Plan Details */}
@@ -631,9 +636,8 @@ export default function EditPlan() {
                       <div className="flex items-center gap-2 shrink-0">
                         <Button
                           size="sm"
-                          variant="outline"
                           onClick={() => handleOpenSwap(selected.originalIndex)}
-                          className="border-black/40 text-black hover:bg-black/5"
+                          className="bg-black hover:bg-zinc-800 text-ministry-gold border border-black"
                           data-testid={`button-swap-exercise-${selected.originalIndex}`}
                         >
                           <Repeat className="h-4 w-4 mr-1" />
@@ -1070,6 +1074,7 @@ export default function EditPlan() {
           </Card>
         </div>
       )}
+      </div>
     </div>
   );
 }
