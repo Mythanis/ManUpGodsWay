@@ -2679,15 +2679,11 @@ export default function Fitness() {
         isPublic: false
       });
 
-      // Add exercises to the plan directly using local database
-      for (let i = 0; i < preBuiltPlan.exercises.length; i++) {
-        const exercise = preBuiltPlan.exercises[i];
-        
-        // Use the assigned day from the generator if present, else fall back
+      // Build all exercise payloads up front
+      const exercisePayloads = preBuiltPlan.exercises.map((exercise, i) => {
         const trainingDay = exercise.assignedDay
           || getExerciseTrainingDay(i, preBuiltPlan.startDay, preBuiltPlan.schedule);
-        
-        // Create exercise entry directly with comprehensive data
+
         const isTimeBased = (!exercise.reps || exercise.reps === 0) && !!exercise.duration;
         const repsValue = isTimeBased
           ? `${exercise.duration}s`
@@ -2696,13 +2692,13 @@ export default function Fitness() {
           ? Math.max(1, Math.round((exercise.duration * exercise.sets) / 60))
           : exercise.duration;
 
-        const exerciseData = {
+        return {
           exerciseId: `prebuilt-${Date.now()}-${i}`,
           exerciseName: exercise.name,
-          imageUrl: exercise.gifUrl || null, // Use actual GIF URL from local database
+          imageUrl: exercise.gifUrl || null,
           targetMuscle: exercise.bodyPart,
           bodyPart: exercise.bodyPart,
-          equipment: exercise.equipment.join(', '),
+          equipment: (exercise.equipment ?? []).join(', '),
           sets: exercise.sets,
           reps: repsValue,
           minutes: minutesValue,
@@ -2710,16 +2706,27 @@ export default function Fitness() {
             // Preserve a legitimate 0 (e.g. cardio block has no inter-set
             // rest). parseInt(...) || 60 would coerce 0 to the 60-second
             // fallback and break consistency with the generator.
-            const parsed = Number.parseInt(exercise.rest.replace(/[^0-9]/g, ''), 10);
+            const parsed = Number.parseInt(String(exercise.rest ?? '60').replace(/[^0-9]/g, ''), 10);
             return Number.isNaN(parsed) ? 60 : parsed;
           })(),
           notes: `${exercise.rest} rest - Training Day: ${exercise.day}`,
           daysOfWeek: [trainingDay],
           weekNumber: exercise.weekNumber || 1,
-          orderIndex: i
+          orderIndex: i,
         };
-        
-        await apiRequest('POST', `/api/fitness-plans/${planResponse.id}/exercises`, exerciseData);
+      });
+
+      // POST exercises in parallel batches to avoid sequential timeouts.
+      // Batches of 10 keep the server happy while finishing ~10x faster
+      // than the previous one-at-a-time loop.
+      const BATCH_SIZE = 10;
+      for (let i = 0; i < exercisePayloads.length; i += BATCH_SIZE) {
+        const batch = exercisePayloads.slice(i, i + BATCH_SIZE);
+        await Promise.all(
+          batch.map(payload =>
+            apiRequest('POST', `/api/fitness-plans/${planResponse.id}/exercises`, payload)
+          )
+        );
       }
 
       return planResponse;

@@ -293,10 +293,9 @@ export default function CreatePlan() {
       };
 
       const plan = await apiRequest('POST', '/api/fitness-plans', planData);
-      
-      // Add exercises to the plan
-      for (let i = 0; i < selectedExercises.length; i++) {
-        const selectedExercise = selectedExercises[i];
+
+      // Build all exercise payloads up front
+      const exercisePayloads = selectedExercises.map((selectedExercise, i) => {
         const exerciseData: any = {
           exerciseId: selectedExercise.exercise.exerciseId,
           exerciseName: selectedExercise.exercise.name,
@@ -308,20 +307,34 @@ export default function CreatePlan() {
           reps: selectedExercise.reps || '10',
           daysOfWeek: selectedExercise.daysOfWeek,
           notes: selectedExercise.notes,
-          orderIndex: i
+          orderIndex: i,
         };
 
-        // Only include minutes if it's a valid number
         if (selectedExercise.minutes && typeof selectedExercise.minutes === 'number' && selectedExercise.minutes > 0) {
           exerciseData.minutes = selectedExercise.minutes;
         }
 
-        await apiRequest('POST', `/api/fitness-plans/${plan.id}/exercises`, exerciseData);
+        return exerciseData;
+      });
+
+      // POST exercises in parallel batches for speed and reliability
+      const BATCH_SIZE = 10;
+      for (let i = 0; i < exercisePayloads.length; i += BATCH_SIZE) {
+        const batch = exercisePayloads.slice(i, i + BATCH_SIZE);
+        await Promise.all(
+          batch.map(payload =>
+            apiRequest('POST', `/api/fitness-plans/${plan.id}/exercises`, payload)
+          )
+        );
       }
 
-      // Add reminders
-      for (const reminder of reminders) {
-        await apiRequest('POST', `/api/fitness-plans/${plan.id}/reminders`, reminder);
+      // Add reminders in parallel
+      if (reminders.length > 0) {
+        await Promise.all(
+          reminders.map(reminder =>
+            apiRequest('POST', `/api/fitness-plans/${plan.id}/reminders`, reminder)
+          )
+        );
       }
 
       return plan;
