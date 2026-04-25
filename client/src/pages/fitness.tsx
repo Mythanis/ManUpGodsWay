@@ -7605,9 +7605,9 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
   const workLabel = (() => {
     if (isUnilateral) {
       const sideText = currentSide === 'right' ? 'Right Side' : 'Left Side';
-      return isTimeBased ? `Work — ${sideText}` : `Perform Set — ${sideText}`;
+      return isTimeBased ? `Exercise — ${sideText}` : `Perform Set — ${sideText}`;
     }
-    return isTimeBased ? 'Work' : 'Perform Set';
+    return isTimeBased ? 'Exercise' : 'Perform Set';
   })();
 
   const phaseLabel: Record<PlayerPhase, string> = {
@@ -7615,7 +7615,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
     work: workLabel,
     'set-rest': 'Rest',
     'side-switch': 'Switch Sides',
-    rest: 'Next Exercise',
+    rest: 'Rest and Preview',
     done: 'Workout Complete'
   };
 
