@@ -497,6 +497,9 @@ export default function Fitness() {
   const [detailPlan, setDetailPlan] = useState<FitnessPlan | null>(null);
   const [detailExercises, setDetailExercises] = useState<FitnessPlanExercise[]>([]);
 
+  // Exercise media preview dialog (Preview button on each ExerciseCard)
+  const [previewExercise, setPreviewExercise] = useState<Exercise | null>(null);
+
   // Manual override / fine-tune dialog state. The sliders work in
   // deltas (rest ±5s, intensity ±2 reps, volume ±1 set) and are sent
   // to /manual-override which applies them immediately. The history
@@ -1768,6 +1771,15 @@ export default function Fitness() {
             </div>
             
             <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setPreviewExercise(exercise)}
+                className="bg-transparent text-black px-3 py-1.5 rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-[#FCD000] font-bold uppercase text-sm flex items-center transition-all"
+                data-testid={`button-preview-${exercise.exerciseId || exercise.id || ''}`}
+              >
+                <Play className="w-4 h-4 mr-1" />
+                Preview
+              </button>
+
               <button
                 onClick={() => handleToggleFavorite(exercise)}
                 className={showRemove 
@@ -7993,6 +8005,57 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
         )}
         </div>
       </div>
+
+      {/* Exercise media preview modal — opens when the user clicks
+          "Preview" on any ExerciseCard. Plays MP4/WebM in <video>,
+          shows GIF/PNG/JPG in <img>, and falls back to a friendly
+          message when the exercise has no valid media path. */}
+      <Dialog open={!!previewExercise} onOpenChange={(open) => { if (!open) setPreviewExercise(null); }}>
+        <DialogContent className="bg-zinc-900 border-2 border-[#FCD000] text-white max-w-2xl w-[92vw]" data-testid="dialog-exercise-preview">
+          <DialogHeader>
+            <DialogTitle className="text-[#FCD000] font-black uppercase tracking-wide">
+              {previewExercise?.name?.replace(/_/g, ' ')}
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              Demo video or image for this exercise
+            </DialogDescription>
+          </DialogHeader>
+          {(() => {
+            const url = previewExercise?.gifUrl || '';
+            const isPlayable = !!url && (url.startsWith('/api/media/') || url.startsWith('http') || url.startsWith('/'));
+            const isVideo = /\.(mp4|webm|mov)(\?.*)?$/i.test(url);
+            if (!isPlayable) {
+              return (
+                <div className="flex flex-col items-center justify-center py-10 text-center text-white/70">
+                  <p className="italic">No demo video is available for this exercise yet.</p>
+                </div>
+              );
+            }
+            return (
+              <div className="flex items-center justify-center bg-black rounded-sm overflow-hidden">
+                {isVideo ? (
+                  <video
+                    src={url}
+                    controls
+                    autoPlay
+                    loop
+                    playsInline
+                    className="w-full max-h-[70vh]"
+                    data-testid="video-exercise-preview"
+                  />
+                ) : (
+                  <img
+                    src={url}
+                    alt={previewExercise?.name || 'Exercise demo'}
+                    className="w-full max-h-[70vh] object-contain"
+                    data-testid="img-exercise-preview"
+                  />
+                )}
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
 
       {/* Written instructions modal — opens paused so the timer freezes
           while the user reads. Falls back to a friendly message when the
