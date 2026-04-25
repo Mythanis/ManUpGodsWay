@@ -869,6 +869,9 @@ export default function Profile() {
                     />
                   </div>
                 )}
+                {(user.musicProvider === 'apple' || user.musicProvider === 'iheart') && (
+                  <p className="text-xs text-gray-500 mt-3">Auto-start is not supported by this provider</p>
+                )}
                 <p className="text-xs text-gray-500 mt-2 text-center">This player will appear at the top of your workout when you hit Begin</p>
               </div>
             ) : (
@@ -958,6 +961,9 @@ export default function Profile() {
                       onCheckedChange={setMusicDraftAutoPlay}
                     />
                   </div>
+                )}
+                {(musicDraftProvider === 'apple' || musicDraftProvider === 'iheart') && (
+                  <p className="text-xs text-gray-500 mb-4">Auto-start is not supported by this provider</p>
                 )}
 
                 <div className="flex gap-2">
