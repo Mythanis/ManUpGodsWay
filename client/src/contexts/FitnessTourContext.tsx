@@ -55,7 +55,7 @@ export const FITNESS_TOUR_STEPS: FitnessTourStep[] = [
     tab: "my-plans",
     title: "My Plans",
     description:
-      "Your personal plan library. Create a new plan from the ground up, edit existing ones, schedule them onto your calendar, and view anything you've purchased. Full control over what your week of training looks like.",
+      "Your personal plan library. Create a new plan from the ground up, edit existing ones, and schedule them onto your calendar. Full control over what your week of training looks like.",
   },
   {
     tab: "nutrition",
