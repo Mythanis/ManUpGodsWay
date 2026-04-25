@@ -52,7 +52,10 @@ import {
   Share,
   Plus,
   ChevronDown,
-  Download
+  Download,
+  Search,
+  ExternalLink,
+  Clipboard
 } from "lucide-react";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
 import { Link } from "wouter";
@@ -87,6 +90,11 @@ export default function Profile() {
   const [musicDraftProvider, setMusicDraftProvider] = useState<MusicProvider | null>(null);
   const [musicDraftUrl, setMusicDraftUrl] = useState('');
   const [musicDraftAutoPlay, setMusicDraftAutoPlay] = useState(false);
+  // iHeart inline search + clipboard paste assist state
+  const [iheartSearchInput, setIheartSearchInput] = useState('');
+  const [iheartSearchDebounced, setIheartSearchDebounced] = useState('');
+  const [iheartClipboardSuggestion, setIheartClipboardSuggestion] = useState<string | null>(null);
+  const [iheartDismissedSuggestions, setIheartDismissedSuggestions] = useState<Set<string>>(() => new Set());
   const [musicUrlError, setMusicUrlError] = useState('');
 
   const musicMutation = useMutation({
@@ -137,6 +145,84 @@ export default function Profile() {
         queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       },
     });
+  };
+
+  // ── iHeart inline search: debounce the input ────────────────────────────────
+  useEffect(() => {
+    const t = setTimeout(() => setIheartSearchDebounced(iheartSearchInput.trim()), 350);
+    return () => clearTimeout(t);
+  }, [iheartSearchInput]);
+
+  // iHeart search results query (uses an explicit queryFn for the ?q= param)
+  const iheartSearchQuery = useQuery<{ results: Array<{ id: string; name: string; type: string; imageUrl: string; iheartUrl: string }> }>({
+    queryKey: ['/api/iheart/search', iheartSearchDebounced],
+    queryFn: async () => {
+      const r = await fetch(`/api/iheart/search?q=${encodeURIComponent(iheartSearchDebounced)}`, { credentials: 'include' });
+      if (!r.ok) throw new Error('search failed');
+      return r.json();
+    },
+    enabled: musicDraftProvider === 'iheart' && iheartSearchDebounced.length >= 2,
+    staleTime: 60_000,
+  });
+
+  // ── iHeart clipboard paste assist ───────────────────────────────────────────
+  // When the iHeart editor is open and the user returns to the tab, peek at the
+  // clipboard. If it contains a fresh iheart.com URL, surface it as a one-tap
+  // suggestion chip above the URL input. Permission denials are swallowed so
+  // browsers (notably iOS Safari) that block clipboard reads stay quiet.
+  useEffect(() => {
+    if (musicDraftProvider !== 'iheart') {
+      if (iheartClipboardSuggestion) setIheartClipboardSuggestion(null);
+      return;
+    }
+
+    const checkClipboard = async () => {
+      if (typeof navigator === 'undefined' || !navigator.clipboard?.readText) return;
+      try {
+        const text = (await navigator.clipboard.readText()).trim();
+        if (!text) return;
+        if (!validateProviderUrl('iheart', text)) return;
+        if (text === musicDraftUrl.trim()) return;
+        if (iheartDismissedSuggestions.has(text)) return;
+        setIheartClipboardSuggestion(text);
+      } catch {
+        // Permission denied or unsupported — silently ignore
+      }
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') checkClipboard();
+    };
+    window.addEventListener('focus', checkClipboard);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('focus', checkClipboard);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [musicDraftProvider, musicDraftUrl, iheartDismissedSuggestions, iheartClipboardSuggestion]);
+
+  const handleIheartResultPick = (iheartUrl: string) => {
+    setMusicDraftUrl(iheartUrl);
+    setMusicUrlError('');
+    setIheartClipboardSuggestion(null);
+  };
+
+  const handleIheartClipboardAccept = () => {
+    if (!iheartClipboardSuggestion) return;
+    setMusicDraftUrl(iheartClipboardSuggestion);
+    setMusicUrlError('');
+    setIheartClipboardSuggestion(null);
+  };
+
+  const handleIheartClipboardDismiss = () => {
+    if (iheartClipboardSuggestion) {
+      setIheartDismissedSuggestions((prev) => {
+        const next = new Set(prev);
+        next.add(iheartClipboardSuggestion);
+        return next;
+      });
+    }
+    setIheartClipboardSuggestion(null);
   };
 
   // Handle successful subscription upgrade — verify session with backend to guarantee activation
@@ -915,8 +1001,110 @@ export default function Profile() {
                     musicDraftUrl.trim() && validateProviderUrl(musicDraftProvider, musicDraftUrl.trim())
                       ? buildEmbedUrl(musicDraftProvider, musicDraftUrl.trim())
                       : null;
+                  const iheartResults = iheartSearchQuery.data?.results ?? [];
                   return (
                     <div className="space-y-2 mb-4">
+                      {/* iHeart-only: inline station/podcast/artist search + browse button */}
+                      {musicDraftProvider === 'iheart' && (
+                        <div className="space-y-2 mb-3 p-3 rounded-sm bg-white/5 border border-white/10" data-testid="iheart-search-panel">
+                          <label className="text-xs font-black text-white/70 uppercase tracking-widest">Find on iHeartRadio</label>
+                          <div className="flex gap-2">
+                            <div className="relative flex-1">
+                              <Search className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" />
+                              <Input
+                                value={iheartSearchInput}
+                                onChange={(e) => setIheartSearchInput(e.target.value)}
+                                placeholder="Search stations, podcasts, artists…"
+                                className="bg-black/40 border-white/20 text-white placeholder:text-white/30 text-sm pl-8"
+                                data-testid="input-iheart-search"
+                              />
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open('https://www.iheart.com/', '_blank', 'noopener')}
+                              className="text-xs border-white/20 text-white hover:bg-white/10 h-9 px-2 whitespace-nowrap"
+                              data-testid="button-iheart-browse"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5 mr-1" />
+                              Browse
+                            </Button>
+                          </div>
+                          <p className="text-xs text-gray-500">Search live stations, podcasts, and artists on iHeartRadio.</p>
+
+                          {/* Results / loading / empty state */}
+                          {iheartSearchDebounced.length >= 2 && (
+                            <div className="mt-1">
+                              {iheartSearchQuery.isLoading && (
+                                <div className="flex items-center gap-2 text-xs text-white/50 py-2">
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  Searching iHeartRadio…
+                                </div>
+                              )}
+                              {iheartSearchQuery.isError && (
+                                <p className="text-xs text-red-400 py-2">Search is unavailable. Try again in a moment.</p>
+                              )}
+                              {!iheartSearchQuery.isLoading && !iheartSearchQuery.isError && iheartResults.length === 0 && (
+                                <p className="text-xs text-white/50 py-2">No results. Try a different search.</p>
+                              )}
+                              {iheartResults.length > 0 && (
+                                <div className="max-h-64 overflow-y-auto rounded-sm border border-white/10 divide-y divide-white/5" data-testid="list-iheart-results">
+                                  {iheartResults.map((r) => (
+                                    <button
+                                      key={r.id}
+                                      type="button"
+                                      onClick={() => handleIheartResultPick(r.iheartUrl)}
+                                      className="w-full flex items-center gap-3 p-2 text-left hover:bg-white/10 transition-colors focus:outline-none focus:bg-white/10"
+                                      data-testid={`iheart-result-${r.id}`}
+                                    >
+                                      <div className="w-10 h-10 flex-shrink-0 rounded-sm bg-black/40 overflow-hidden border border-white/10">
+                                        {r.imageUrl ? (
+                                          <img src={r.imageUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
+                                        ) : (
+                                          <div className="w-full h-full flex items-center justify-center">
+                                            <SiIheartradio className="w-5 h-5 text-[#C6002B]" />
+                                          </div>
+                                        )}
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-bold text-white truncate">{r.name}</p>
+                                        <p className="text-[10px] uppercase tracking-widest text-white/50">{r.type}</p>
+                                      </div>
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Clipboard paste-assist chip (iHeart only) */}
+                      {musicDraftProvider === 'iheart' && iheartClipboardSuggestion && (
+                        <div className="flex items-center gap-2 p-2 rounded-sm bg-ministry-gold-exact/10 border border-ministry-gold-exact/40" data-testid="iheart-clipboard-chip">
+                          <Clipboard className="w-4 h-4 text-ministry-gold-exact flex-shrink-0" />
+                          <button
+                            type="button"
+                            onClick={handleIheartClipboardAccept}
+                            className="flex-1 text-left text-xs text-white hover:underline truncate"
+                            data-testid="button-iheart-clipboard-paste"
+                          >
+                            <span className="font-bold">Paste this iHeart link?</span>{' '}
+                            <span className="text-white/60">{iheartClipboardSuggestion.replace(/^https?:\/\//, '')}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleIheartClipboardDismiss}
+                            aria-label="Dismiss clipboard suggestion"
+                            className="flex-shrink-0 p-1 text-white/60 hover:text-white"
+                            data-testid="button-iheart-clipboard-dismiss"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
+
                       <label className="text-xs font-black text-white/70 uppercase tracking-widest">Playlist / Station URL</label>
                       <Input
                         value={musicDraftUrl}

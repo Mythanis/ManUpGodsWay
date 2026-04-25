@@ -566,6 +566,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // iHeartRadio inline station/podcast/artist search.
+  // Proxies iHeart's public, unauthenticated v3 search endpoint so the browser
+  // doesn't hit CORS, normalizes the response into a flat list, and constructs
+  // the canonical iheart.com URL for each result so the client can drop it
+  // straight into musicEmbedUrl. Tiny in-memory TTL cache (60s) keeps repeated
+  // typeahead lookups for the same query off iHeart's servers.
+  const iheartSearchCache = new Map<string, { at: number; payload: any }>();
+  const IHEART_CACHE_TTL_MS = 60_000;
+  app.get('/api/iheart/search', isAuthenticated, async (req: any, res) => {
+    try {
+      const raw = typeof req.query.q === 'string' ? req.query.q : '';
+      const q = raw.trim();
+      if (q.length < 2) return res.json({ results: [] });
+      if (q.length > 80) return res.status(400).json({ message: 'Query too long' });
+
+      const cacheKey = q.toLowerCase();
+      const cached = iheartSearchCache.get(cacheKey);
+      if (cached && Date.now() - cached.at < IHEART_CACHE_TTL_MS) {
+        return res.json(cached.payload);
+      }
+
+      const url = `https://api.iheart.com/api/v3/search/all?keywords=${encodeURIComponent(q)}&maxRows=12&keyword=true&bundle=false`;
+      const r = await fetch(url, {
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (compatible; ManUpGodsWay/1.0)',
+        },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!r.ok) {
+        return res.status(502).json({ message: 'iHeart search is unavailable. Try again in a moment.' });
+      }
+      const data: any = await r.json();
+      const hits = data?.results || {};
+
+      type Item = { id: string; name: string; type: string; imageUrl: string; iheartUrl: string };
+      const items: Item[] = [];
+
+      // Live radio stations first — by far the most useful for workout listening
+      for (const s of (hits.stations || []).slice(0, 5)) {
+        if (!s?.id || !s?.name) continue;
+        items.push({
+          id: `station-${s.id}`,
+          name: String(s.name),
+          type: 'Live Radio',
+          imageUrl: typeof s.imageUrl === 'string' ? s.imageUrl : '',
+          iheartUrl: `https://www.iheart.com/live/${s.id}/`,
+        });
+      }
+
+      // Podcasts
+      for (const p of (hits.podcasts || []).slice(0, 4)) {
+        if (!p?.id) continue;
+        const name = p.title || p.name;
+        if (!name) continue;
+        items.push({
+          id: `podcast-${p.id}`,
+          name: String(name),
+          type: 'Podcast',
+          imageUrl: typeof p.image === 'string' ? p.image : '',
+          iheartUrl: `https://www.iheart.com/podcast/${p.id}/`,
+        });
+      }
+
+      // Artists (clicking opens the artist's iHeart page with a Top Songs player)
+      for (const a of (hits.artists || []).slice(0, 3)) {
+        if (!a?.id || !a?.name) continue;
+        items.push({
+          id: `artist-${a.id}`,
+          name: String(a.name),
+          type: 'Artist',
+          imageUrl: typeof a.image === 'string' ? a.image : '',
+          iheartUrl: `https://www.iheart.com/artist/${a.id}/`,
+        });
+      }
+
+      const payload = { results: items.slice(0, 10) };
+      iheartSearchCache.set(cacheKey, { at: Date.now(), payload });
+      // Tiny LRU-ish trim so the map can't grow unbounded
+      if (iheartSearchCache.size > 200) {
+        const oldestKey = iheartSearchCache.keys().next().value;
+        if (oldestKey) iheartSearchCache.delete(oldestKey);
+      }
+
+      res.json(payload);
+    } catch (error: any) {
+      if (error?.name === 'TimeoutError' || error?.name === 'AbortError') {
+        return res.status(504).json({ message: 'iHeart search timed out' });
+      }
+      console.error('Error in iHeart search proxy:', error);
+      res.status(500).json({ message: 'iHeart search failed' });
+    }
+  });
+
   // Mark app tour as completed for authenticated user
   app.post('/api/user/complete-tour', isAuthenticated, async (req: any, res) => {
     try {
