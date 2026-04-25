@@ -7347,18 +7347,22 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
   // insert time). Synchronous — no async lookup needed. Old rows without the
   // column default to 'bilateral' (null ?? 'bilateral').
   const isUnilateral = (currentExercise?.sidedness ?? 'bilateral') === 'unilateral';
-  const totalSets = currentExercise?.sets ?? 3;
   const repsString = String(currentExercise?.reps ?? '');
   const timeBasedMatch = repsString.match(/^(\d+)s$/);
   const isTimeBased = !!timeBasedMatch;
-  const workSeconds = isTimeBased ? parseInt(timeBasedMatch![1], 10) || 30 : 30;
+  // numReps: integer rep count for this exercise (0 when time-based or
+  // unparseable). Hoisted above totalSets/workSeconds because the rep-based
+  // set-duration formula (numReps × tempoSec) depends on it.
+  const numReps = !isTimeBased
+    ? (parseInt(String(currentExercise?.reps ?? '0'), 10) || 0)
+    : 0;
   // A "transition" exercise is a 1-set time-based block (stretch / warm-up
   // cardio / cooldown). Per spec, the buffer between these is a flat 5s
   // regardless of any stale restTime persisted on older plans (where a
   // legacy default 60s or post-rollback 65s may have stuck around).
   const isTransitionExercise = (() => {
     if (!currentExercise) return false;
-    if (!isTimeBased || totalSets !== 1) return false;
+    if (!isTimeBased || (currentExercise.sets ?? 3) !== 1) return false;
     const haystack = `${currentExercise.exerciseName ?? ''} ${currentExercise.notes ?? ''}`.toLowerCase();
     return /stretch|warm[\s-]?up|cool[\s-]?down|mobility/.test(haystack);
   })();
@@ -7367,6 +7371,21 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
   // Every other (standard) exercise gets a flat 30s break between sets
   // and exercises; transitions keep the short 10s buffer.
   const isHiitExercise = isTimeBased && !isTransitionExercise;
+  // Per spec, HIIT has no set structure — each emitted HIIT entry is one
+  // time-based block in the round-robin circuit (the plan generator
+  // already emits sets=1 for HIIT and pre-expands the circuit by rounds).
+  // Defensively clamp to 1 here so any legacy plan or data drift can't
+  // reintroduce a multi-set HIIT loop in the player.
+  const totalSets = isHiitExercise ? 1 : (currentExercise?.sets ?? 3);
+  // Set duration:
+  //   • Time-based (stretches, warm-ups, cooldowns, HIIT): use the parsed
+  //     "30s" reps value — same behavior as before.
+  //   • Rep-based (normal strength exercises): duration = numReps × tempoSec
+  //     so one set lasts exactly long enough to perform every rep at the
+  //     stored per-rep cadence. Falls back to 30s if numReps is 0.
+  const workSeconds = isTimeBased
+    ? parseInt(timeBasedMatch![1], 10) || 30
+    : (numReps > 0 ? Math.max(1, Math.round(numReps * effectiveTempo)) : 30);
   const restSeconds = isHiitExercise
     ? (currentExercise?.restTime ?? 60)
     : 30;
@@ -7471,11 +7490,6 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
       console.warn('[WorkoutPlayer] beep failed:', err);
     }
   };
-
-  // numReps: integer rep count for this exercise (0 when time-based or unparseable)
-  const numReps = !isTimeBased
-    ? (parseInt(String(currentExercise?.reps ?? '0'), 10) || 0)
-    : 0;
 
   // Category-aware default tempo: compound/heavy lifts get more time per rep,
   // isolation/light exercises get less. Falls back to 3s if unknown.
@@ -8067,7 +8081,13 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
               {currentExercise?.exerciseName}
             </h2>
             <p className="text-[#FCD000] font-bold uppercase tracking-wide mb-6">
-              Set {setIdx + 1} of {totalSets}
+              {/* HIIT has no set structure — show the time-based length
+                  instead of "Set 1 of 1". Everything else keeps the
+                  standard "Set X of Y" header. */}
+              {isHiitExercise
+                ? `${workSeconds}s Interval`
+                : <>Set {setIdx + 1} of {totalSets}</>
+              }
               {!isTimeBased && numReps > 0 && phase === 'work'
                 ? <span className="ml-1">• Rep {Math.min(repCount, numReps)} of {numReps}</span>
                 : (!isTimeBased && currentExercise?.reps && phase === 'work'
