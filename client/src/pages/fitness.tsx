@@ -6931,6 +6931,73 @@ export default function Fitness() {
           }
         }}
       />
+
+      {/* Exercise media preview popout — opens when the user clicks
+          "Preview" on any ExerciseCard. Plays MP4/WebM in <video>,
+          shows GIF/PNG/JPG in <img>, and falls back to a friendly
+          message when the exercise has no valid media path. Uses a
+          plain fixed overlay (not shadcn Dialog) so it's immune to
+          z-index or portal issues from other page overlays. */}
+      {previewExercise && (() => {
+        const url = previewExercise.gifUrl || '';
+        const isPlayable = !!url && (url.startsWith('/api/media/') || url.startsWith('http') || url.startsWith('/'));
+        const isVideo = /\.(mp4|webm|mov)(\?.*)?$/i.test(url);
+        const closePreview = () => setPreviewExercise(null);
+        return (
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 p-4"
+            onClick={closePreview}
+            data-testid="dialog-exercise-preview"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div
+              className="relative bg-zinc-900 border-2 border-[#FCD000] rounded-sm w-full max-w-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-[6px_6px_0px_0px_rgba(252,208,0,1)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-4 py-3 border-b-2 border-[#FCD000] bg-zinc-900">
+                <h3 className="text-[#FCD000] font-black uppercase tracking-wide text-base sm:text-lg pr-4 truncate">
+                  {previewExercise.name?.replace(/_/g, ' ')}
+                </h3>
+                <button
+                  type="button"
+                  onClick={closePreview}
+                  className="flex items-center gap-1 bg-[#FCD000] text-black px-3 py-1.5 rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-white font-black uppercase text-xs sm:text-sm shrink-0"
+                  data-testid="button-close-preview"
+                  aria-label="Close preview"
+                >
+                  <X className="w-4 h-4" />
+                  Close
+                </button>
+              </div>
+              <div className="flex-1 flex items-center justify-center bg-black overflow-hidden">
+                {!isPlayable ? (
+                  <p className="italic text-white/70 text-center px-6 py-10">
+                    No demo video is available for this exercise yet.
+                  </p>
+                ) : isVideo ? (
+                  <video
+                    src={url}
+                    controls
+                    autoPlay
+                    loop
+                    playsInline
+                    className="w-full max-h-[75vh]"
+                    data-testid="video-exercise-preview"
+                  />
+                ) : (
+                  <img
+                    src={url}
+                    alt={previewExercise.name || 'Exercise demo'}
+                    className="w-full max-h-[75vh] object-contain"
+                    data-testid="img-exercise-preview"
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -8022,73 +8089,6 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
         )}
         </div>
       </div>
-
-      {/* Exercise media preview popout — opens when the user clicks
-          "Preview" on any ExerciseCard. Plays MP4/WebM in <video>,
-          shows GIF/PNG/JPG in <img>, and falls back to a friendly
-          message when the exercise has no valid media path. Uses a
-          plain fixed overlay (not shadcn Dialog) so it's immune to
-          z-index or portal issues from other page overlays. */}
-      {previewExercise && (() => {
-        const url = previewExercise.gifUrl || '';
-        const isPlayable = !!url && (url.startsWith('/api/media/') || url.startsWith('http') || url.startsWith('/'));
-        const isVideo = /\.(mp4|webm|mov)(\?.*)?$/i.test(url);
-        const closePreview = () => setPreviewExercise(null);
-        return (
-          <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 p-4"
-            onClick={closePreview}
-            data-testid="dialog-exercise-preview"
-            role="dialog"
-            aria-modal="true"
-          >
-            <div
-              className="relative bg-zinc-900 border-2 border-[#FCD000] rounded-sm w-full max-w-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-[6px_6px_0px_0px_rgba(252,208,0,1)]"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between px-4 py-3 border-b-2 border-[#FCD000] bg-zinc-900">
-                <h3 className="text-[#FCD000] font-black uppercase tracking-wide text-base sm:text-lg pr-4 truncate">
-                  {previewExercise.name?.replace(/_/g, ' ')}
-                </h3>
-                <button
-                  type="button"
-                  onClick={closePreview}
-                  className="flex items-center gap-1 bg-[#FCD000] text-black px-3 py-1.5 rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-white font-black uppercase text-xs sm:text-sm shrink-0"
-                  data-testid="button-close-preview"
-                  aria-label="Close preview"
-                >
-                  <X className="w-4 h-4" />
-                  Close
-                </button>
-              </div>
-              <div className="flex-1 flex items-center justify-center bg-black overflow-hidden">
-                {!isPlayable ? (
-                  <p className="italic text-white/70 text-center px-6 py-10">
-                    No demo video is available for this exercise yet.
-                  </p>
-                ) : isVideo ? (
-                  <video
-                    src={url}
-                    controls
-                    autoPlay
-                    loop
-                    playsInline
-                    className="w-full max-h-[75vh]"
-                    data-testid="video-exercise-preview"
-                  />
-                ) : (
-                  <img
-                    src={url}
-                    alt={previewExercise.name || 'Exercise demo'}
-                    className="w-full max-h-[75vh] object-contain"
-                    data-testid="img-exercise-preview"
-                  />
-                )}
-              </div>
-            </div>
-          </div>
-        );
-      })()}
 
       {/* Written instructions modal — opens paused so the timer freezes
           while the user reads. Falls back to a friendly message when the
