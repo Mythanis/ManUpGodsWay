@@ -6939,10 +6939,19 @@ export default function Fitness() {
           plain fixed overlay (not shadcn Dialog) so it's immune to
           z-index or portal issues from other page overlays. */}
       {previewExercise && (() => {
-        const url = previewExercise.gifUrl || '';
+        const rawUrl = previewExercise.gifUrl
+          || (previewExercise as any).mediaFile
+          || (previewExercise as any).media_file
+          || (previewExercise as any).exerciseGifUrl
+          || (previewExercise as any).imageUrl
+          || '';
+        const url = String(rawUrl).trim();
         const isPlayable = !!url && (url.startsWith('/api/media/') || url.startsWith('http') || url.startsWith('/'));
         const isVideo = /\.(mp4|webm|mov)(\?.*)?$/i.test(url);
         const closePreview = () => setPreviewExercise(null);
+        if (!isPlayable) {
+          console.warn('[ExercisePreview] no playable URL for exercise', previewExercise);
+        }
         return (
           <div
             className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 p-4"
