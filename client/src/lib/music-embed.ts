@@ -36,7 +36,7 @@ export function validateProviderUrl(provider: MusicProvider, url: string): boole
 
 export function buildEmbedUrl(provider: MusicProvider, userUrl: string): string | null {
   try {
-    const parsed = new URL(normalizeUrl(userUrl));
+    const parsed = new URL(normalizeMusicUrl(userUrl));
 
     if (provider === 'spotify') {
       const parts = parsed.pathname.split('/').filter(Boolean);
