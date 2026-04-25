@@ -49,7 +49,7 @@ export const FITNESS_TOUR_STEPS: FitnessTourStep[] = [
     tab: "pre-built-plans",
     title: "Plans",
     description:
-      "Done-for-you fitness plans built by our coach, plus a section to generate or view AI-recommended plans tailored to your goals. Pick one up and you've got a full multi-week program ready to go without building anything from scratch.",
+      "Generate or view AI-recommended fitness plans tailored to your goals. Pick one up and you've got a full multi-week program ready to go without building anything from scratch.",
   },
   {
     tab: "my-plans",
