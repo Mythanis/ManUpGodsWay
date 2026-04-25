@@ -874,19 +874,37 @@ export default function Profile() {
                 </div>
 
                 {/* URL input — shown once provider is chosen */}
-                {musicDraftProvider && (
-                  <div className="space-y-2 mb-4">
-                    <label className="text-xs font-black text-white/70 uppercase tracking-widest">Playlist / Station URL</label>
-                    <Input
-                      value={musicDraftUrl}
-                      onChange={(e) => { setMusicDraftUrl(e.target.value); setMusicUrlError(''); }}
-                      placeholder={PROVIDER_PLACEHOLDERS[musicDraftProvider]}
-                      className="bg-white/5 border-white/20 text-white placeholder:text-white/30 text-sm"
-                    />
-                    {musicUrlError && <p className="text-xs text-red-400">{musicUrlError}</p>}
-                    <p className="text-xs text-gray-500">Paste the URL directly from {PROVIDER_LABELS[musicDraftProvider]}</p>
-                  </div>
-                )}
+                {musicDraftProvider && (() => {
+                  const draftPreviewSrc =
+                    musicDraftUrl.trim() && validateProviderUrl(musicDraftProvider, musicDraftUrl.trim())
+                      ? buildEmbedUrl(musicDraftProvider, musicDraftUrl.trim())
+                      : null;
+                  return (
+                    <div className="space-y-2 mb-4">
+                      <label className="text-xs font-black text-white/70 uppercase tracking-widest">Playlist / Station URL</label>
+                      <Input
+                        value={musicDraftUrl}
+                        onChange={(e) => { setMusicDraftUrl(e.target.value); setMusicUrlError(''); }}
+                        placeholder={PROVIDER_PLACEHOLDERS[musicDraftProvider]}
+                        className="bg-white/5 border-white/20 text-white placeholder:text-white/30 text-sm"
+                      />
+                      {musicUrlError && <p className="text-xs text-red-400">{musicUrlError}</p>}
+                      <p className="text-xs text-gray-500">Paste the URL directly from {PROVIDER_LABELS[musicDraftProvider]}</p>
+                      {draftPreviewSrc && (
+                        <div className="mt-1">
+                          <p className="text-xs text-white/40 uppercase tracking-widest mb-1">Preview</p>
+                          <iframe
+                            src={draftPreviewSrc}
+                            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                            loading="lazy"
+                            style={{ height: musicDraftProvider === 'soundcloud' ? 166 : 152, border: 'none', width: '100%', borderRadius: 4 }}
+                            title="Music player preview"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 <div className="flex gap-2">
                   <Button

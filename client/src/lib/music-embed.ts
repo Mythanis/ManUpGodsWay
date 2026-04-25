@@ -1,4 +1,6 @@
-export type MusicProvider = 'spotify' | 'apple' | 'iheart' | 'soundcloud';
+import { type MusicProvider } from "@shared/schema";
+
+export type { MusicProvider };
 
 export const PROVIDER_LABELS: Record<MusicProvider, string> = {
   spotify: 'Spotify',
@@ -43,25 +45,21 @@ export function buildEmbedUrl(provider: MusicProvider, userUrl: string): string 
     const parsed = new URL(userUrl);
 
     if (provider === 'spotify') {
-      // open.spotify.com/playlist/ID?si=... → open.spotify.com/embed/playlist/ID?utm_source=generator
       const parts = parsed.pathname.split('/').filter(Boolean);
       if (parts.length < 2) return null;
       return `https://open.spotify.com/embed/${parts.join('/')}?utm_source=generator`;
     }
 
     if (provider === 'apple') {
-      // music.apple.com/us/playlist/... → embed.music.apple.com/us/playlist/...
       return `https://embed.music.apple.com${parsed.pathname}`;
     }
 
     if (provider === 'iheart') {
-      // Append ?embed=true (or &embed=true) to the existing URL
       const sep = parsed.search ? '&' : '?';
       return `${parsed.origin}${parsed.pathname}${parsed.search}${sep}embed=true`;
     }
 
     if (provider === 'soundcloud') {
-      // SoundCloud widget player wraps any soundcloud.com URL
       const encoded = encodeURIComponent(userUrl);
       return `https://w.soundcloud.com/player/?url=${encoded}&color=%23FCD000&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true`;
     }

@@ -19,6 +19,11 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
+// Music provider enum — shared between frontend and backend
+export const MUSIC_PROVIDERS = ['spotify', 'apple', 'iheart', 'soundcloud'] as const;
+export const musicProviderEnum = z.enum(MUSIC_PROVIDERS);
+export type MusicProvider = z.infer<typeof musicProviderEnum>;
+
 // Session storage table (required for Replit Auth)
 export const sessions = pgTable(
   "sessions",

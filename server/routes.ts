@@ -53,7 +53,9 @@ import {
   insertFitnessPostSchema,
   insertExerciseSchema,
   insertHealthMetricSchema,
-  type HealthMetricType
+  type HealthMetricType,
+  musicProviderEnum,
+  MUSIC_PROVIDERS
 } from "@shared/schema";
 import { z, ZodError } from "zod";
 import { devotionalNotificationService } from "./devotionalNotificationService";
@@ -521,7 +523,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const { provider, url } = req.body;
 
-      const VALID_PROVIDERS = ['spotify', 'apple', 'iheart', 'soundcloud'];
       const PROVIDER_HOSTS: Record<string, string[]> = {
         spotify: ['open.spotify.com'],
         apple: ['music.apple.com'],
@@ -535,8 +536,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(updatedUser);
       }
 
-      if (!VALID_PROVIDERS.includes(provider)) {
-        return res.status(400).json({ message: 'Invalid music provider' });
+      const providerParsed = musicProviderEnum.safeParse(provider);
+      if (!providerParsed.success) {
+        return res.status(400).json({ message: `Invalid music provider. Must be one of: ${MUSIC_PROVIDERS.join(', ')}` });
       }
 
       if (!url || typeof url !== 'string') {
@@ -551,12 +553,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Invalid URL format' });
       }
 
-      const allowedHosts = PROVIDER_HOSTS[provider];
+      const allowedHosts = PROVIDER_HOSTS[providerParsed.data];
       if (!allowedHosts.includes(parsedUrl.hostname)) {
-        return res.status(400).json({ message: `URL must be from ${provider === 'spotify' ? 'open.spotify.com' : provider === 'apple' ? 'music.apple.com' : provider === 'iheart' ? 'iheart.com' : 'soundcloud.com'}` });
+        return res.status(400).json({ message: `URL must be from ${PROVIDER_HOSTS[providerParsed.data]?.[0] ?? providerParsed.data}` });
       }
 
-      const updatedUser = await storage.updateUserMusicSettings(userId, provider, url);
+      const updatedUser = await storage.updateUserMusicSettings(userId, providerParsed.data, url);
       res.json(updatedUser);
     } catch (error) {
       console.error("Error updating music settings:", error);

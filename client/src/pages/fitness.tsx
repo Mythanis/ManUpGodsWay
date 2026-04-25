@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, type User as AuthUser } from "@/hooks/useAuth";
 import { useTour } from "@/contexts/TourContext";
 import { apiRequest } from "@/lib/queryClient";
 import { type MusicProvider, buildEmbedUrl } from "@/lib/music-embed";
@@ -7079,10 +7079,10 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
   };
 
   // Fetch user data to get music streaming settings (cached from auth query — no extra network call)
-  const { data: workoutUser } = useQuery<any>({ queryKey: ['/api/auth/user'], staleTime: Infinity });
+  const { data: workoutUser } = useQuery<AuthUser>({ queryKey: ['/api/auth/user'], staleTime: Infinity });
   const musicProvider = workoutUser?.musicProvider as MusicProvider | null | undefined;
-  const musicEmbedUrl = workoutUser?.musicEmbedUrl as string | null | undefined;
-  const workoutMusicSrc = musicProvider && musicEmbedUrl ? buildEmbedUrl(musicProvider, musicEmbedUrl) : null;
+  const musicEmbedUrl = workoutUser?.musicEmbedUrl;
+  const workoutMusicSrc = musicProvider && musicEmbedUrl ? buildEmbedUrl(musicProvider, musicEmbedUrl as string) : null;
   const [instructionsOpen, setInstructionsOpen] = useState(false);
   // Adjust-exercise dialog state. Lets the user tweak sets / reps /
   // rest period mid-workout without leaving the player. Pauses the
