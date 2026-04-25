@@ -7077,6 +7077,17 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
   // For unilateral exercises: tracks which side is currently working.
   // Resets to 'right' at the start of every new set / exercise.
   const [currentSide, setCurrentSide] = useState<'right' | 'left'>('right');
+
+  // ── Rep counter (for non-time-based sets) ────────────────────────────────
+  // repCount: how many reps have been completed this set (0-indexed → display as repCount+1)
+  // videoDuration: natural loop length of the current exercise video (populated on loadedmetadata)
+  // effectiveTempo: seconds-per-rep (video duration adjusted by +/- override)
+  const [repCount, setRepCount] = useState(0);
+  const [videoDuration, setVideoDuration] = useState<number | null>(null);
+  const [effectiveTempo, setEffectiveTempo] = useState<number>(3.0);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const TEMPO_OVERRIDE_PREFIX = 'tempoOverride_';
+
   // Pause flag — when true the tick interval is a no-op so timers
   // freeze in place. Toggled by the pause button, by tapping the
   // exercise media or timer, and forced on whenever the written-
@@ -7459,11 +7470,69 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
     }
   };
 
+  // numReps: integer rep count for this exercise (0 when time-based or unparseable)
+  const numReps = !isTimeBased
+    ? (parseInt(String(currentExercise?.reps ?? '0'), 10) || 0)
+    : 0;
+
+  // Load effectiveTempo whenever the exercise changes.
+  // Priority: localStorage override → video natural duration → 3s default.
+  useEffect(() => {
+    if (!exerciseLookupName) return;
+    try {
+      const stored = localStorage.getItem(`${TEMPO_OVERRIDE_PREFIX}${exerciseLookupName}`);
+      if (stored) {
+        const parsed = parseFloat(stored);
+        if (parsed >= 1 && parsed <= 8) { setEffectiveTempo(parsed); return; }
+      }
+    } catch { /* ignore */ }
+    // Fall back to video natural duration if available, else 3s
+    setEffectiveTempo(videoDuration ?? 3.0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exerciseLookupName]);
+
+  // Update playbackRate whenever effectiveTempo or videoDuration changes.
+  useEffect(() => {
+    if (!videoRef.current || !videoDuration || videoDuration <= 0 || !isVideo) return;
+    videoRef.current.playbackRate = videoDuration / effectiveTempo;
+  }, [effectiveTempo, videoDuration, isVideo]);
+
+  // Reset repCount when exercise, set, or phase changes (new set starts fresh).
+  useEffect(() => {
+    setRepCount(0);
+  }, [exerciseIdx, setIdx, phase]);
+
+  // Reset videoDuration when moving to a new exercise so the next video's
+  // loadedmetadata event sets the correct tempo baseline.
+  useEffect(() => {
+    setVideoDuration(null);
+  }, [exerciseIdx]);
+
+  // Rep-counting timer: fires once per effectiveTempo seconds during rep-based work.
+  // In timed pacing, auto-advances when the target count is hit.
+  useEffect(() => {
+    if (phase !== 'work' || isTimeBased || awaitingStart || paused || numReps <= 0) return;
+    const id = setInterval(() => {
+      setRepCount(c => {
+        const next = c + 1;
+        if (next >= numReps && pacingMode === 'timed') {
+          // Give React one tick to re-render the counter before advancing
+          setTimeout(() => advancePhase(), 200);
+        }
+        return next;
+      });
+    }, effectiveTempo * 1000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, isTimeBased, exerciseIdx, setIdx, paused, awaitingStart, pacingMode, effectiveTempo, numReps]);
+
   // Tick timer
   useEffect(() => {
     if (phase === 'done') return;
     if (awaitingStart) return; // Pre-start gate — waiting for user to tap Begin
     if (paused) return; // Frozen — pause button or instructions modal open
+    // Rep-based work phase is driven by the rep counter above — skip countdown.
+    if (!isTimeBased && phase === 'work') return;
     // In manual mode, once the timer parks at 0 there's nothing left to
     // tick — bail to avoid pointless 1Hz wake-ups.
     if (pacingMode === 'manual' && secondsLeft === 0 && phase !== 'countdown') return;
@@ -7965,10 +8034,15 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
             </h2>
             <p className="text-[#FCD000] font-bold uppercase tracking-wide mb-6">
               Set {setIdx + 1} of {totalSets}
-              {!isTimeBased && phase === 'work' && currentExercise?.reps && ` • ${currentExercise.reps} reps`}
+              {!isTimeBased && numReps > 0 && phase === 'work'
+                ? <span className="ml-1">• Rep {Math.min(repCount + 1, numReps)} of {numReps}</span>
+                : (!isTimeBased && currentExercise?.reps && phase === 'work'
+                    ? ` • ${currentExercise.reps} reps`
+                    : null)
+              }
             </p>
 
-            {mediaUrl && (
+            {mediaUrl && (<>
               <div className="relative flex items-center gap-2 md:gap-4 mb-6">
                 {/* Manual-mode previous-exercise arrow. Hidden on the
                     very first exercise since previous() would just
@@ -7996,6 +8070,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                 {isVideo ? (
                   <video
                     key={mediaUrl}
+                    ref={videoRef}
                     src={mediaUrl}
                     autoPlay
                     loop
@@ -8004,6 +8079,18 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                     preload="auto"
                     className="w-full h-full object-contain pointer-events-none"
                     data-testid="video-current-exercise"
+                    onLoadedMetadata={() => {
+                      const dur = videoRef.current?.duration;
+                      if (dur && isFinite(dur) && dur > 0) {
+                        setVideoDuration(dur);
+                        // If no localStorage override, use the actual video duration as tempo
+                        const key = `${TEMPO_OVERRIDE_PREFIX}${exerciseLookupName}`;
+                        try {
+                          const stored = localStorage.getItem(key);
+                          if (!stored) setEffectiveTempo(dur);
+                        } catch { setEffectiveTempo(dur); }
+                      }
+                    }}
                   />
                 ) : (
                   <img
@@ -8036,7 +8123,41 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                   </button>
                 )}
               </div>
-            )}
+
+              {/* ── Tempo nudge control ───────────────────────────────────────
+                  Visible during rep-based work only. Lets users speed up or
+                  slow down the rep cadence by 0.25s per tap. The choice
+                  persists in localStorage across sessions. */}
+              {!isTimeBased && phase === 'work' && numReps > 0 && !awaitingStart && (
+                <div className="flex items-center gap-2 mt-2 mb-1" data-testid="tempo-control">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = Math.max(1.0, Math.round((effectiveTempo - 0.25) * 4) / 4);
+                      setEffectiveTempo(next);
+                      try { localStorage.setItem(`${TEMPO_OVERRIDE_PREFIX}${exerciseLookupName}`, String(next)); } catch { /* ignore */ }
+                    }}
+                    aria-label="Slow down tempo"
+                    className="w-7 h-7 rounded-sm bg-white/10 border border-white/30 text-white font-black text-base flex items-center justify-center hover:bg-white/20 active:scale-95 transition"
+                    data-testid="button-tempo-slower"
+                  >–</button>
+                  <span className="text-white/70 text-[10px] font-bold uppercase tracking-widest min-w-[52px] text-center">
+                    {effectiveTempo.toFixed(2)}s/rep
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = Math.min(8.0, Math.round((effectiveTempo + 0.25) * 4) / 4);
+                      setEffectiveTempo(next);
+                      try { localStorage.setItem(`${TEMPO_OVERRIDE_PREFIX}${exerciseLookupName}`, String(next)); } catch { /* ignore */ }
+                    }}
+                    aria-label="Speed up tempo"
+                    className="w-7 h-7 rounded-sm bg-white/10 border border-white/30 text-white font-black text-base flex items-center justify-center hover:bg-white/20 active:scale-95 transition"
+                    data-testid="button-tempo-faster"
+                  >+</button>
+                </div>
+              )}
+            </>)}
             {!mediaUrl && awaitingStart && (
               <div
                 role="button"

@@ -1970,6 +1970,10 @@ export const exercises = pgTable("exercises", {
   //               One countdown, reps shown as per-side count.
   // DB check constraint (exercises_sidedness_check) enforces valid values.
   sidedness: varchar("sidedness").notNull().default("bilateral").$type<'bilateral' | 'unilateral' | 'alternating'>(),
+  // Seconds per rep for the guided workout player's rep counter.
+  // Seeded from ffprobe duration of the demo video (one loop = one rep).
+  // Defaults to 3.0s when a video can't be probed.
+  tempoSec: real("tempo_sec").default(3.0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
