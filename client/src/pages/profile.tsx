@@ -836,6 +836,13 @@ export default function Profile() {
                     />
                   );
                 })()}
+                {user.musicProvider === 'spotify' && (
+                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-sm p-2 mt-2">
+                    <p className="text-xs text-yellow-300 leading-relaxed">
+                      <span className="font-bold">Spotify limitation:</span> Embeds play 30-second previews unless you're signed into Spotify in this same browser (with Premium and third-party cookies allowed). For full-length tracks, switch to <span className="font-bold">SoundCloud</span>.
+                    </p>
+                  </div>
+                )}
                 <p className="text-xs text-gray-500 mt-2 text-center">This player will appear at the top of your workout when you hit Begin</p>
               </div>
             ) : (
@@ -890,6 +897,13 @@ export default function Profile() {
                       />
                       {musicUrlError && <p className="text-xs text-red-400">{musicUrlError}</p>}
                       <p className="text-xs text-gray-500">Paste the URL directly from {PROVIDER_LABELS[musicDraftProvider]}</p>
+                      {musicDraftProvider === 'spotify' && (
+                        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-sm p-2 mt-2">
+                          <p className="text-xs text-yellow-300 leading-relaxed">
+                            <span className="font-bold">Heads up:</span> Spotify embeds only play 30-second previews unless you're signed into Spotify in this same browser (with Premium and third-party cookies allowed). For uninterrupted full-track playback in this app, <span className="font-bold">SoundCloud</span> works best.
+                          </p>
+                        </div>
+                      )}
                       {draftPreviewSrc && (
                         <div className="mt-1">
                           <p className="text-xs text-white/40 uppercase tracking-widest mb-1">Preview</p>
