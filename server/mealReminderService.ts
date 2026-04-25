@@ -58,7 +58,7 @@ class MealReminderService {
       try {
         // Get user timezone from their profile
         const user = await storage.getUser(reminder.userId);
-        const timezone = (user as any)?.timezone || 'UTC';
+        const timezone = user?.timezone || 'UTC';
         const localTime = this.getUserLocalTime(now, timezone);
 
         if (localTime !== reminder.time) continue;

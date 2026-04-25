@@ -17589,6 +17589,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Bulk-approve a list of reviews — marks them as permanently reviewed (needsReview=false)
+  // so they no longer appear in the corrections queue. The AI corrections were already
+  // applied to exercises.instructions when the review row was created; this just records
+  // the admin sign-off.
+  app.post('/api/admin/exercise-instruction-reviews/bulk-approve', isAuthenticated, requireAdmin, async (req: any, res: any) => {
+    try {
+      const rawIds = Array.isArray(req.body?.ids) ? req.body.ids : [];
+      const ids = Array.from(new Set(
+        rawIds.map((x: any) => Number(x)).filter((n: number) => Number.isFinite(n) && n > 0)
+      )) as number[];
+
+      if (ids.length === 0) {
+        return res.status(400).json({ message: 'No valid review IDs provided' });
+      }
+      if (ids.length > 500) {
+        return res.status(400).json({ message: 'Cannot approve more than 500 reviews at once' });
+      }
+
+      const result = await db
+        .update(schema.exerciseInstructionReviews)
+        .set({ needsReview: false, status: 'approved' })
+        .where(inArray(schema.exerciseInstructionReviews.id, ids))
+        .returning({ id: schema.exerciseInstructionReviews.id });
+
+      res.json({
+        message: `Approved ${result.length} review${result.length === 1 ? '' : 's'}`,
+        approvedCount: result.length,
+      });
+    } catch (err: any) {
+      console.error('[exercise-instruction-reviews] bulk-approve error:', err.message);
+      res.status(500).json({ message: err.message });
+    }
+  });
+
   app.post('/api/admin/exercise-instruction-reviews/:id/requeue', isAuthenticated, requireAdmin, async (req: any, res: any) => {
     try {
       const id = Number(req.params.id);

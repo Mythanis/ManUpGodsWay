@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle, RotateCcw, RefreshCw, ChevronLeft, ChevronRight, Search, AlertTriangle, Pencil, Save, X, Filter } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { CheckCircle, RotateCcw, RefreshCw, ChevronLeft, ChevronRight, Search, AlertTriangle, Pencil, Save, X, Filter, CheckCheck } from "lucide-react";
 
 type View = "corrections" | "matched" | "rejected";
 type ConfidenceValue = "high" | "medium" | "low";
@@ -187,6 +188,7 @@ export default function ExerciseInstructionReviews() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(0);
   const [keptIds, setKeptIds] = useState<Set<number>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editDraft, setEditDraft] = useState<string>("");
@@ -206,6 +208,7 @@ export default function ExerciseInstructionReviews() {
     setSearch("");
     setDebouncedSearch("");
     setKeptIds(new Set());
+    setSelectedIds(new Set());
     setExpandedId(null);
     setConfidenceFilter("all");
   };
@@ -272,6 +275,33 @@ export default function ExerciseInstructionReviews() {
     },
   });
 
+  const bulkApproveMutation = useMutation({
+    mutationFn: (ids: number[]) =>
+      apiRequest("POST", "/api/admin/exercise-instruction-reviews/bulk-approve", { ids }),
+    onSuccess: async (res: any) => {
+      let approvedCount = selectedIds.size;
+      try {
+        const data = await res.json();
+        if (typeof data?.approvedCount === "number") approvedCount = data.approvedCount;
+      } catch {
+        // body already consumed or not JSON — fall back to selectedIds.size
+      }
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/exercise-instruction-reviews"] });
+      toast({
+        title: "Reviews Approved",
+        description: `Marked ${approvedCount} review${approvedCount === 1 ? "" : "s"} as permanently reviewed.`,
+      });
+      setSelectedIds(new Set());
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Bulk Approve Failed",
+        description: err.message || "Could not approve reviews",
+        variant: "destructive",
+      });
+    },
+  });
+
   const requeueMutation = useMutation({
     mutationFn: (id: number) =>
       apiRequest("POST", `/api/admin/exercise-instruction-reviews/${id}/requeue`),
@@ -296,10 +326,43 @@ export default function ExerciseInstructionReviews() {
     if (expandedId === id) setExpandedId(null);
   };
 
+  const toggleSelected = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   const rows = data?.rows ?? [];
   const total = data?.total ?? 0;
   const visibleRows = view === "corrections" ? rows.filter((r) => !keptIds.has(r.id)) : rows;
   const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  const pageIds = visibleRows.map((r) => r.id);
+  const selectedOnPageCount = pageIds.filter((id) => selectedIds.has(id)).length;
+  const allOnPageSelected = pageIds.length > 0 && selectedOnPageCount === pageIds.length;
+  const someOnPageSelected = selectedOnPageCount > 0 && !allOnPageSelected;
+
+  const togglePageSelection = () => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (allOnPageSelected) {
+        pageIds.forEach((id) => next.delete(id));
+      } else {
+        pageIds.forEach((id) => next.add(id));
+      }
+      return next;
+    });
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const handleBulkApprove = () => {
+    if (selectedIds.size === 0) return;
+    bulkApproveMutation.mutate(Array.from(selectedIds));
+  };
 
   return (
     <div className="space-y-4">
@@ -364,6 +427,55 @@ export default function ExerciseInstructionReviews() {
         </p>
       )}
 
+      {/* Bulk-approve toolbar (corrections view only) */}
+      {view === "corrections" && !isLoading && visibleRows.length > 0 && (
+        <div className="sticky top-0 z-10 bg-white border-2 border-black rounded p-2 flex items-center gap-3 flex-wrap shadow-sm">
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <Checkbox
+              checked={allOnPageSelected ? true : someOnPageSelected ? "indeterminate" : false}
+              onCheckedChange={togglePageSelection}
+              data-testid="checkbox-select-all-page"
+            />
+            <span className="text-xs font-bold">
+              {allOnPageSelected ? "Deselect page" : "Select all on page"}
+            </span>
+          </label>
+
+          <span className="text-xs text-gray-500">
+            {selectedIds.size} selected{selectedIds.size > 0 ? ` · ${selectedOnPageCount} on this page` : ""}
+          </span>
+
+          <div className="flex-1" />
+
+          {selectedIds.size > 0 && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 px-2 text-xs border-2 border-gray-400 hover:bg-gray-100"
+              onClick={clearSelection}
+              disabled={bulkApproveMutation.isPending}
+              data-testid="button-clear-selection"
+            >
+              <X className="h-3 w-3 mr-1" />
+              Clear
+            </Button>
+          )}
+
+          <Button
+            size="sm"
+            className="h-7 px-3 text-xs bg-green-600 hover:bg-green-700 text-white border-2 border-green-700 disabled:opacity-50"
+            onClick={handleBulkApprove}
+            disabled={selectedIds.size === 0 || bulkApproveMutation.isPending}
+            data-testid="button-bulk-approve"
+          >
+            <CheckCheck className="h-3 w-3 mr-1" />
+            {bulkApproveMutation.isPending
+              ? "Approving…"
+              : `Approve ${selectedIds.size || ""} selected`}
+          </Button>
+        </div>
+      )}
+
       {/* Loading */}
       {isLoading && (
         <div className="flex items-center justify-center py-12">
@@ -390,13 +502,28 @@ export default function ExerciseInstructionReviews() {
             (requeueMutation.isPending && requeueMutation.variables === row.id) ||
             (editMutation.isPending && editMutation.variables?.id === row.id);
 
+          const isSelected = selectedIds.has(row.id);
+
           return (
-            <Card key={row.id} className={`border-2 ${isBusy ? "opacity-60" : ""}`}>
+            <Card key={row.id} className={`border-2 ${isBusy ? "opacity-60" : ""} ${isSelected ? "ring-2 ring-green-500 border-green-500" : ""}`}>
               <CardHeader
                 className="pb-2 cursor-pointer"
                 onClick={() => setExpandedId(isExpanded ? null : row.id)}
               >
                 <div className="flex items-start justify-between gap-3">
+                  {view === "corrections" && (
+                    <div
+                      className="pt-0.5"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleSelected(row.id)}
+                        disabled={isBusy || bulkApproveMutation.isPending}
+                        data-testid={`checkbox-row-${row.id}`}
+                      />
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <CardTitle className="text-sm font-bold truncate">

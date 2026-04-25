@@ -87,6 +87,7 @@ export const users = pgTable("users", {
   musicProvider: varchar("music_provider"), // spotify, apple, iheart, soundcloud
   musicEmbedUrl: text("music_embed_url"), // user-pasted URL to embed
   musicAutoPlay: boolean("music_auto_play").default(false), // auto-start music when workout begins
+  timezone: varchar("timezone").default("UTC"), // IANA timezone for reminders, e.g. "America/New_York"
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
