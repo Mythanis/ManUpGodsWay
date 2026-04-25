@@ -7475,8 +7475,18 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
     ? (parseInt(String(currentExercise?.reps ?? '0'), 10) || 0)
     : 0;
 
+  // Category-aware default tempo: compound/heavy lifts get more time per rep,
+  // isolation/light exercises get less. Falls back to 3s if unknown.
+  const getCategoryDefaultTempo = (): number => {
+    const name = (currentExercise?.exerciseName ?? '').toLowerCase();
+    const cat  = (currentExercise?.category ?? '').toLowerCase();
+    if (/squat|deadlift|bench|press|row|pull.up|clean|snatch|compound/i.test(name + cat)) return 4.0;
+    if (/curl|lateral|fly|extension|raise|isolation/i.test(name + cat)) return 2.5;
+    return 3.0;
+  };
+
   // Load effectiveTempo whenever the exercise changes.
-  // Priority: localStorage override → video natural duration → 3s default.
+  // Priority: localStorage override → video natural duration → DB tempo_sec → category default.
   useEffect(() => {
     if (!exerciseLookupName) return;
     try {
@@ -7486,8 +7496,15 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
         if (parsed >= 1 && parsed <= 8) { setEffectiveTempo(parsed); return; }
       }
     } catch { /* ignore */ }
-    // Fall back to video natural duration if available, else 3s
-    setEffectiveTempo(videoDuration ?? 3.0);
+    // Video duration is set asynchronously via onLoadedMetadata; skip here
+    // and let that handler update tempo once metadata is known.
+    // Use DB tempo if it differs from the bare default, else use category default.
+    const dbTempo = currentExercise?.tempoSec;
+    if (dbTempo && dbTempo > 0 && dbTempo !== 3.0) {
+      setEffectiveTempo(dbTempo);
+    } else {
+      setEffectiveTempo(getCategoryDefaultTempo());
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exerciseLookupName]);
 
@@ -8130,6 +8147,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                   persists in localStorage across sessions. */}
               {!isTimeBased && phase === 'work' && numReps > 0 && !awaitingStart && (
                 <div className="flex items-center gap-2 mt-2 mb-1" data-testid="tempo-control">
+                  {/* "–" reduces seconds-per-rep → cadence gets FASTER */}
                   <button
                     type="button"
                     onClick={() => {
@@ -8137,13 +8155,14 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                       setEffectiveTempo(next);
                       try { localStorage.setItem(`${TEMPO_OVERRIDE_PREFIX}${exerciseLookupName}`, String(next)); } catch { /* ignore */ }
                     }}
-                    aria-label="Slow down tempo"
+                    aria-label="Faster cadence (less time per rep)"
                     className="w-7 h-7 rounded-sm bg-white/10 border border-white/30 text-white font-black text-base flex items-center justify-center hover:bg-white/20 active:scale-95 transition"
-                    data-testid="button-tempo-slower"
+                    data-testid="button-tempo-faster"
                   >–</button>
                   <span className="text-white/70 text-[10px] font-bold uppercase tracking-widest min-w-[52px] text-center">
                     {effectiveTempo.toFixed(2)}s/rep
                   </span>
+                  {/* "+" increases seconds-per-rep → cadence gets SLOWER */}
                   <button
                     type="button"
                     onClick={() => {
@@ -8151,9 +8170,9 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                       setEffectiveTempo(next);
                       try { localStorage.setItem(`${TEMPO_OVERRIDE_PREFIX}${exerciseLookupName}`, String(next)); } catch { /* ignore */ }
                     }}
-                    aria-label="Speed up tempo"
+                    aria-label="Slower cadence (more time per rep)"
                     className="w-7 h-7 rounded-sm bg-white/10 border border-white/30 text-white font-black text-base flex items-center justify-center hover:bg-white/20 active:scale-95 transition"
-                    data-testid="button-tempo-faster"
+                    data-testid="button-tempo-slower"
                   >+</button>
                 </div>
               )}
@@ -8181,10 +8200,25 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
               className="cursor-pointer select-none"
               data-testid="timer-tap-to-pause"
             >
-              <div className="text-8xl md:text-9xl font-black text-[#FCD000] tabular-nums mb-2" data-testid="text-timer">
-                {secondsLeft}
-              </div>
-              <p className="text-white/50 text-sm uppercase tracking-widest font-bold mb-2">seconds</p>
+              {(!isTimeBased && phase === 'work' && numReps > 0) ? (
+                /* Rep-based work: show live rep counter as the primary display */
+                <>
+                  <div className="text-8xl md:text-9xl font-black text-[#FCD000] tabular-nums mb-2" data-testid="text-timer">
+                    {Math.min(repCount + 1, numReps)}
+                  </div>
+                  <p className="text-white/50 text-sm uppercase tracking-widest font-bold mb-2">
+                    of {numReps} reps
+                  </p>
+                </>
+              ) : (
+                /* Time-based or non-work phases: show countdown */
+                <>
+                  <div className="text-8xl md:text-9xl font-black text-[#FCD000] tabular-nums mb-2" data-testid="text-timer">
+                    {secondsLeft}
+                  </div>
+                  <p className="text-white/50 text-sm uppercase tracking-widest font-bold mb-2">seconds</p>
+                </>
+              )}
               <p className="text-white/30 text-[10px] uppercase tracking-widest font-bold mb-6">Tap to {paused ? 'resume' : 'pause'}</p>
             </div>
 
