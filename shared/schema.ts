@@ -19,25 +19,6 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
-// Music provider enum — shared between frontend and backend
-export const MUSIC_PROVIDERS = ['spotify', 'apple', 'iheart', 'soundcloud'] as const;
-export const musicProviderEnum = z.enum(MUSIC_PROVIDERS);
-export type MusicProvider = z.infer<typeof musicProviderEnum>;
-
-export const MUSIC_PROVIDER_HOSTS: Record<MusicProvider, string[]> = {
-  spotify: ['open.spotify.com'],
-  apple: ['music.apple.com'],
-  iheart: ['www.iheart.com', 'iheart.com'],
-  soundcloud: ['soundcloud.com', 'www.soundcloud.com', 'm.soundcloud.com', 'on.soundcloud.com'],
-};
-
-export function normalizeMusicUrl(url: string): string {
-  const trimmed = url.trim();
-  if (!trimmed) return trimmed;
-  if (/^https?:\/\//i.test(trimmed)) return trimmed;
-  return `https://${trimmed}`;
-}
-
 // Session storage table (required for Replit Auth)
 export const sessions = pgTable(
   "sessions",
@@ -84,9 +65,6 @@ export const users = pgTable("users", {
   hasFitnessAccess: boolean("has_fitness_access").default(false),
   hasCompletedTour: boolean("has_completed_tour").default(false),
   conversionNudgesSent: jsonb("conversion_nudges_sent").default(sql`'{}'::jsonb`),
-  musicProvider: varchar("music_provider"), // spotify, apple, iheart, soundcloud
-  musicEmbedUrl: text("music_embed_url"), // user-pasted URL to embed
-  musicAutoPlay: boolean("music_auto_play").default(false), // auto-start music when workout begins
   timezone: varchar("timezone").default("UTC"), // IANA timezone for reminders, e.g. "America/New_York"
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

@@ -14,7 +14,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth, type User as AuthUser } from "@/hooks/useAuth";
 import { useTour } from "@/contexts/TourContext";
 import { apiRequest } from "@/lib/queryClient";
-import { type MusicProvider, buildEmbedUrl } from "@/lib/music-embed";
 import { BackButton } from "@/components/BackButton";
 import { 
   Dumbbell, 
@@ -7078,12 +7077,6 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
     setPaused(p => !p);
   };
 
-  // Fetch user data to get music streaming settings (cached from auth query — no extra network call)
-  const { data: workoutUser } = useQuery<AuthUser>({ queryKey: ['/api/auth/user'], staleTime: Infinity });
-  const musicProvider = workoutUser?.musicProvider as MusicProvider | null | undefined;
-  const musicEmbedUrl = workoutUser?.musicEmbedUrl;
-  const musicAutoPlay = workoutUser?.musicAutoPlay ?? false;
-  const workoutMusicSrc = musicProvider && musicEmbedUrl ? buildEmbedUrl(musicProvider, musicEmbedUrl as string, musicAutoPlay) : null;
   const [instructionsOpen, setInstructionsOpen] = useState(false);
   // Adjust-exercise dialog state. Lets the user tweak sets / reps /
   // rest period mid-workout without leaving the player. Pauses the
@@ -7674,21 +7667,6 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
           </Button>
         </div>
       </div>
-
-      {/* Music embed strip — shown once user taps Begin; stays mounted for the whole workout
-          so playback is not interrupted between exercises. Countdown beeps play on top of
-          music via Web Audio API, which the browser audio mixer handles natively. */}
-      {!awaitingStart && workoutMusicSrc && (
-        <div className="border-b-2 border-[#FCD000]/30 bg-black/80">
-          <iframe
-            src={workoutMusicSrc}
-            className="w-full"
-            style={{ height: musicProvider === 'soundcloud' ? 116 : 80, border: 'none', display: 'block' }}
-            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-            title="Workout music player"
-          />
-        </div>
-      )}
 
       {/* Body */}
       <div className="flex-1 overflow-y-auto">
