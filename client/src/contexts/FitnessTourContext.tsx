@@ -77,9 +77,12 @@ export const FITNESS_TOUR_STEPS: FitnessTourStep[] = [
   },
 ];
 
+const TOUR_STEP_KEY = "fitnessTourLastStep";
+
 interface FitnessTourContextType {
   isFitnessTourActive: boolean;
   fitnessTourStep: number;
+  savedTourStep: number | null;
   targetTab: FitnessTab | null;
   startFitnessTour: () => void;
   nextFitnessStep: () => void;
@@ -90,6 +93,7 @@ interface FitnessTourContextType {
 const FitnessTourContext = createContext<FitnessTourContextType>({
   isFitnessTourActive: false,
   fitnessTourStep: 0,
+  savedTourStep: null,
   targetTab: null,
   startFitnessTour: () => {},
   nextFitnessStep: () => {},
@@ -100,6 +104,16 @@ const FitnessTourContext = createContext<FitnessTourContextType>({
 export function FitnessTourProvider({ children }: { children: React.ReactNode }) {
   const [isFitnessTourActive, setIsFitnessTourActive] = useState(false);
   const [fitnessTourStep, setFitnessTourStep] = useState(0);
+  const [savedTourStep, setSavedTourStep] = useState<number | null>(() => {
+    try {
+      const raw = localStorage.getItem(TOUR_STEP_KEY);
+      if (raw !== null) {
+        const parsed = parseInt(raw, 10);
+        if (!isNaN(parsed)) return parsed;
+      }
+    } catch {}
+    return null;
+  });
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
 
@@ -111,6 +125,10 @@ export function FitnessTourProvider({ children }: { children: React.ReactNode })
     setIsFitnessTourActive(false);
     setFitnessTourStep(0);
     try {
+      localStorage.removeItem(TOUR_STEP_KEY);
+      setSavedTourStep(null);
+    } catch {}
+    try {
       await apiRequest("POST", "/api/user/complete-fitness-tour");
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
     } catch {
@@ -118,10 +136,11 @@ export function FitnessTourProvider({ children }: { children: React.ReactNode })
   }, [queryClient]);
 
   const startFitnessTour = useCallback(() => {
-    setFitnessTourStep(0);
+    const resumeStep = savedTourStep ?? 0;
+    setFitnessTourStep(resumeStep);
     setIsFitnessTourActive(true);
     navigate("/fitness");
-  }, [navigate]);
+  }, [navigate, savedTourStep]);
 
   const nextFitnessStep = useCallback(() => {
     const next = fitnessTourStep + 1;
@@ -139,14 +158,20 @@ export function FitnessTourProvider({ children }: { children: React.ReactNode })
   }, [fitnessTourStep]);
 
   const closeFitnessTour = useCallback(() => {
-    endFitnessTour();
-  }, [endFitnessTour]);
+    try {
+      localStorage.setItem(TOUR_STEP_KEY, String(fitnessTourStep));
+      setSavedTourStep(fitnessTourStep);
+    } catch {}
+    setIsFitnessTourActive(false);
+    setFitnessTourStep(0);
+  }, [fitnessTourStep]);
 
   return (
     <FitnessTourContext.Provider
       value={{
         isFitnessTourActive,
         fitnessTourStep,
+        savedTourStep,
         targetTab,
         startFitnessTour,
         nextFitnessStep,

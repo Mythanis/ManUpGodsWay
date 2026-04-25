@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useTour } from "@/contexts/TourContext";
-import { useFitnessTour } from "@/contexts/FitnessTourContext";
+import { useFitnessTour, FITNESS_TOUR_STEPS } from "@/contexts/FitnessTourContext";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
@@ -77,7 +77,7 @@ export default function Profile() {
   );
   const { user } = useAuth();
   const { startTour } = useTour();
-  const { startFitnessTour } = useFitnessTour();
+  const { startFitnessTour, savedTourStep } = useFitnessTour();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -792,7 +792,11 @@ export default function Profile() {
                   <div className="w-8 h-8 rounded-sm bg-ministry-gold-exact flex items-center justify-center">
                     <Dumbbell className="w-4 h-4 text-black" />
                   </div>
-                  <span className="font-bold text-white uppercase tracking-wide">Take the Fitness Tour</span>
+                  <span className="font-bold text-white uppercase tracking-wide">
+                    {savedTourStep !== null && savedTourStep > 0
+                      ? `Resume Fitness Tour (Step ${savedTourStep + 1} of ${FITNESS_TOUR_STEPS.length})`
+                      : "Take the Fitness Tour"}
+                  </span>
                 </div>
                 <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
