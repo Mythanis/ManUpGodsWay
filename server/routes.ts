@@ -55,7 +55,9 @@ import {
   insertHealthMetricSchema,
   type HealthMetricType,
   musicProviderEnum,
-  MUSIC_PROVIDERS
+  MUSIC_PROVIDERS,
+  MUSIC_PROVIDER_HOSTS,
+  normalizeMusicUrl
 } from "@shared/schema";
 import { z, ZodError } from "zod";
 import { devotionalNotificationService } from "./devotionalNotificationService";
@@ -523,13 +525,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const { provider, url } = req.body;
 
-      const PROVIDER_HOSTS: Record<string, string[]> = {
-        spotify: ['open.spotify.com'],
-        apple: ['music.apple.com'],
-        iheart: ['www.iheart.com', 'iheart.com'],
-        soundcloud: ['soundcloud.com', 'www.soundcloud.com'],
-      };
-
       // Allow null/null to clear settings
       if (provider === null || provider === undefined) {
         const updatedUser = await storage.updateUserMusicSettings(userId, null, null);
@@ -545,20 +540,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'URL is required' });
       }
 
+      const normalizedUrl = normalizeMusicUrl(url);
+
       // Validate the URL hostname matches the chosen provider
       let parsedUrl: URL;
       try {
-        parsedUrl = new URL(url);
+        parsedUrl = new URL(normalizedUrl);
       } catch {
         return res.status(400).json({ message: 'Invalid URL format' });
       }
 
-      const allowedHosts = PROVIDER_HOSTS[providerParsed.data];
+      const allowedHosts = MUSIC_PROVIDER_HOSTS[providerParsed.data];
       if (!allowedHosts.includes(parsedUrl.hostname)) {
-        return res.status(400).json({ message: `URL must be from ${PROVIDER_HOSTS[providerParsed.data]?.[0] ?? providerParsed.data}` });
+        return res.status(400).json({ message: `URL must be from ${allowedHosts[0]}` });
       }
 
-      const updatedUser = await storage.updateUserMusicSettings(userId, providerParsed.data, url);
+      const updatedUser = await storage.updateUserMusicSettings(userId, providerParsed.data, normalizedUrl);
       res.json(updatedUser);
     } catch (error) {
       console.error("Error updating music settings:", error);

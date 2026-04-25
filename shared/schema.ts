@@ -24,6 +24,20 @@ export const MUSIC_PROVIDERS = ['spotify', 'apple', 'iheart', 'soundcloud'] as c
 export const musicProviderEnum = z.enum(MUSIC_PROVIDERS);
 export type MusicProvider = z.infer<typeof musicProviderEnum>;
 
+export const MUSIC_PROVIDER_HOSTS: Record<MusicProvider, string[]> = {
+  spotify: ['open.spotify.com'],
+  apple: ['music.apple.com'],
+  iheart: ['www.iheart.com', 'iheart.com'],
+  soundcloud: ['soundcloud.com', 'www.soundcloud.com', 'm.soundcloud.com', 'on.soundcloud.com'],
+};
+
+export function normalizeMusicUrl(url: string): string {
+  const trimmed = url.trim();
+  if (!trimmed) return trimmed;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+}
+
 // Session storage table (required for Replit Auth)
 export const sessions = pgTable(
   "sessions",

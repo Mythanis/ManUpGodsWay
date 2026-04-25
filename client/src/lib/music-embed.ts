@@ -1,6 +1,7 @@
-import { type MusicProvider } from "@shared/schema";
+import { type MusicProvider, MUSIC_PROVIDER_HOSTS, normalizeMusicUrl } from "@shared/schema";
 
 export type { MusicProvider };
+export { normalizeMusicUrl as normalizeUrl };
 
 export const PROVIDER_LABELS: Record<MusicProvider, string> = {
   spotify: 'Spotify',
@@ -16,24 +17,10 @@ export const PROVIDER_PLACEHOLDERS: Record<MusicProvider, string> = {
   soundcloud: 'https://soundcloud.com/artist/track-name',
 };
 
-const PROVIDER_HOSTS: Record<MusicProvider, string[]> = {
-  spotify: ['open.spotify.com'],
-  apple: ['music.apple.com'],
-  iheart: ['www.iheart.com', 'iheart.com'],
-  soundcloud: ['soundcloud.com', 'www.soundcloud.com', 'm.soundcloud.com', 'on.soundcloud.com'],
-};
-
-export function normalizeUrl(url: string): string {
-  const trimmed = url.trim();
-  if (!trimmed) return trimmed;
-  if (/^https?:\/\//i.test(trimmed)) return trimmed;
-  return `https://${trimmed}`;
-}
-
 export function detectProvider(url: string): MusicProvider | null {
   try {
-    const { hostname } = new URL(normalizeUrl(url));
-    for (const [provider, hosts] of Object.entries(PROVIDER_HOSTS) as [MusicProvider, string[]][]) {
+    const { hostname } = new URL(normalizeMusicUrl(url));
+    for (const [provider, hosts] of Object.entries(MUSIC_PROVIDER_HOSTS) as [MusicProvider, string[]][]) {
       if (hosts.includes(hostname)) return provider;
     }
   } catch {
