@@ -747,6 +747,9 @@ export const insertFitnessPlanReminderSchema = createInsertSchema(fitnessPlanRem
 
 export type FitnessPlanExercise = typeof fitnessPlanExercises.$inferSelect;
 export type InsertFitnessPlanExercise = z.infer<typeof insertFitnessPlanExerciseSchema>;
+// Enriched exercise row returned by getFitnessPlanExercises — includes
+// tempoSec joined from the exercises library table.
+export type FitnessPlanExerciseWithTempo = FitnessPlanExercise & { tempoSec?: number | null };
 
 export type FitnessPlanReminder = typeof fitnessPlanReminders.$inferSelect;
 export type InsertFitnessPlanReminder = z.infer<typeof insertFitnessPlanReminderSchema>;

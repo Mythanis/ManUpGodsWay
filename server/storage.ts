@@ -39,6 +39,7 @@ import {
   fitnessPlans,
   fitnessPlanExercises,
   fitnessPlanReminders,
+  exercises as exercisesTable,
   exerciseCompletions,
   workoutFeedback,
   workoutStreakResets,
@@ -142,6 +143,7 @@ import {
   type FitnessPlan,
   type InsertFitnessPlan,
   type FitnessPlanExercise,
+  type FitnessPlanExerciseWithTempo,
   type InsertFitnessPlanExercise,
   type FitnessPlanReminder,
   type InsertFitnessPlanReminder,
@@ -634,7 +636,7 @@ export interface IStorage {
   getFitnessPlanWithExercises(id: string): Promise<(FitnessPlan & { exercises: FitnessPlanExercise[] }) | undefined>;
 
   // Fitness plan exercises operations
-  getFitnessPlanExercises(planId: string): Promise<FitnessPlanExercise[]>;
+  getFitnessPlanExercises(planId: string): Promise<FitnessPlanExerciseWithTempo[]>;
   addExerciseToPlan(exercise: InsertFitnessPlanExercise): Promise<FitnessPlanExercise>;
   addExercisesToPlan(exercises: InsertFitnessPlanExercise[]): Promise<FitnessPlanExercise[]>;
   updatePlanExercise(id: string, updates: Partial<InsertFitnessPlanExercise>): Promise<FitnessPlanExercise>;
@@ -6543,12 +6545,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Fitness plan exercises implementation methods
-  async getFitnessPlanExercises(planId: string): Promise<FitnessPlanExercise[]> {
-    return await db
-      .select()
+  async getFitnessPlanExercises(planId: string): Promise<FitnessPlanExerciseWithTempo[]> {
+    const rows = await db
+      .select({
+        ...fitnessPlanExercises,
+        tempoSec: exercisesTable.tempoSec,
+      })
       .from(fitnessPlanExercises)
+      .leftJoin(exercisesTable, eq(exercisesTable.name, fitnessPlanExercises.exerciseName))
       .where(eq(fitnessPlanExercises.planId, planId))
       .orderBy(asc(fitnessPlanExercises.orderIndex));
+    return rows as FitnessPlanExerciseWithTempo[];
   }
 
   async addExerciseToPlan(exercise: InsertFitnessPlanExercise): Promise<FitnessPlanExercise> {

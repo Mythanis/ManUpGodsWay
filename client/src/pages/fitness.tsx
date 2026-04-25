@@ -7477,11 +7477,14 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
 
   // Category-aware default tempo: compound/heavy lifts get more time per rep,
   // isolation/light exercises get less. Falls back to 3s if unknown.
+  // Uses exerciseName and bodyPart (both available on FitnessPlanExercise).
   const getCategoryDefaultTempo = (): number => {
     const name = (currentExercise?.exerciseName ?? '').toLowerCase();
-    const cat  = (currentExercise?.category ?? '').toLowerCase();
-    if (/squat|deadlift|bench|press|row|pull.up|clean|snatch|compound/i.test(name + cat)) return 4.0;
-    if (/curl|lateral|fly|extension|raise|isolation/i.test(name + cat)) return 2.5;
+    const part = (currentExercise?.bodyPart ?? '').toLowerCase();
+    if (/squat|deadlift|bench|press|row|pull.up|clean|snatch/i.test(name) ||
+        /back|chest|compound/i.test(part)) return 4.0;
+    if (/curl|lateral|fly|extension|raise/i.test(name) ||
+        /biceps|triceps|shoulders/i.test(part)) return 2.5;
     return 3.0;
   };
 
@@ -7508,11 +7511,16 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exerciseLookupName]);
 
-  // Update playbackRate whenever effectiveTempo or videoDuration changes.
+  // Update playbackRate ONLY for rep-based work so time-based / stretch /
+  // HIIT exercises always play at 1× speed.
   useEffect(() => {
     if (!videoRef.current || !videoDuration || videoDuration <= 0 || !isVideo) return;
-    videoRef.current.playbackRate = videoDuration / effectiveTempo;
-  }, [effectiveTempo, videoDuration, isVideo]);
+    if (!isTimeBased && phase === 'work') {
+      videoRef.current.playbackRate = videoDuration / effectiveTempo;
+    } else {
+      videoRef.current.playbackRate = 1;
+    }
+  }, [effectiveTempo, videoDuration, isVideo, isTimeBased, phase]);
 
   // Reset repCount when exercise, set, or phase changes (new set starts fresh).
   useEffect(() => {
@@ -7527,10 +7535,14 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
 
   // Rep-counting timer: fires once per effectiveTempo seconds during rep-based work.
   // In timed pacing, auto-advances when the target count is hit.
+  // In manual pacing, the counter stops at numReps (no auto-advance).
   useEffect(() => {
     if (phase !== 'work' || isTimeBased || awaitingStart || paused || numReps <= 0) return;
     const id = setInterval(() => {
       setRepCount(c => {
+        // In manual mode: freeze the counter once we've reached the target —
+        // the user advances manually, so no more updates are needed.
+        if (c >= numReps && pacingMode === 'manual') return c;
         const next = c + 1;
         if (next >= numReps && pacingMode === 'timed') {
           // Give React one tick to re-render the counter before advancing
