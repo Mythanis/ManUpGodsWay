@@ -20,7 +20,7 @@ const PROVIDER_HOSTS: Record<MusicProvider, string[]> = {
   spotify: ['open.spotify.com'],
   apple: ['music.apple.com'],
   iheart: ['www.iheart.com', 'iheart.com'],
-  soundcloud: ['soundcloud.com', 'www.soundcloud.com'],
+  soundcloud: ['soundcloud.com', 'www.soundcloud.com', 'm.soundcloud.com', 'on.soundcloud.com'],
 };
 
 export function detectProvider(url: string): MusicProvider | null {
