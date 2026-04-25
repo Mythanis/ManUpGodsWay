@@ -23,9 +23,16 @@ const PROVIDER_HOSTS: Record<MusicProvider, string[]> = {
   soundcloud: ['soundcloud.com', 'www.soundcloud.com', 'm.soundcloud.com', 'on.soundcloud.com'],
 };
 
+export function normalizeUrl(url: string): string {
+  const trimmed = url.trim();
+  if (!trimmed) return trimmed;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+}
+
 export function detectProvider(url: string): MusicProvider | null {
   try {
-    const { hostname } = new URL(url);
+    const { hostname } = new URL(normalizeUrl(url));
     for (const [provider, hosts] of Object.entries(PROVIDER_HOSTS) as [MusicProvider, string[]][]) {
       if (hosts.includes(hostname)) return provider;
     }
@@ -42,7 +49,7 @@ export function validateProviderUrl(provider: MusicProvider, url: string): boole
 
 export function buildEmbedUrl(provider: MusicProvider, userUrl: string): string | null {
   try {
-    const parsed = new URL(userUrl);
+    const parsed = new URL(normalizeUrl(userUrl));
 
     if (provider === 'spotify') {
       const parts = parsed.pathname.split('/').filter(Boolean);
