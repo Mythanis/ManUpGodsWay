@@ -15,6 +15,8 @@ export type User = {
   allowGroupInvites?: boolean;
   isProfileComplete?: boolean;
   hasCompletedTour?: boolean;
+  musicProvider?: string | null;
+  musicEmbedUrl?: string | null;
 };
 
 export function useAuth() {

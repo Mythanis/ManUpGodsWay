@@ -515,6 +515,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update music streaming settings
+  app.patch('/api/user/music-settings', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { provider, url } = req.body;
+
+      const VALID_PROVIDERS = ['spotify', 'apple', 'iheart', 'soundcloud'];
+      const PROVIDER_HOSTS: Record<string, string[]> = {
+        spotify: ['open.spotify.com'],
+        apple: ['music.apple.com'],
+        iheart: ['www.iheart.com', 'iheart.com'],
+        soundcloud: ['soundcloud.com', 'www.soundcloud.com'],
+      };
+
+      // Allow null/null to clear settings
+      if (provider === null || provider === undefined) {
+        const updatedUser = await storage.updateUserMusicSettings(userId, null, null);
+        return res.json(updatedUser);
+      }
+
+      if (!VALID_PROVIDERS.includes(provider)) {
+        return res.status(400).json({ message: 'Invalid music provider' });
+      }
+
+      if (!url || typeof url !== 'string') {
+        return res.status(400).json({ message: 'URL is required' });
+      }
+
+      // Validate the URL hostname matches the chosen provider
+      let parsedUrl: URL;
+      try {
+        parsedUrl = new URL(url);
+      } catch {
+        return res.status(400).json({ message: 'Invalid URL format' });
+      }
+
+      const allowedHosts = PROVIDER_HOSTS[provider];
+      if (!allowedHosts.includes(parsedUrl.hostname)) {
+        return res.status(400).json({ message: `URL must be from ${provider === 'spotify' ? 'open.spotify.com' : provider === 'apple' ? 'music.apple.com' : provider === 'iheart' ? 'iheart.com' : 'soundcloud.com'}` });
+      }
+
+      const updatedUser = await storage.updateUserMusicSettings(userId, provider, url);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating music settings:", error);
+      res.status(500).json({ message: "Failed to update music settings" });
+    }
+  });
+
   // Mark app tour as completed for authenticated user
   app.post('/api/user/complete-tour', isAuthenticated, async (req: any, res) => {
     try {

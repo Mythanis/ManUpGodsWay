@@ -9,7 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { SiSpotify, SiApplemusic, SiIheartradio, SiSoundcloud } from "react-icons/si";
+import { type MusicProvider, PROVIDER_LABELS, PROVIDER_PLACEHOLDERS, buildEmbedUrl, validateProviderUrl } from "@/lib/music-embed";
 import { NotificationPanel } from "@/components/notification-panel";
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
 import { FeedbackDialog } from "@/components/feedback-dialog";
@@ -78,6 +81,52 @@ export default function Profile() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Music streaming state
+  const [musicEditing, setMusicEditing] = useState(false);
+  const [musicDraftProvider, setMusicDraftProvider] = useState<MusicProvider | null>(null);
+  const [musicDraftUrl, setMusicDraftUrl] = useState('');
+  const [musicUrlError, setMusicUrlError] = useState('');
+
+  const musicMutation = useMutation({
+    mutationFn: (data: { provider: string | null; url: string | null }) =>
+      apiRequest('PATCH', '/api/user/music-settings', data),
+    onError: (err: any) => {
+      toast({ title: 'Failed to save', description: err?.response?.data?.message || 'Please try again.', variant: 'destructive' });
+    },
+  });
+
+  const handleMusicSave = () => {
+    if (!musicDraftProvider) return;
+    if (!musicDraftUrl.trim()) {
+      setMusicUrlError('Please enter a URL');
+      return;
+    }
+    if (!validateProviderUrl(musicDraftProvider, musicDraftUrl.trim())) {
+      setMusicUrlError(`URL must be from the ${PROVIDER_LABELS[musicDraftProvider]} website`);
+      return;
+    }
+    setMusicUrlError('');
+    musicMutation.mutate({ provider: musicDraftProvider, url: musicDraftUrl.trim() }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+        setMusicEditing(false);
+        toast({ title: 'Music settings saved', description: 'Your streaming selection has been updated.' });
+      },
+    });
+  };
+
+  const handleMusicRemove = () => {
+    musicMutation.mutate({ provider: null, url: null }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+        setMusicDraftProvider(null);
+        setMusicDraftUrl('');
+        setMusicUrlError('');
+        toast({ title: 'Music removed', description: 'Your streaming selection has been cleared.' });
+      },
+    });
+  };
 
   // Handle successful subscription upgrade — verify session with backend to guarantee activation
   useEffect(() => {
@@ -728,6 +777,140 @@ export default function Profile() {
           </Card>
         </div>
       )}
+
+      {/* Music Streaming */}
+      <div className="px-6 mb-6">
+        <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>Music Streaming</h2>
+        <Card className="liquid-black border-2 border-ministry-gold-exact overflow-hidden rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]" data-testid="card-music-streaming">
+          <CardContent className="p-4">
+            {/* Saved state — show embed + remove/change */}
+            {user?.musicProvider && user?.musicEmbedUrl && !musicEditing ? (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    {user.musicProvider === 'spotify' && <SiSpotify className="w-5 h-5 text-[#1DB954]" />}
+                    {user.musicProvider === 'apple' && <SiApplemusic className="w-5 h-5 text-[#FC3C44]" />}
+                    {user.musicProvider === 'iheart' && <SiIheartradio className="w-5 h-5 text-[#C6002B]" />}
+                    {user.musicProvider === 'soundcloud' && <SiSoundcloud className="w-5 h-5 text-[#FF5500]" />}
+                    <span className="font-black text-white text-sm uppercase tracking-wide">
+                      {PROVIDER_LABELS[user.musicProvider as MusicProvider] ?? user.musicProvider}
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs border-ministry-gold-exact/50 text-white hover:bg-gray-800 h-7 px-2"
+                      onClick={() => {
+                        setMusicDraftProvider(user.musicProvider as MusicProvider);
+                        setMusicDraftUrl(user.musicEmbedUrl ?? '');
+                        setMusicUrlError('');
+                        setMusicEditing(true);
+                      }}
+                    >
+                      Change
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-xs text-red-400 hover:text-red-300 hover:bg-red-900/20 h-7 px-2"
+                      onClick={handleMusicRemove}
+                      disabled={musicMutation.isPending}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+                {/* Live embed preview */}
+                {(() => {
+                  const embedSrc = buildEmbedUrl(user.musicProvider as MusicProvider, user.musicEmbedUrl!);
+                  if (!embedSrc) return null;
+                  return (
+                    <iframe
+                      src={embedSrc}
+                      className="w-full rounded-sm border border-ministry-gold-exact/20"
+                      style={{ height: user.musicProvider === 'soundcloud' ? 166 : 152, border: 'none' }}
+                      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                      loading="lazy"
+                      title="Music player preview"
+                    />
+                  );
+                })()}
+                <p className="text-xs text-gray-500 mt-2 text-center">This player will appear at the top of your workout when you hit Begin</p>
+              </div>
+            ) : (
+              /* Editing / setup form */
+              <div>
+                {!musicEditing && !user?.musicProvider && (
+                  <p className="text-sm text-gray-400 mb-4">Choose a streaming service to use during your workouts. The player will appear at the top of the workout player after you tap Begin.</p>
+                )}
+
+                {/* Provider selector */}
+                <p className="text-xs font-black text-white/70 uppercase tracking-widest mb-3">Select service</p>
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  {([
+                    { key: 'spotify' as MusicProvider, Icon: SiSpotify, color: '#1DB954', label: 'Spotify' },
+                    { key: 'apple' as MusicProvider, Icon: SiApplemusic, color: '#FC3C44', label: 'Apple Music' },
+                    { key: 'iheart' as MusicProvider, Icon: SiIheartradio, color: '#C6002B', label: 'iHeartRadio' },
+                    { key: 'soundcloud' as MusicProvider, Icon: SiSoundcloud, color: '#FF5500', label: 'SoundCloud' },
+                  ] as const).map(({ key, Icon, color, label }) => (
+                    <button
+                      key={key}
+                      onClick={() => {
+                        setMusicDraftProvider(key);
+                        setMusicDraftUrl('');
+                        setMusicUrlError('');
+                      }}
+                      className={`flex items-center gap-2 p-3 rounded-sm border-2 transition-all text-left ${
+                        musicDraftProvider === key
+                          ? 'border-ministry-gold-exact bg-ministry-gold-exact/10'
+                          : 'border-white/20 hover:border-white/40 bg-white/5'
+                      }`}
+                    >
+                      <Icon style={{ color }} className="w-5 h-5 flex-shrink-0" />
+                      <span className="text-xs font-black text-white uppercase tracking-wide leading-tight">{label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* URL input — shown once provider is chosen */}
+                {musicDraftProvider && (
+                  <div className="space-y-2 mb-4">
+                    <label className="text-xs font-black text-white/70 uppercase tracking-widest">Playlist / Station URL</label>
+                    <Input
+                      value={musicDraftUrl}
+                      onChange={(e) => { setMusicDraftUrl(e.target.value); setMusicUrlError(''); }}
+                      placeholder={PROVIDER_PLACEHOLDERS[musicDraftProvider]}
+                      className="bg-white/5 border-white/20 text-white placeholder:text-white/30 text-sm"
+                    />
+                    {musicUrlError && <p className="text-xs text-red-400">{musicUrlError}</p>}
+                    <p className="text-xs text-gray-500">Paste the URL directly from {PROVIDER_LABELS[musicDraftProvider]}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleMusicSave}
+                    disabled={!musicDraftProvider || !musicDraftUrl.trim() || musicMutation.isPending}
+                    className="bg-[#FCD000] hover:bg-yellow-400 text-black font-black uppercase tracking-wide border-2 border-black rounded-sm text-xs h-9"
+                  >
+                    {musicMutation.isPending ? 'Saving…' : 'Save'}
+                  </Button>
+                  {(musicEditing || user?.musicProvider) && (
+                    <Button
+                      variant="ghost"
+                      onClick={() => { setMusicEditing(false); setMusicDraftProvider(null); setMusicDraftUrl(''); setMusicUrlError(''); }}
+                      className="text-xs text-white/60 hover:text-white h-9"
+                    >
+                      Cancel
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Settings Menu */}
       <div className="px-6 mb-6">

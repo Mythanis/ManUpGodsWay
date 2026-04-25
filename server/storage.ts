@@ -463,6 +463,7 @@ export interface IStorage {
     memberSince: Date;
   } | undefined>;
   createUserReport(report: InsertUserReport): Promise<UserReport>;
+  updateUserMusicSettings(userId: string, provider: string | null, url: string | null): Promise<User>;
   
   // Notification preferences operations
   getNotificationPreferences(userId: string): Promise<NotificationPreferences | undefined>;
@@ -4014,6 +4015,18 @@ export class DatabaseStorage implements IStorage {
     const [updatedUser] = await db.update(users)
       .set({
         ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return updatedUser;
+  }
+
+  async updateUserMusicSettings(userId: string, provider: string | null, url: string | null): Promise<User> {
+    const [updatedUser] = await db.update(users)
+      .set({
+        musicProvider: provider,
+        musicEmbedUrl: url,
         updatedAt: new Date(),
       })
       .where(eq(users.id, userId))
