@@ -6977,14 +6977,21 @@ export default function Fitness() {
                   </p>
                 ) : isVideo ? (
                   <video
+                    key={url}
                     src={url}
                     controls
                     autoPlay
                     loop
+                    muted
                     playsInline
+                    preload="auto"
                     className="w-full max-h-[75vh]"
                     data-testid="video-exercise-preview"
-                  />
+                    onError={(e) => console.error('[ExercisePreview] Video failed to load:', url, e)}
+                  >
+                    <source src={url} type="video/mp4" />
+                    Your browser does not support video playback.
+                  </video>
                 ) : (
                   <img
                     src={url}
