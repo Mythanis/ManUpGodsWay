@@ -1772,7 +1772,8 @@ export default function Fitness() {
             
             <div className="flex flex-wrap gap-2">
               <button
-                onClick={() => setPreviewExercise(exercise)}
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPreviewExercise(exercise); }}
                 className="bg-transparent text-black px-3 py-1.5 rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-[#FCD000] font-bold uppercase text-sm flex items-center transition-all"
                 data-testid={`button-preview-${exercise.exerciseId || exercise.id || ''}`}
               >
@@ -8027,7 +8028,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
           shows GIF/PNG/JPG in <img>, and falls back to a friendly
           message when the exercise has no valid media path. */}
       <Dialog open={!!previewExercise} onOpenChange={(open) => { if (!open) setPreviewExercise(null); }}>
-        <DialogContent className="bg-zinc-900 border-2 border-[#FCD000] text-white max-w-2xl w-[92vw]" data-testid="dialog-exercise-preview">
+        <DialogContent className="bg-zinc-900 border-2 border-[#FCD000] text-white max-w-2xl w-[92vw] z-[200]" data-testid="dialog-exercise-preview">
           <DialogHeader>
             <DialogTitle className="text-[#FCD000] font-black uppercase tracking-wide">
               {previewExercise?.name?.replace(/_/g, ' ')}
