@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth, type User as AuthUser } from "@/hooks/useAuth";
 import { useTour } from "@/contexts/TourContext";
+import { useFitnessTour } from "@/contexts/FitnessTourContext";
 import { apiRequest } from "@/lib/queryClient";
 import { BackButton } from "@/components/BackButton";
 import { 
@@ -551,7 +552,39 @@ export default function Fitness() {
   const [purchasingPlanId, setPurchasingPlanId] = useState<string | null>(null);
   const { user: authUser } = useAuth();
   const { isTourActive } = useTour();
+  const {
+    isFitnessTourActive,
+    targetTab: fitnessTourTargetTab,
+    startFitnessTour,
+  } = useFitnessTour();
   const { isSubscribed: isPushSubscribed } = usePushNotifications();
+
+  // Sync the active tab to whatever step the fitness tour is currently on
+  useEffect(() => {
+    if (isFitnessTourActive && fitnessTourTargetTab && fitnessTourTargetTab !== activeFitnessTab) {
+      setActiveFitnessTab(fitnessTourTargetTab);
+    }
+  }, [isFitnessTourActive, fitnessTourTargetTab]);
+
+  // Auto-start the fitness tour the first time a paid fitness member lands on this page.
+  // Skips non-fitness members entirely (they see the upsell, not the tour) and skips
+  // anyone who's already taken it. Also defers when the app-wide onboarding tour is
+  // running so the two overlays never collide.
+  const hasLaunchedFitnessTourRef = useRef(false);
+  useEffect(() => {
+    if (
+      authUser &&
+      authUser.hasFitnessAccess === true &&
+      authUser.hasCompletedFitnessTour === false &&
+      !isFitnessTourActive &&
+      !isTourActive &&
+      !hasLaunchedFitnessTourRef.current
+    ) {
+      hasLaunchedFitnessTourRef.current = true;
+      const t = setTimeout(() => startFitnessTour(), 600);
+      return () => clearTimeout(t);
+    }
+  }, [authUser, isFitnessTourActive, isTourActive, startFitnessTour]);
 
   // Community tab state
   const [communityPostText, setCommunityPostText] = useState('');

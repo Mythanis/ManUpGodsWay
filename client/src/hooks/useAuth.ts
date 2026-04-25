@@ -15,6 +15,8 @@ export type User = {
   allowGroupInvites?: boolean;
   isProfileComplete?: boolean;
   hasCompletedTour?: boolean;
+  hasCompletedFitnessTour?: boolean;
+  hasFitnessAccess?: boolean;
 };
 
 export function useAuth() {

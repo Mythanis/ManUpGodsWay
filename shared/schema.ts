@@ -64,6 +64,7 @@ export const users = pgTable("users", {
   hasSeenWelcome: boolean("has_seen_welcome").default(false),
   hasFitnessAccess: boolean("has_fitness_access").default(false),
   hasCompletedTour: boolean("has_completed_tour").default(false),
+  hasCompletedFitnessTour: boolean("has_completed_fitness_tour").default(false),
   conversionNudgesSent: jsonb("conversion_nudges_sent").default(sql`'{}'::jsonb`),
   timezone: varchar("timezone").default("UTC"), // IANA timezone for reminders, e.g. "America/New_York"
   createdAt: timestamp("created_at").defaultNow(),

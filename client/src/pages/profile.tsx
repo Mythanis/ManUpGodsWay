@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useTour } from "@/contexts/TourContext";
+import { useFitnessTour } from "@/contexts/FitnessTourContext";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
@@ -76,6 +77,7 @@ export default function Profile() {
   );
   const { user } = useAuth();
   const { startTour } = useTour();
+  const { startFitnessTour } = useFitnessTour();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -777,6 +779,26 @@ export default function Profile() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
               </svg>
             </Button>
+
+            {/* Fitness Tour — only shown for users with fitness access */}
+            {user?.hasFitnessAccess && (
+              <Button
+                variant="ghost"
+                className="w-full justify-between p-4 h-auto hover:bg-gray-800 border-b-2 border-ministry-gold-exact/30 rounded-sm"
+                onClick={startFitnessTour}
+                data-testid="button-take-fitness-tour"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-sm bg-ministry-gold-exact flex items-center justify-center">
+                    <Dumbbell className="w-4 h-4 text-black" />
+                  </div>
+                  <span className="font-bold text-white uppercase tracking-wide">Take the Fitness Tour</span>
+                </div>
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </Button>
+            )}
             
             {/* Add to Home Screen — hidden if already installed or no install path */}
             {!isInstalled && (deferredPrompt || isIOSSafari) && (

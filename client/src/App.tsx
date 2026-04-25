@@ -8,6 +8,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { TourProvider, useTour } from "@/contexts/TourContext";
 import { AppTour } from "@/components/app-tour";
+import { FitnessTourProvider, useFitnessTour } from "@/contexts/FitnessTourContext";
+import { FitnessTour } from "@/components/fitness-tour";
 import SplashScreen from "@/components/splash-screen";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
@@ -337,6 +339,8 @@ function AppContent() {
       </div>
       {/* Tour overlay — renders on top of all content during onboarding */}
       {isAuthenticated && <AppTour />}
+      {/* Fitness tour overlay — appears on the Fitness page only (the Fitness page wires the tab sync) */}
+      {isAuthenticated && <FitnessTour />}
     </div>
   );
 }
@@ -350,7 +354,9 @@ function App() {
         <TooltipProvider>
           <SplashContext.Provider value={{ splashCompleted, setSplashCompleted }}>
             <TourProvider>
-              <AppContent />
+              <FitnessTourProvider>
+                <AppContent />
+              </FitnessTourProvider>
             </TourProvider>
           </SplashContext.Provider>
           <Toaster />
