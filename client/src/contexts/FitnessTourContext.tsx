@@ -25,7 +25,7 @@ export const FITNESS_TOUR_STEPS: FitnessTourStep[] = [
     tab: "workout",
     title: "Workout",
     description:
-      "This is your home base. Each day shows the exercises scheduled for you with an estimated duration. Tap Begin to launch the guided workout player — it walks you through every set, rep, and rest period one screen at a time so you can stay focused on the lift, not the phone.",
+      "This is your armory, where you gear up. Each day shows the exercises scheduled for you with an estimated duration. Tap Begin to launch the guided workout player — it walks you through every set, rep, and rest period one screen at a time so you can stay focused on the lift, not the phone.",
   },
   {
     tab: "community",
