@@ -195,6 +195,8 @@ interface FitnessPlanExercise {
   // Drives the unilateral two-countdown-per-set logic in WorkoutPlayer.
   // Null/undefined on legacy rows → treated as 'bilateral'.
   sidedness?: 'bilateral' | 'unilateral' | 'alternating' | null;
+  // Joined from exercises.tempo_sec — seconds per rep for the rep counter.
+  tempoSec?: number | null;
 }
 
 interface PreBuiltPlan {
@@ -7522,9 +7524,11 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
     }
   }, [effectiveTempo, videoDuration, isVideo, isTimeBased, phase]);
 
-  // Reset repCount when exercise, set, or phase changes (new set starts fresh).
+  // Reset repCount to 1 when exercise, set, or phase changes (new set starts fresh).
+  // Starting at 1 means the display immediately shows "Rep 1 of N" — the current rep
+  // being performed — and increments after each tempo interval.
   useEffect(() => {
-    setRepCount(0);
+    setRepCount(1);
   }, [exerciseIdx, setIdx, phase]);
 
   // Reset videoDuration when moving to a new exercise so the next video's
@@ -7534,18 +7538,19 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
   }, [exerciseIdx]);
 
   // Rep-counting timer: fires once per effectiveTempo seconds during rep-based work.
-  // In timed pacing, auto-advances when the target count is hit.
-  // In manual pacing, the counter stops at numReps (no auto-advance).
+  // repCount starts at 1 (the first rep being done) and increments each interval.
+  // Auto-advance fires AFTER the Nth interval (next > numReps) so "Rep N of N"
+  // is shown for exactly one full interval before the phase changes.
+  // In manual pacing, the counter freezes at numReps — user advances manually.
   useEffect(() => {
     if (phase !== 'work' || isTimeBased || awaitingStart || paused || numReps <= 0) return;
     const id = setInterval(() => {
       setRepCount(c => {
-        // In manual mode: freeze the counter once we've reached the target —
-        // the user advances manually, so no more updates are needed.
+        // In manual mode: freeze once we've completed all reps
         if (c >= numReps && pacingMode === 'manual') return c;
         const next = c + 1;
-        if (next >= numReps && pacingMode === 'timed') {
-          // Give React one tick to re-render the counter before advancing
+        // Auto-advance AFTER the last rep's interval completes (next exceeds target)
+        if (next > numReps && pacingMode === 'timed') {
           setTimeout(() => advancePhase(), 200);
         }
         return next;
@@ -8064,7 +8069,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
             <p className="text-[#FCD000] font-bold uppercase tracking-wide mb-6">
               Set {setIdx + 1} of {totalSets}
               {!isTimeBased && numReps > 0 && phase === 'work'
-                ? <span className="ml-1">• Rep {Math.min(repCount + 1, numReps)} of {numReps}</span>
+                ? <span className="ml-1">• Rep {Math.min(repCount, numReps)} of {numReps}</span>
                 : (!isTimeBased && currentExercise?.reps && phase === 'work'
                     ? ` • ${currentExercise.reps} reps`
                     : null)
@@ -8216,7 +8221,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                 /* Rep-based work: show live rep counter as the primary display */
                 <>
                   <div className="text-8xl md:text-9xl font-black text-[#FCD000] tabular-nums mb-2" data-testid="text-timer">
-                    {Math.min(repCount + 1, numReps)}
+                    {Math.min(repCount, numReps)}
                   </div>
                   <p className="text-white/50 text-sm uppercase tracking-widest font-bold mb-2">
                     of {numReps} reps

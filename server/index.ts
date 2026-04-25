@@ -83,6 +83,17 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Idempotent schema migration: ensure exercises.tempo_sec column exists.
+  // Uses IF NOT EXISTS so it is safe to run on every startup regardless of
+  // whether the column was already added manually or via a prior deployment.
+  try {
+    await db.execute(sqlExpr`
+      ALTER TABLE exercises ADD COLUMN IF NOT EXISTS tempo_sec REAL DEFAULT 3.0
+    `);
+  } catch (err) {
+    console.warn('[startup] tempo_sec migration skipped or failed (column may already exist):', err);
+  }
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
