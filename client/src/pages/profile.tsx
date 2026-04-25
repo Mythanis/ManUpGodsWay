@@ -86,10 +86,11 @@ export default function Profile() {
   const [musicEditing, setMusicEditing] = useState(false);
   const [musicDraftProvider, setMusicDraftProvider] = useState<MusicProvider | null>(null);
   const [musicDraftUrl, setMusicDraftUrl] = useState('');
+  const [musicDraftAutoPlay, setMusicDraftAutoPlay] = useState(false);
   const [musicUrlError, setMusicUrlError] = useState('');
 
   const musicMutation = useMutation({
-    mutationFn: (data: { provider: string | null; url: string | null }) =>
+    mutationFn: (data: { provider: string | null; url: string | null; autoPlay?: boolean }) =>
       apiRequest('PATCH', '/api/user/music-settings', data),
     onError: (err: any) => {
       toast({ title: 'Failed to save', description: err?.response?.data?.message || 'Please try again.', variant: 'destructive' });
@@ -107,7 +108,7 @@ export default function Profile() {
       return;
     }
     setMusicUrlError('');
-    musicMutation.mutate({ provider: musicDraftProvider, url: musicDraftUrl.trim() }, {
+    musicMutation.mutate({ provider: musicDraftProvider, url: musicDraftUrl.trim(), autoPlay: musicDraftAutoPlay }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
         setMusicEditing(false);
@@ -117,13 +118,23 @@ export default function Profile() {
   };
 
   const handleMusicRemove = () => {
-    musicMutation.mutate({ provider: null, url: null }, {
+    musicMutation.mutate({ provider: null, url: null, autoPlay: false }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
         setMusicDraftProvider(null);
         setMusicDraftUrl('');
+        setMusicDraftAutoPlay(false);
         setMusicUrlError('');
         toast({ title: 'Music removed', description: 'Your streaming selection has been cleared.' });
+      },
+    });
+  };
+
+  const handleMusicAutoPlayToggle = (checked: boolean) => {
+    if (!user?.musicProvider || !user?.musicEmbedUrl) return;
+    musicMutation.mutate({ provider: user.musicProvider, url: user.musicEmbedUrl, autoPlay: checked }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       },
     });
   };
@@ -804,6 +815,7 @@ export default function Profile() {
                       onClick={() => {
                         setMusicDraftProvider(user.musicProvider as MusicProvider);
                         setMusicDraftUrl(user.musicEmbedUrl ?? '');
+                        setMusicDraftAutoPlay(user.musicAutoPlay ?? false);
                         setMusicUrlError('');
                         setMusicEditing(true);
                       }}
@@ -841,6 +853,20 @@ export default function Profile() {
                     <p className="text-xs text-yellow-300 leading-relaxed">
                       <span className="font-bold">Spotify limitation:</span> Embeds play 30-second previews unless you're signed into Spotify in this same browser (with Premium and third-party cookies allowed). For full-length tracks, switch to <span className="font-bold">SoundCloud</span>.
                     </p>
+                  </div>
+                )}
+                {/* Auto-start toggle */}
+                {(user.musicProvider === 'spotify' || user.musicProvider === 'soundcloud') && (
+                  <div className="flex items-center justify-between mt-3 py-2 px-3 rounded-sm bg-white/5 border border-white/10">
+                    <div>
+                      <p className="text-xs font-black text-white uppercase tracking-wide">Auto-start music</p>
+                      <p className="text-xs text-gray-500">Music plays automatically when you tap Begin</p>
+                    </div>
+                    <Switch
+                      checked={user.musicAutoPlay ?? false}
+                      onCheckedChange={handleMusicAutoPlayToggle}
+                      disabled={musicMutation.isPending}
+                    />
                   </div>
                 )}
                 <p className="text-xs text-gray-500 mt-2 text-center">This player will appear at the top of your workout when you hit Begin</p>
@@ -920,6 +946,20 @@ export default function Profile() {
                   );
                 })()}
 
+                {/* Auto-start toggle in editing form — only for supported providers */}
+                {(musicDraftProvider === 'spotify' || musicDraftProvider === 'soundcloud') && (
+                  <div className="flex items-center justify-between mb-4 py-2 px-3 rounded-sm bg-white/5 border border-white/10">
+                    <div>
+                      <p className="text-xs font-black text-white uppercase tracking-wide">Auto-start music</p>
+                      <p className="text-xs text-gray-500">Music plays automatically when you tap Begin</p>
+                    </div>
+                    <Switch
+                      checked={musicDraftAutoPlay}
+                      onCheckedChange={setMusicDraftAutoPlay}
+                    />
+                  </div>
+                )}
+
                 <div className="flex gap-2">
                   <Button
                     onClick={handleMusicSave}
@@ -931,7 +971,7 @@ export default function Profile() {
                   {(musicEditing || user?.musicProvider) && (
                     <Button
                       variant="ghost"
-                      onClick={() => { setMusicEditing(false); setMusicDraftProvider(null); setMusicDraftUrl(''); setMusicUrlError(''); }}
+                      onClick={() => { setMusicEditing(false); setMusicDraftProvider(null); setMusicDraftUrl(''); setMusicDraftAutoPlay(false); setMusicUrlError(''); }}
                       className="text-xs text-white/60 hover:text-white h-9"
                     >
                       Cancel

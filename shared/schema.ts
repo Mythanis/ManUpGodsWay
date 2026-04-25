@@ -86,6 +86,7 @@ export const users = pgTable("users", {
   conversionNudgesSent: jsonb("conversion_nudges_sent").default(sql`'{}'::jsonb`),
   musicProvider: varchar("music_provider"), // spotify, apple, iheart, soundcloud
   musicEmbedUrl: text("music_embed_url"), // user-pasted URL to embed
+  musicAutoPlay: boolean("music_auto_play").default(false), // auto-start music when workout begins
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

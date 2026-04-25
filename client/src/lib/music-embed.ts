@@ -34,14 +34,15 @@ export function validateProviderUrl(provider: MusicProvider, url: string): boole
   return detected === provider;
 }
 
-export function buildEmbedUrl(provider: MusicProvider, userUrl: string): string | null {
+export function buildEmbedUrl(provider: MusicProvider, userUrl: string, autoPlay = false): string | null {
   try {
     const parsed = new URL(normalizeMusicUrl(userUrl));
 
     if (provider === 'spotify') {
       const parts = parsed.pathname.split('/').filter(Boolean);
       if (parts.length < 2) return null;
-      return `https://open.spotify.com/embed/${parts.join('/')}?utm_source=generator`;
+      const autoPlayParam = autoPlay ? '&autoplay=1' : '';
+      return `https://open.spotify.com/embed/${parts.join('/')}?utm_source=generator${autoPlayParam}`;
     }
 
     if (provider === 'apple') {
@@ -61,7 +62,8 @@ export function buildEmbedUrl(provider: MusicProvider, userUrl: string): string 
       // also needs that token forwarded as a separate `secret_token` query param.
       const secretMatch = parsed.pathname.match(/\/(s-[A-Za-z0-9]+)(?:\/?$)/);
       const secretParam = secretMatch ? `&secret_token=${encodeURIComponent(secretMatch[1])}` : '';
-      return `https://w.soundcloud.com/player/?url=${encoded}${secretParam}&color=%23FCD000&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true`;
+      const autoPlayValue = autoPlay ? 'true' : 'false';
+      return `https://w.soundcloud.com/player/?url=${encoded}${secretParam}&color=%23FCD000&auto_play=${autoPlayValue}&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true`;
     }
   } catch {
     // bad URL

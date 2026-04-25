@@ -7082,7 +7082,8 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
   const { data: workoutUser } = useQuery<AuthUser>({ queryKey: ['/api/auth/user'], staleTime: Infinity });
   const musicProvider = workoutUser?.musicProvider as MusicProvider | null | undefined;
   const musicEmbedUrl = workoutUser?.musicEmbedUrl;
-  const workoutMusicSrc = musicProvider && musicEmbedUrl ? buildEmbedUrl(musicProvider, musicEmbedUrl as string) : null;
+  const musicAutoPlay = workoutUser?.musicAutoPlay ?? false;
+  const workoutMusicSrc = musicProvider && musicEmbedUrl ? buildEmbedUrl(musicProvider, musicEmbedUrl as string, musicAutoPlay) : null;
   const [instructionsOpen, setInstructionsOpen] = useState(false);
   // Adjust-exercise dialog state. Lets the user tweak sets / reps /
   // rest period mid-workout without leaving the player. Pauses the

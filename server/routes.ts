@@ -523,11 +523,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/user/music-settings', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { provider, url } = req.body;
+      const { provider, url, autoPlay } = req.body;
 
       // Allow null/null to clear settings
       if (provider === null || provider === undefined) {
-        const updatedUser = await storage.updateUserMusicSettings(userId, null, null);
+        const updatedUser = await storage.updateUserMusicSettings(userId, null, null, false);
         return res.json(updatedUser);
       }
 
@@ -555,7 +555,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: `URL must be from ${allowedHosts[0]}` });
       }
 
-      const updatedUser = await storage.updateUserMusicSettings(userId, providerParsed.data, normalizedUrl);
+      // Auto-play is only supported for Spotify and SoundCloud; force false for other providers
+      const AUTOPLAY_SUPPORTED_PROVIDERS = ['spotify', 'soundcloud'];
+      const resolvedAutoPlay = AUTOPLAY_SUPPORTED_PROVIDERS.includes(providerParsed.data) ? autoPlay === true : false;
+      const updatedUser = await storage.updateUserMusicSettings(userId, providerParsed.data, normalizedUrl, resolvedAutoPlay);
       res.json(updatedUser);
     } catch (error) {
       console.error("Error updating music settings:", error);

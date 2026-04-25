@@ -17,6 +17,7 @@ export type User = {
   hasCompletedTour?: boolean;
   musicProvider?: string | null;
   musicEmbedUrl?: string | null;
+  musicAutoPlay?: boolean | null;
 };
 
 export function useAuth() {

@@ -463,7 +463,7 @@ export interface IStorage {
     memberSince: Date;
   } | undefined>;
   createUserReport(report: InsertUserReport): Promise<UserReport>;
-  updateUserMusicSettings(userId: string, provider: string | null, url: string | null): Promise<User>;
+  updateUserMusicSettings(userId: string, provider: string | null, url: string | null, autoPlay?: boolean): Promise<User>;
   
   // Notification preferences operations
   getNotificationPreferences(userId: string): Promise<NotificationPreferences | undefined>;
@@ -4022,11 +4022,12 @@ export class DatabaseStorage implements IStorage {
     return updatedUser;
   }
 
-  async updateUserMusicSettings(userId: string, provider: string | null, url: string | null): Promise<User> {
+  async updateUserMusicSettings(userId: string, provider: string | null, url: string | null, autoPlay?: boolean): Promise<User> {
     const [updatedUser] = await db.update(users)
       .set({
         musicProvider: provider,
         musicEmbedUrl: url,
+        musicAutoPlay: autoPlay ?? false,
         updatedAt: new Date(),
       })
       .where(eq(users.id, userId))
