@@ -54,7 +54,9 @@ export function buildEmbedUrl(provider: MusicProvider, userUrl: string): string 
     }
 
     if (provider === 'soundcloud') {
-      const encoded = encodeURIComponent(userUrl);
+      // Strip tracking params (?si=, utm_*, etc.) that break the widget resolver
+      const cleanUrl = `${parsed.origin}${parsed.pathname}`;
+      const encoded = encodeURIComponent(cleanUrl);
       return `https://w.soundcloud.com/player/?url=${encoded}&color=%23FCD000&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true`;
     }
   } catch {
