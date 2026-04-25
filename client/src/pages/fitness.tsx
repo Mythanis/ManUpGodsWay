@@ -5085,7 +5085,10 @@ export default function Fitness() {
                 <Bell className="w-5 h-5 text-[#FCD000] mr-2" />
                 <h3 className="text-white font-black uppercase tracking-wide text-sm flex-1">Meal Reminders</h3>
                 <button
-                  onClick={() => setShowMealReminderForm(!showMealReminderForm)}
+                  onClick={() => {
+                    if (showMealReminderForm) setNewMealLabel('');
+                    setShowMealReminderForm(!showMealReminderForm);
+                  }}
                   className="text-[#FCD000] hover:text-[#FCD000]/80 transition-colors"
                 >
                   <Plus className="w-5 h-5" />
@@ -5124,6 +5127,16 @@ export default function Fitness() {
                       />
                     </div>
                   </div>
+                  <div>
+                    <label className="text-zinc-400 text-[10px] font-black uppercase tracking-wide">Label <span className="normal-case font-normal">(optional)</span></label>
+                    <input
+                      type="text"
+                      value={newMealLabel}
+                      onChange={(e) => setNewMealLabel(e.target.value)}
+                      placeholder="e.g. Pre-workout snack"
+                      className="mt-1 w-full bg-zinc-800 border border-zinc-600 rounded-sm text-white text-sm px-3 py-1.5 focus:outline-none focus:border-zinc-400 placeholder:text-zinc-600"
+                    />
+                  </div>
                   <div className="flex gap-2">
                     <button
                       onClick={() => {
@@ -5141,7 +5154,10 @@ export default function Fitness() {
                       {addMealReminderMutation.isPending ? 'Saving…' : 'Save Reminder'}
                     </button>
                     <button
-                      onClick={() => setShowMealReminderForm(false)}
+                      onClick={() => {
+                        setShowMealReminderForm(false);
+                        setNewMealLabel('');
+                      }}
                       className="bg-zinc-700 text-white font-black text-xs uppercase px-4 py-1.5 rounded-sm"
                     >
                       Cancel
