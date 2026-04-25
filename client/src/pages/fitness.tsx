@@ -5169,18 +5169,33 @@ export default function Fitness() {
                               ))}
                             </div>
                           </div>
-                          <input
-                            type="time"
-                            value={editMealTime}
-                            onChange={(e) => setEditMealTime(e.target.value)}
-                            className="w-32 bg-zinc-800 border border-zinc-600 rounded-sm text-white text-sm px-2 py-1 focus:outline-none"
-                          />
+                          <div className="flex gap-2 items-end">
+                            <div>
+                              <p className="text-zinc-400 text-[10px] font-black uppercase tracking-wide mb-1">Time</p>
+                              <input
+                                type="time"
+                                value={editMealTime}
+                                onChange={(e) => setEditMealTime(e.target.value)}
+                                className="w-32 bg-zinc-800 border border-zinc-600 rounded-sm text-white text-sm px-2 py-1 focus:outline-none"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-zinc-400 text-[10px] font-black uppercase tracking-wide mb-1">Label (optional)</p>
+                              <input
+                                type="text"
+                                value={editMealLabel}
+                                onChange={(e) => setEditMealLabel(e.target.value)}
+                                placeholder="e.g. Pre-workout"
+                                className="w-full bg-zinc-800 border border-zinc-600 rounded-sm text-white text-sm px-2 py-1 focus:outline-none placeholder:text-zinc-600"
+                              />
+                            </div>
+                          </div>
                           <div className="flex gap-2">
                             <button
                               onClick={() => updateMealReminderMutation.mutate({ id: r.id, time: editMealTime, label: editMealLabel, mealType: editMealType })}
                               disabled={!editMealTime || updateMealReminderMutation.isPending}
                               className="bg-[#FCD000] text-black font-black text-xs px-3 py-1 rounded-sm disabled:opacity-50"
-                            >Save</button>
+                            >{updateMealReminderMutation.isPending ? 'Saving…' : 'Save'}</button>
                             <button onClick={() => setEditingMealId(null)} className="bg-zinc-700 text-white text-xs px-3 py-1 rounded-sm">Cancel</button>
                           </div>
                         </div>
