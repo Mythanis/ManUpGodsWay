@@ -7088,6 +7088,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
   const [videoDuration, setVideoDuration] = useState<number | null>(null);
   const [effectiveTempo, setEffectiveTempo] = useState<number>(3.0);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const tempoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const TEMPO_OVERRIDE_PREFIX = 'tempoOverride_';
 
   // Pause flag — when true the tick interval is a no-op so timers
@@ -7550,6 +7551,13 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
   useEffect(() => {
     setVideoDuration(null);
   }, [exerciseIdx]);
+
+  // Clear any pending tempo-save timer on unmount to prevent stale requests.
+  useEffect(() => {
+    return () => {
+      if (tempoSaveTimerRef.current) clearTimeout(tempoSaveTimerRef.current);
+    };
+  }, []);
 
   // Rep-counting timer: fires once per effectiveTempo seconds during rep-based work.
   // repCount starts at 1 (the first rep being done) and increments each interval.
@@ -8143,6 +8151,15 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                           const stored = localStorage.getItem(key);
                           if (!stored) setEffectiveTempo(dur);
                         } catch { setEffectiveTempo(dur); }
+                        // Debounce-save the discovered duration back to the DB so other
+                        // parts of the app can reference it without loading the video.
+                        if (exerciseLookupName) {
+                          if (tempoSaveTimerRef.current) clearTimeout(tempoSaveTimerRef.current);
+                          tempoSaveTimerRef.current = setTimeout(() => {
+                            apiRequest('PATCH', `/api/exercises/${encodeURIComponent(exerciseLookupName)}/tempo`, { tempoSec: dur })
+                              .catch(() => { /* best-effort, ignore errors */ });
+                          }, 2000);
+                        }
                       }
                     }}
                   />

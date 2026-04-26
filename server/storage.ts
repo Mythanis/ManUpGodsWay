@@ -621,6 +621,9 @@ export interface IStorage {
   publishFitnessChallenge(id: string): Promise<FitnessChallenge>;
   getTodaysFitnessChallenge(): Promise<FitnessChallenge | null>;
 
+  // Exercise catalog operations
+  updateExerciseTempo(name: string, tempoSec: number): Promise<boolean>;
+
   // Favorite exercises operations
   getFavoriteExercises(userId: string): Promise<FavoriteExercise[]>;
   addFavoriteExercise(exercise: InsertFavoriteExercise): Promise<FavoriteExercise>;
@@ -6442,6 +6445,16 @@ export class DatabaseStorage implements IStorage {
       );
     
     return challenge || null;
+  }
+
+  // Exercise catalog implementation
+  async updateExerciseTempo(name: string, tempoSec: number): Promise<boolean> {
+    const result = await db
+      .update(exercisesTable)
+      .set({ tempoSec, updatedAt: new Date() })
+      .where(sql`LOWER(${exercisesTable.name}) = LOWER(${name})`)
+      .returning({ id: exercisesTable.id });
+    return result.length > 0;
   }
 
   // Favorite exercises implementation methods

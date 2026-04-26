@@ -10236,6 +10236,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch('/api/exercises/:name/tempo', isAuthenticated, async (req: any, res) => {
+    try {
+      const name = decodeURIComponent(req.params.name || '').trim();
+      if (!name) return res.status(400).json({ message: 'Exercise name required' });
+      const { tempoSec } = req.body;
+      if (typeof tempoSec !== 'number' || !isFinite(tempoSec) || tempoSec <= 0 || tempoSec > 60) {
+        return res.status(400).json({ message: 'tempoSec must be a positive number no greater than 60' });
+      }
+      const updated = await storage.updateExerciseTempo(name, tempoSec);
+      if (!updated) return res.status(404).json({ message: 'Exercise not found' });
+      res.json({ ok: true });
+    } catch (error) {
+      console.error('Error updating exercise tempo:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   app.get('/api/exercises/equipment-types', async (req: any, res) => {
     try {
       const result = await db.selectDistinct({ equipment: schema.exercises.equipment })
