@@ -1310,15 +1310,18 @@ export default function FitnessManagement() {
                     /\.(mp4|webm|mov)(\?|$)/i.test(exForm.mediaFile) ? (
                       <video
                         src={exForm.mediaFile}
-                        className="h-40 rounded border bg-muted/20"
+                        className="w-full max-h-[420px] rounded border bg-black object-contain"
                         controls
                         muted
+                        playsInline
+                        preload="metadata"
+                        data-testid="video-exercise-preview"
                       />
                     ) : (
                       <img
                         src={exForm.mediaFile}
                         alt="exercise media"
-                        className="h-40 object-contain rounded border bg-muted/20"
+                        className="w-full max-h-[420px] object-contain rounded border bg-muted/20"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                       />
                     )
