@@ -1172,7 +1172,9 @@ export default function Fitness() {
       }
       params.set('offset', offset.toString());
       params.set('limit', limit.toString());
-      
+      // Collapse left/right pair rows so users only see one unilateral entry per pair.
+      params.set('dedupePairs', 'true');
+
       const url = `/api/exercises${params.toString() ? '?' + params.toString() : ''}`;
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch exercises');
@@ -2243,7 +2245,7 @@ export default function Fitness() {
     try {
       // Fetch exercises for each selected equipment type from local database
       for (const equipment of equipmentList) {
-        const url = `/api/exercises?equipment=${encodeURIComponent(equipment)}&level=${encodeURIComponent(levelParam)}`;
+        const url = `/api/exercises?equipment=${encodeURIComponent(equipment)}&level=${encodeURIComponent(levelParam)}&dedupePairs=true`;
         
         try {
           const resp = await fetch(url);

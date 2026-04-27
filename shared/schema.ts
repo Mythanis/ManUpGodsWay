@@ -1977,6 +1977,16 @@ export const exercises = pgTable("exercises", {
   // Seeded from ffprobe duration of the demo video (one loop = one rep).
   // Defaults to 3.0s when a video can't be probed.
   tempoSec: real("tempo_sec").default(3.0),
+  // Left/right pair linkage. When two exercises differ only by "left" vs
+  // "right" in their name (e.g. "Diagonal Chop Left" / "Diagonal Chop Right"),
+  // the pair-lr-exercises script links both rows to each other via
+  // pairedExerciseId, marks each side via `side`, and stores the canonical
+  // name (sans left/right) in pairBaseName. Both rows are forced to
+  // sidedness='unilateral' so the workout runner does right-then-left in a
+  // single set rather than two separate single-side sets.
+  pairedExerciseId: integer("paired_exercise_id"),
+  side: varchar("side").$type<'left' | 'right' | null>(),
+  pairBaseName: varchar("pair_base_name"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

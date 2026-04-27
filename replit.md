@@ -187,6 +187,46 @@ Trigger it via the admin API or set `EXERCISE_AUDIT_AUTO_START=true` in env vars
 - `GET  /api/admin/exercise-audit/status` — running state, processed/total counts (admin only)
 - `POST /api/admin/exercise-audit/start`  — trigger the audit job (admin only)
 
+# Left/Right Exercise Pairing
+
+Some exercises in the library exist as separate "left" and "right" rows
+(e.g. `#79 Diagonal Chop Left` + `#80 Diagonal Chop Right`). Logically
+these are one unilateral exercise where each set means "do the right side,
+then do the left side". They were being added to plans as two independent
+exercises. To collapse them into a single unilateral entry:
+
+**Schema** (in `exercises`):
+- `paired_exercise_id integer` — self-FK to the partner row
+- `side varchar` — `'left'` or `'right'`
+- `pair_base_name varchar` — canonical name with the L/R token stripped (e.g. `"Diagonal Chop"`)
+
+**Auto-pair script:** `scripts/pair-lr-exercises.ts`
+- Detects pairs by matching name modulo standalone `\b(left|right)\b` tokens
+  within the same body-part + equipment.
+- Sets `paired_exercise_id`, `side`, `pair_base_name` on both rows and forces
+  `sidedness='unilateral'`.
+- Idempotent. Default is dry-run; pass `--apply` to write. Pass `--unpair`
+  to clear all pair links.
+- Last run linked 11 pairs (22 rows). Skipped rows are singletons whose
+  partner doesn't exist in the DB or ambiguous duplicates — see script
+  output for the list.
+
+**API behaviour:**
+`GET /api/exercises?dedupePairs=true` returns one row per pair (the
+`side='left'` half) with `name` rewritten to `pair_base_name`. User-facing
+flows (`fitness.tsx` browse + plan-build, `create-plan.tsx`,
+`edit-plan.tsx` picker + swap) all pass `dedupePairs=true`. Admin
+(`exercise-reviews.tsx`, `fitness-management.tsx`) omits the flag so both
+halves remain visible.
+
+**Runtime:** the workout player already runs `sidedness='unilateral'` as
+right-side-then-left-side per set, so once a pair is linked the merged
+entry naturally plays both sides in one set.
+
+**Admin UI:** `Exercise Reviews` shows an `L-pair` / `R-pair` chip on list
+rows that are linked, and the detail view shows a "L/R Pair" panel with an
+"Open partner" button to jump to the other side.
+
 ```bash
 # CLI — targeted re-runs (e.g. the 5 that failed)
 npx tsx scripts/audit-exercise-instructions.ts --ids 472,615,1461,1573,1610 --force

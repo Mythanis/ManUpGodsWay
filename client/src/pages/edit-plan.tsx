@@ -270,7 +270,9 @@ export default function EditPlan() {
       if (selectedEquipment !== 'all') params.set('equipment', selectedEquipment);
       params.set('offset', offset.toString());
       params.set('limit', limit.toString());
-      
+      // Collapse left/right pair rows so users only see one unilateral entry per pair.
+      params.set('dedupePairs', 'true');
+
       const url = `/api/exercises${params.toString() ? '?' + params.toString() : ''}`;
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch exercises');
@@ -468,6 +470,8 @@ export default function EditPlan() {
       if (swapBodyPart) params.set('bodyPart', swapBodyPart);
       if (swapEquipment) params.set('equipment', swapEquipment);
       params.set('limit', '500');
+      // Hide one half of any L/R pair so each pair surfaces as a single entry.
+      params.set('dedupePairs', 'true');
       const res = await fetch(`/api/exercises?${params.toString()}`);
       if (!res.ok) throw new Error('Failed to fetch swap candidates');
       return res.json();

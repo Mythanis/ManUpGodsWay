@@ -41,6 +41,9 @@ interface Exercise {
   sidedness: SidednessValue;
   hiit: string;
   stretching: string;
+  pairedExerciseId: number | null;
+  side: "left" | "right" | null;
+  pairBaseName: string | null;
 }
 
 const SIDEDNESS_COLORS: Record<SidednessValue, string> = {
@@ -405,6 +408,34 @@ export default function ExerciseReviews() {
               </p>
             </div>
 
+            {/* Pair partner — only shown when this row is half of an L/R pair */}
+            {activeExercise.pairedExerciseId !== null && activeExercise.side && (
+              <div>
+                <Label className="text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1.5 block">
+                  L/R Pair
+                </Label>
+                <div className="border-2 border-gray-300 rounded p-2 flex items-center justify-between gap-2 bg-gray-50">
+                  <div className="text-xs text-gray-700">
+                    This is the <span className="font-bold uppercase">{activeExercise.side}</span> side of{" "}
+                    <span className="font-semibold">{activeExercise.pairBaseName ?? "(unknown)"}</span>.
+                    {" "}Paired with{" "}
+                    <span className="font-mono text-gray-500">#{activeExercise.pairedExerciseId}</span>.
+                    The workout runner plays this pair as a single unilateral set
+                    (right side → left side).
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setActiveId(activeExercise.pairedExerciseId!)}
+                    data-testid="button-jump-to-pair"
+                  >
+                    Open partner
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {/* Short instructions */}
             <div>
               <Label
@@ -704,6 +735,14 @@ export default function ExerciseReviews() {
                 {row.bodyPart}
               </span>
               <SidednessBadge value={row.sidedness} />
+              {row.pairedExerciseId !== null && row.side && (
+                <span
+                  title={`Paired with #${row.pairedExerciseId} — ${row.pairBaseName ?? ""} (${row.side} side)`}
+                  className="inline-flex items-center rounded border border-gray-400 bg-gray-100 text-gray-700 px-1.5 py-0 text-[10px] font-semibold uppercase"
+                >
+                  {row.side === "left" ? "L" : "R"}-pair
+                </span>
+              )}
               {!playable && (
                 <span
                   title="No playable video"

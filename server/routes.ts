@@ -10169,7 +10169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/exercises', async (req: any, res) => {
     try {
       // Apply filters
-      const { bodyPart, equipment, level, search, offset, limit, hiit, stretching } = req.query;
+      const { bodyPart, equipment, level, search, offset, limit, hiit, stretching, dedupePairs } = req.query;
       const conditions = [];
       
       if (bodyPart) conditions.push(eq(schema.exercises.bodyPart, bodyPart));
@@ -10190,7 +10190,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (stretching) conditions.push(eq(schema.exercises.stretching, stretching as string));
       
       if (search) conditions.push(sql`${schema.exercises.name} ILIKE ${'%' + search + '%'}`);
-      
+
+      // dedupePairs: when 'true', collapse left/right pair rows to ONE entry
+      // per pair (keeping the side='left' row as canonical) and substitute
+      // pair_base_name for name. Used by user-facing flows where the pair
+      // should appear as a single unilateral exercise. Admin tools omit
+      // this param so they can see and manage both halves.
+      const dedupe = dedupePairs === 'true' || dedupePairs === '1';
+      if (dedupe) {
+        conditions.push(
+          sql`(${schema.exercises.pairedExerciseId} IS NULL OR ${schema.exercises.side} = 'left')`,
+        );
+      }
+
       let query = db.select().from(schema.exercises);
       
       if (conditions.length > 0) {
@@ -10206,10 +10218,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const exercises = await query;
-      if (exercises.length === 0 && (equipment || level)) {
+
+      // When deduping, surface the canonical pair name (e.g. "Diagonal Chop")
+      // instead of the side-specific row name ("Diagonal Chop Left").
+      const payload = dedupe
+        ? exercises.map((ex: any) =>
+            ex.pairedExerciseId && ex.pairBaseName
+              ? { ...ex, name: ex.pairBaseName }
+              : ex,
+          )
+        : exercises;
+
+      if (payload.length === 0 && (equipment || level)) {
         console.warn('[/api/exercises] 0 results for query:', { equipment, level, bodyPart, hiit, stretching });
       }
-      res.json(exercises);
+      res.json(payload);
     } catch (error) {
       console.error('Error fetching exercises:', error);
       res.status(500).json({ message: 'Internal server error' });
