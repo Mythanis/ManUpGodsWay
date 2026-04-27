@@ -642,8 +642,11 @@ export default function Fitness() {
     retry: false,
   });
 
-  // User has access if they have an active Stripe membership OR admin-granted access
-  const hasMembership = (membershipData?.hasMembership ?? false) || ((authUser as any)?.hasFitnessAccess === true);
+  // Fitness is now free for all authenticated users.
+  // The membership data is still queried so existing subscribers
+  // can manage / cancel their old Stripe subscription, but access
+  // is no longer gated on it.
+  const hasMembership = true;
 
   // Fetch admin-created fitness plans
   const { data: adminPlans = [] } = useQuery<AdminFitnessPlan[]>({

@@ -11993,10 +11993,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ─── Fitness Community ─────────────────────────────────────────────────────
 
+  // Fitness access is now free for all authenticated users.
+  // Middleware kept (rather than removed at every call site) so the
+  // route signatures stay stable; it just loads the user and passes through.
   const requireFitnessAccess = async (req: any, res: any, next: any) => {
     const user = await storage.getUser(req.user.claims.sub);
     if (!user) return res.status(404).json({ message: 'User not found' });
-    if (!user.hasFitnessAccess) return res.status(403).json({ message: 'Fitness subscription required' });
     req.fitnessUser = user;
     next();
   };
