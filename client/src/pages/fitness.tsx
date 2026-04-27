@@ -7747,22 +7747,48 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
   return (
     <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col" data-testid="workout-player">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b-2 border-[#FDD000]">
-        <div>
-          <p className="text-xs font-black text-[#FDD000] uppercase tracking-widest">{plan.name}</p>
+      <div className="border-b-2 border-[#FDD000] bg-black">
+        {/* Row 1: close | plan name | end & rate */}
+        <div className="flex items-center gap-2 px-3 pt-3 pb-1">
+          <Button
+            onClick={onClose}
+            variant="ghost"
+            size="sm"
+            className="text-white hover:bg-white/10 shrink-0 -ml-1 p-1"
+            data-testid="button-close-player"
+          >
+            <X className="w-5 h-5" />
+          </Button>
+          <p className="text-xs font-black text-[#FDD000] uppercase tracking-widest flex-1 truncate text-center">
+            {plan.name}
+          </p>
+          {phase !== 'done' && exerciseIdx > 0 ? (
+            <Button
+              onClick={() => {
+                setEarlyEndIdx(exerciseIdx);
+                setPhase('done');
+              }}
+              variant="ghost"
+              size="sm"
+              className="text-white/60 hover:bg-white/10 text-[10px] uppercase font-black tracking-widest shrink-0 px-2 py-1"
+              data-testid="button-end-early"
+            >
+              End & rate
+            </Button>
+          ) : (
+            <div className="w-16 shrink-0" />
+          )}
+        </div>
+        {/* Row 2: exercise progress | pacing mode toggle */}
+        <div className="flex items-center justify-between px-4 pb-3">
           <p className="text-sm text-white/70 font-bold">
             Exercise {exerciseIdx + 1} of {exercises.length}
           </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* Pacing-mode toggle — radio-style pill that lets the user
-              choose between the auto-advancing timer or fully manual
-              advance via the on-screen arrows beside the media. */}
           {phase !== 'done' && (
             <div
               role="radiogroup"
               aria-label="Workout pacing mode"
-              className="inline-flex bg-zinc-900 border-2 border-white/20 rounded-sm overflow-hidden"
+              className="inline-flex bg-zinc-900 border border-white/20 rounded-sm overflow-hidden"
               data-testid="toggle-pacing-mode"
             >
               <button
@@ -7770,7 +7796,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                 role="radio"
                 aria-checked={pacingMode === 'timed'}
                 onClick={() => setPacingMode('timed')}
-                className={`px-2 py-1 text-[10px] font-black uppercase tracking-widest transition-colors ${pacingMode === 'timed' ? 'bg-[#FDD000] text-black' : 'text-white/60 hover:bg-white/10'}`}
+                className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-widest transition-colors ${pacingMode === 'timed' ? 'bg-[#FDD000] text-black' : 'text-white/60 hover:bg-white/10'}`}
                 data-testid="button-mode-timed"
               >
                 Timed
@@ -7780,40 +7806,13 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                 role="radio"
                 aria-checked={pacingMode === 'manual'}
                 onClick={() => setPacingMode('manual')}
-                className={`px-2 py-1 text-[10px] font-black uppercase tracking-widest transition-colors ${pacingMode === 'manual' ? 'bg-[#FDD000] text-black' : 'text-white/60 hover:bg-white/10'}`}
+                className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-widest transition-colors ${pacingMode === 'manual' ? 'bg-[#FDD000] text-black' : 'text-white/60 hover:bg-white/10'}`}
                 data-testid="button-mode-manual"
               >
                 Manual
               </button>
             </div>
           )}
-          {/* End-early affordance — exposes the feedback prompt mid-workout
-              so a partial-completion rating gets recorded and weighted at
-              0.5 by the streak engine. Hidden once we're already on the
-              feedback / done screen. */}
-          {phase !== 'done' && exerciseIdx > 0 && (
-            <Button
-              onClick={() => {
-                setEarlyEndIdx(exerciseIdx);
-                setPhase('done');
-              }}
-              variant="ghost"
-              size="sm"
-              className="text-white/70 hover:bg-white/10 text-xs uppercase font-black tracking-widest"
-              data-testid="button-end-early"
-            >
-              End & rate
-            </Button>
-          )}
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            size="sm"
-            className="text-white hover:bg-white/10"
-            data-testid="button-close-player"
-          >
-            <X className="w-6 h-6" />
-          </Button>
         </div>
       </div>
 
