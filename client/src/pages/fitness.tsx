@@ -8096,28 +8096,14 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
             </p>
 
             {mediaUrl && (<>
-              <div className="relative flex items-center gap-2 md:gap-4 mb-6">
-                {/* Manual-mode previous-exercise arrow. Hidden on the
-                    very first exercise since previous() would just
-                    restart the same one. */}
-                {pacingMode === 'manual' && !awaitingStart && exerciseIdx > 0 && (
-                  <button
-                    type="button"
-                    onClick={previous}
-                    aria-label="Previous exercise"
-                    className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#FDD000] text-black border-2 border-black flex items-center justify-center shadow-lg hover:bg-[#FDD000]/90 active:scale-95 transition"
-                    data-testid="button-manual-prev"
-                  >
-                    <ChevronLeft className="w-6 h-6 md:w-7 md:h-7" />
-                  </button>
-                )}
+              <div className="relative w-full mb-6">
               <div
                 role="button"
                 tabIndex={0}
                 onClick={togglePause}
                 onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); togglePause(); } }}
                 aria-label={awaitingStart ? 'Begin workout' : (paused ? 'Resume workout' : 'Pause workout')}
-                className="relative w-48 h-48 md:w-64 md:h-64 bg-white rounded-sm border-2 border-[#FDD000] overflow-hidden cursor-pointer select-none"
+                className="relative w-full aspect-square bg-white rounded-sm border-2 border-[#FDD000] overflow-hidden cursor-pointer select-none"
                 data-testid="media-tap-to-pause"
               >
                 {isVideo ? (
@@ -8162,6 +8148,23 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                     className="w-full h-full object-contain pointer-events-none"
                   />
                 )}
+                {/* Timer overlay — bottom-right corner of the video */}
+                {!awaitingStart && phase !== 'done' && (
+                  <div className="absolute bottom-3 right-3 bg-black/75 backdrop-blur-sm rounded px-2.5 py-1.5 flex flex-col items-center leading-none pointer-events-none" data-testid="timer-overlay">
+                    <span className="text-4xl font-black text-[#FDD000] tabular-nums" data-testid="text-timer">
+                      {(!isTimeBased && phase === 'work' && numReps > 0) ? Math.min(repCount, numReps) : secondsLeft}
+                    </span>
+                    <span className="text-[9px] text-white/60 uppercase font-bold mt-0.5">
+                      {(!isTimeBased && phase === 'work' && numReps > 0) ? `/${numReps} reps` : 'sec'}
+                    </span>
+                  </div>
+                )}
+                {/* Paused indicator overlay */}
+                {paused && !awaitingStart && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 pointer-events-none">
+                    <Pause className="w-16 h-16 text-white/80" />
+                  </div>
+                )}
                 {awaitingStart && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm pointer-events-none">
                     <div className="px-6 py-3 bg-[#FDD000] text-black font-black uppercase tracking-widest text-lg border-2 border-black rounded-sm shadow-lg" data-testid="overlay-begin-label">
@@ -8170,20 +8173,30 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                   </div>
                 )}
               </div>
-                {/* Manual-mode next-exercise arrow. Visible once the
-                    workout has begun; on the last exercise it ends the
-                    session (jumps to the feedback screen). */}
-                {pacingMode === 'manual' && !awaitingStart && (
-                  <button
-                    type="button"
-                    onClick={nextManual}
-                    aria-label="Next phase"
-                    className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#FDD000] text-black border-2 border-black flex items-center justify-center shadow-lg hover:bg-[#FDD000]/90 active:scale-95 transition"
-                    data-testid="button-manual-next"
-                  >
-                    <ChevronRight className="w-6 h-6 md:w-7 md:h-7" />
-                  </button>
-                )}
+              {/* Manual-mode prev arrow — overlaid on video left edge */}
+              {pacingMode === 'manual' && !awaitingStart && exerciseIdx > 0 && (
+                <button
+                  type="button"
+                  onClick={previous}
+                  aria-label="Previous exercise"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 backdrop-blur-sm text-white border border-white/30 flex items-center justify-center shadow-lg hover:bg-black/80 active:scale-95 transition z-10"
+                  data-testid="button-manual-prev"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+              )}
+              {/* Manual-mode next arrow — overlaid on video right edge */}
+              {pacingMode === 'manual' && !awaitingStart && (
+                <button
+                  type="button"
+                  onClick={nextManual}
+                  aria-label="Next phase"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 backdrop-blur-sm text-white border border-white/30 flex items-center justify-center shadow-lg hover:bg-black/80 active:scale-95 transition z-10"
+                  data-testid="button-manual-next"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              )}
               </div>
 
               {/* ── Tempo nudge control ───────────────────────────────────────
@@ -8229,43 +8242,22 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                 onClick={begin}
                 onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); begin(); } }}
                 aria-label="Begin workout"
-                className="w-48 h-48 md:w-64 md:h-64 mb-6 flex items-center justify-center bg-[#FDD000] text-black font-black uppercase tracking-widest text-2xl border-2 border-black rounded-sm cursor-pointer select-none"
+                className="w-full aspect-square mb-6 flex items-center justify-center bg-[#FDD000] text-black font-black uppercase tracking-widest text-2xl border-2 border-black rounded-sm cursor-pointer select-none"
                 data-testid="button-begin-no-media"
               >
                 Begin
               </div>
             )}
 
-            <div
-              role="button"
-              tabIndex={0}
+            <button
+              type="button"
               onClick={togglePause}
-              onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); togglePause(); } }}
               aria-label={paused ? 'Resume workout' : 'Pause workout'}
-              className="cursor-pointer select-none"
+              className="cursor-pointer select-none mt-3 mb-4 px-4 py-2 rounded bg-white/5 border border-white/10 text-white/40 text-[10px] uppercase tracking-widest font-bold hover:bg-white/10 transition"
               data-testid="timer-tap-to-pause"
             >
-              {(!isTimeBased && phase === 'work' && numReps > 0) ? (
-                /* Rep-based work: show live rep counter as the primary display */
-                <>
-                  <div className="text-8xl md:text-9xl font-black text-[#FDD000] tabular-nums mb-2" data-testid="text-timer">
-                    {Math.min(repCount, numReps)}
-                  </div>
-                  <p className="text-white/50 text-sm uppercase tracking-widest font-bold mb-2">
-                    of {numReps} reps
-                  </p>
-                </>
-              ) : (
-                /* Time-based or non-work phases: show countdown */
-                <>
-                  <div className="text-8xl md:text-9xl font-black text-[#FDD000] tabular-nums mb-2" data-testid="text-timer">
-                    {secondsLeft}
-                  </div>
-                  <p className="text-white/50 text-sm uppercase tracking-widest font-bold mb-2">seconds</p>
-                </>
-              )}
-              <p className="text-white/30 text-[10px] uppercase tracking-widest font-bold mb-6">Tap to {paused ? 'resume' : 'pause'}</p>
-            </div>
+              {paused ? '▶ Resume' : '⏸ Pause'}
+            </button>
 
             <div className="flex flex-wrap justify-center gap-3 max-w-2xl">
               <Button
