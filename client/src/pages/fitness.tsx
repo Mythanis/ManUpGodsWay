@@ -7163,6 +7163,11 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
   const tempoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const TEMPO_OVERRIDE_PREFIX = 'tempoOverride_';
 
+  // Exercises the user has explicitly tapped "Mark as Done" on.
+  // Prevents auto-logging — the timer advances automatically but
+  // completion is only recorded when the user manually confirms.
+  const [markedDone, setMarkedDone] = useState<Set<string>>(new Set());
+
   // Pause flag — when true the tick interval is a no-op so timers
   // freeze in place. Toggled by the pause button, by tapping the
   // exercise media or timer, and forced on whenever the written-
@@ -7710,11 +7715,8 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
       // Mark set done
       const isLastSet = setIdx + 1 >= totalSets;
       if (isLastSet) {
-        // Finished all sets of this exercise
-        if (currentExercise?.exerciseId) {
-          // Pass the row id so the completion FK lookup succeeds
-          onExerciseComplete(currentExercise.id);
-        }
+        // Finished all sets of this exercise — DO NOT auto-log.
+        // The user must tap "Mark as Done" themselves.
         const isLastExercise = exerciseIdx + 1 >= exercises.length;
         if (isLastExercise) {
           beep(880, 600);
@@ -8338,6 +8340,27 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
             >
               {paused ? '▶ Resume' : '⏸ Pause'}
             </button>
+
+            {/* Manual completion button — user must tap this to log the exercise */}
+            {currentExercise && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (!currentExercise?.id || markedDone.has(currentExercise.id)) return;
+                  setMarkedDone(prev => new Set([...prev, currentExercise.id]));
+                  onExerciseComplete(currentExercise.id);
+                }}
+                disabled={markedDone.has(currentExercise?.id ?? '')}
+                className={`w-full max-w-xs mb-4 py-4 rounded-sm border-2 font-black uppercase tracking-widest text-base transition-all ${
+                  markedDone.has(currentExercise?.id ?? '')
+                    ? 'bg-emerald-900/40 border-emerald-600 text-emerald-400 cursor-default'
+                    : 'bg-emerald-600 border-emerald-500 text-white hover:bg-emerald-500 active:scale-95'
+                }`}
+                data-testid="button-mark-done"
+              >
+                {markedDone.has(currentExercise?.id ?? '') ? '✓ Logged' : '✓ Mark as Done'}
+              </button>
+            )}
 
             <div className="flex flex-wrap justify-center gap-3 max-w-2xl">
               <Button
