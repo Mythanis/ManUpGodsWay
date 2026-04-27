@@ -629,6 +629,7 @@ export default function Fitness() {
   const [hrRange, setHrRange] = useState<7 | 30 | 90>(7);
   const [sleepRange, setSleepRange] = useState<7 | 30 | 90>(7);
   const [weightRange, setWeightRange] = useState<7 | 30 | 90>(7);
+  const [workoutHistoryDays, setWorkoutHistoryDays] = useState<7 | 30 | 90>(30);
 
   // Community comments state
   const [expandedCommentPost, setExpandedCommentPost] = useState<string | null>(null);
@@ -805,6 +806,17 @@ export default function Fitness() {
     queryKey: ['/api/health-goals'],
     enabled: hasMembership,
   });
+
+  // Workout session history
+  type WorkoutSession = { id: string; planId: string; planName: string; workoutType: string; feeling: 'too_hard' | 'just_right' | 'too_easy'; completionPct: number; createdAt: string };
+  const { data: workoutHistoryData } = useQuery<{ sessions: WorkoutSession[] }>({
+    queryKey: ['/api/workout-history'],
+    enabled: hasMembership,
+  });
+  const allWorkoutSessions = workoutHistoryData?.sessions ?? [];
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - workoutHistoryDays);
+  const workoutSessions = allWorkoutSessions.filter(s => new Date(s.createdAt) >= cutoff);
 
   const getHealthGoal = (metricType: string) =>
     healthGoalsData.find(g => g.metricType === metricType);
@@ -6264,6 +6276,69 @@ export default function Fitness() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Workout Sessions Log */}
+            <Card className="bg-zinc-900 border-2 border-black rounded-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-white font-black uppercase tracking-wide text-sm">
+                  <Dumbbell className="w-5 h-5 text-[#FDD000]" />
+                  Workout Sessions
+                  <span className="ml-1 text-white/40 font-normal normal-case tracking-normal text-[10px]">
+                    {workoutSessions.length} session{workoutSessions.length !== 1 ? 's' : ''}
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex gap-1">
+                  {([7, 30, 90] as const).map(r => (
+                    <button key={r} onClick={() => setWorkoutHistoryDays(r)} className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-sm border transition-colors ${workoutHistoryDays === r ? 'bg-[#FDD000] text-black border-[#FDD000]' : 'border-zinc-700 text-white/40 hover:text-white hover:border-zinc-500'}`}>{r}d</button>
+                  ))}
+                </div>
+                {workoutSessions.length === 0 ? (
+                  <div className="text-center py-6">
+                    <Dumbbell className="w-10 h-10 mx-auto text-zinc-600 mb-2" />
+                    <p className="text-white/40 text-sm">No workouts logged in this period.</p>
+                    <p className="text-white/25 text-xs mt-1">Complete a workout and rate it to see your history here.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {workoutSessions.map(session => {
+                      const feelingConfig = {
+                        too_hard:   { emoji: '😤', label: 'Too Hard',   color: 'text-red-400' },
+                        just_right: { emoji: '💪', label: 'Just Right', color: 'text-emerald-400' },
+                        too_easy:   { emoji: '😴', label: 'Too Easy',   color: 'text-sky-400' },
+                      }[session.feeling] ?? { emoji: '💪', label: session.feeling, color: 'text-white/60' };
+                      const pct = Math.round((session.completionPct ?? 1) * 100);
+                      const sessionDate = new Date(session.createdAt);
+                      const dateLabel = isToday(sessionDate) ? 'Today' : format(sessionDate, 'MMM d');
+                      const timeLabel = format(sessionDate, 'h:mm a');
+                      return (
+                        <div key={session.id} className="flex items-center gap-3 p-3 bg-black/40 border border-zinc-800 rounded-sm">
+                          <div className="shrink-0 w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-base">
+                            {feelingConfig.emoji}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white font-bold text-xs truncate">{session.planName}</p>
+                            <p className="text-white/40 text-[10px]">{dateLabel} · {timeLabel}</p>
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <p className={`text-[10px] font-black uppercase ${feelingConfig.color}`}>{feelingConfig.label}</p>
+                            {pct < 100 && (
+                              <p className="text-white/30 text-[10px]">{pct}% done</p>
+                            )}
+                            {pct >= 100 && (
+                              <p className="text-emerald-500 text-[10px] font-bold flex items-center gap-0.5 justify-end">
+                                <Check className="w-3 h-3" /> Full
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
         </Tabs>
@@ -6917,6 +6992,7 @@ export default function Fitness() {
             setPlayerOpen(false);
             setPlayerPlan(null);
             setPlayerExercises([]);
+            queryClient.invalidateQueries({ queryKey: ['/api/workout-history'] });
           }}
           onExerciseComplete={(rowId) => {
             // The completion endpoint expects the fitness_plan_exercises row id
@@ -6940,6 +7016,11 @@ export default function Fitness() {
               const next = new Set(prev);
               next.add(rowId);
               return next;
+            });
+            toast({
+              title: '✓ Exercise logged',
+              description: 'Recorded in your workout history.',
+              duration: 2000,
             });
           }}
         />

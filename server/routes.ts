@@ -11908,6 +11908,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all workout sessions (feedback rows) for the current user, joined with plan name
+  app.get('/api/workout-history', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+
+      const sessions = await db
+        .select({
+          id: schema.workoutFeedback.id,
+          planId: schema.workoutFeedback.planId,
+          planName: schema.fitnessPlans.name,
+          workoutType: schema.workoutFeedback.workoutType,
+          feeling: schema.workoutFeedback.feeling,
+          completionPct: schema.workoutFeedback.completionPct,
+          createdAt: schema.workoutFeedback.createdAt,
+        })
+        .from(schema.workoutFeedback)
+        .innerJoin(schema.fitnessPlans, eq(schema.fitnessPlans.id, schema.workoutFeedback.planId))
+        .where(eq(schema.workoutFeedback.userId, user.id))
+        .orderBy(desc(schema.workoutFeedback.createdAt))
+        .limit(50);
+
+      res.json({ sessions });
+    } catch (error) {
+      console.error('Error loading workout history:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   // Unmark exercise as complete
   app.delete('/api/fitness-plans/:planId/exercises/:exerciseId/complete', isAuthenticated, async (req: any, res) => {
     try {
