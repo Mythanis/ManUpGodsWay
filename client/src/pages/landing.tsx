@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, BookOpen, Video, MessageCircle, Shield, Target, Flame, ChevronRight } from "lucide-react";
+import { Users, BookOpen, Video, MessageCircle, Shield, Target, Flame, ChevronRight, Dumbbell, PlayCircle, ClipboardList, Activity, Utensils, Heart } from "lucide-react";
 import logoUrl from "@assets/Man_Up_Logo-Gods_way-White-Yellow_copy_1766440697541.png";
 import warGroupsImageUrl from "@assets/image_1767068818932.png";
 
@@ -185,6 +185,113 @@ export default function Landing() {
             <p className="text-zinc-500 text-sm">Grow through action and accountability</p>
           </div>
         </div>
+
+        {/* Fitness Features & Benefits Section */}
+        <div className="h-px bg-gradient-to-r from-transparent via-[#FDD000]/20 to-transparent my-8" />
+
+        <div className="text-center mb-10">
+          <p className="text-[#FDD000] text-sm font-semibold tracking-[0.15em] uppercase mb-4">
+            Fitness & Training
+          </p>
+          <h2
+            className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight"
+            style={{ fontFamily: "'Inter', 'DM Sans', sans-serif" }}
+            data-testid="fitness-section-title"
+          >
+            Train Your Body. Strengthen Your Spirit.
+          </h2>
+          <p className="text-zinc-400 text-lg max-w-xl mx-auto">
+            A complete fitness system built on biblical principles — from your first rep to your hundredth.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 mb-10" data-testid="fitness-benefits-grid">
+          <Card className="group border-0 bg-zinc-900/50 backdrop-blur-sm hover:bg-zinc-800/60 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-[#FDD000]/5 rounded-2xl overflow-hidden">
+            <CardContent className="p-6">
+              <div className="w-12 h-12 rounded-xl bg-[#FDD000]/10 flex items-center justify-center mb-4 group-hover:bg-[#FDD000]/20 transition-colors">
+                <Dumbbell className="w-6 h-6 text-[#FDD000]" />
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2 tracking-tight">Guided Workout Plans</h3>
+              <p className="text-zinc-400 text-sm leading-relaxed">
+                Pre-built programs for every level — Beginner to Advanced — with step-by-step video demonstrations for every movement.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="group border-0 bg-zinc-900/50 backdrop-blur-sm hover:bg-zinc-800/60 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-[#FDD000]/5 rounded-2xl overflow-hidden">
+            <CardContent className="p-6">
+              <div className="w-12 h-12 rounded-xl bg-[#FDD000]/10 flex items-center justify-center mb-4 group-hover:bg-[#FDD000]/20 transition-colors">
+                <PlayCircle className="w-6 h-6 text-[#FDD000]" />
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2 tracking-tight">Live Workout Player</h3>
+              <p className="text-zinc-400 text-sm leading-relaxed">
+                Real-time rep counters, rest timers, and automatic left/right guidance so you train both sides equally and with purpose.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="group border-0 bg-zinc-900/50 backdrop-blur-sm hover:bg-zinc-800/60 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-[#FDD000]/5 rounded-2xl overflow-hidden">
+            <CardContent className="p-6">
+              <div className="w-12 h-12 rounded-xl bg-[#FDD000]/10 flex items-center justify-center mb-4 group-hover:bg-[#FDD000]/20 transition-colors">
+                <ClipboardList className="w-6 h-6 text-[#FDD000]" />
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2 tracking-tight">Custom Plan Builder</h3>
+              <p className="text-zinc-400 text-sm leading-relaxed">
+                Design your own plan from 1,600+ exercises filtered by muscle group, equipment, and difficulty — then schedule it day by day.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="group border-0 bg-zinc-900/50 backdrop-blur-sm hover:bg-zinc-800/60 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-[#FDD000]/5 rounded-2xl overflow-hidden">
+            <CardContent className="p-6">
+              <div className="w-12 h-12 rounded-xl bg-[#FDD000]/10 flex items-center justify-center mb-4 group-hover:bg-[#FDD000]/20 transition-colors">
+                <Activity className="w-6 h-6 text-[#FDD000]" />
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2 tracking-tight">Health Dashboard</h3>
+              <p className="text-zinc-400 text-sm leading-relaxed">
+                Track steps, heart rate, sleep, and weight. Spot trends with clear charts that keep you honest and progressing.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="group border-0 bg-zinc-900/50 backdrop-blur-sm hover:bg-zinc-800/60 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-[#FDD000]/5 rounded-2xl overflow-hidden">
+            <CardContent className="p-6">
+              <div className="w-12 h-12 rounded-xl bg-[#FDD000]/10 flex items-center justify-center mb-4 group-hover:bg-[#FDD000]/20 transition-colors">
+                <Utensils className="w-6 h-6 text-[#FDD000]" />
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2 tracking-tight">Nutrition & Calorie Tracking</h3>
+              <p className="text-zinc-400 text-sm leading-relaxed">
+                Know your daily targets with a science-backed calorie calculator, then log every meal to stay on track.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="group border-0 bg-zinc-900/50 backdrop-blur-sm hover:bg-zinc-800/60 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-[#FDD000]/5 rounded-2xl overflow-hidden">
+            <CardContent className="p-6">
+              <div className="w-12 h-12 rounded-xl bg-[#FDD000]/10 flex items-center justify-center mb-4 group-hover:bg-[#FDD000]/20 transition-colors">
+                <Heart className="w-6 h-6 text-[#FDD000]" />
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2 tracking-tight">Fitness Brotherhood</h3>
+              <p className="text-zinc-400 text-sm leading-relaxed">
+                Share wins, encourage brothers, and stay accountable in a dedicated fitness community built for men of faith.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="text-center mb-10">
+          <Button
+            onClick={() => window.location.href = '/fitness'}
+            variant="outline"
+            className="border-2 border-[#FDD000] text-[#FDD000] bg-transparent hover:bg-[#FDD000] hover:text-zinc-950 text-base px-8 py-5 rounded-xl font-bold transition-all hover:scale-[1.02]"
+            data-testid="button-start-training"
+          >
+            Start Training
+            <ChevronRight className="ml-2 w-5 h-5" />
+          </Button>
+        </div>
+
+        <div className="h-px bg-gradient-to-r from-transparent via-[#FDD000]/20 to-transparent mb-12" />
 
         {/* CTA Section */}
         <div className="relative">
