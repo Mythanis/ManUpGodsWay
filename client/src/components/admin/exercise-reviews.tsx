@@ -24,6 +24,7 @@ import {
   ArrowRight,
   AlertTriangle,
   Video as VideoIcon,
+  FilterX,
 } from "lucide-react";
 
 type SidednessValue = "bilateral" | "unilateral" | "alternating";
@@ -78,6 +79,28 @@ export default function ExerciseReviews() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [activeId, setActiveId] = useState<number | null>(null);
 
+  // Filters — "all" means no filter for that field
+  const [filterEquipment, setFilterEquipment] = useState<string>("all");
+  const [filterBodyPart, setFilterBodyPart] = useState<string>("all");
+  const [filterLevel, setFilterLevel] = useState<string>("all");
+  const [filterHiit, setFilterHiit] = useState<string>("all");
+  const [filterStretching, setFilterStretching] = useState<string>("all");
+
+  const hasActiveFilters =
+    filterEquipment !== "all" ||
+    filterBodyPart !== "all" ||
+    filterLevel !== "all" ||
+    filterHiit !== "all" ||
+    filterStretching !== "all";
+
+  const clearFilters = () => {
+    setFilterEquipment("all");
+    setFilterBodyPart("all");
+    setFilterLevel("all");
+    setFilterHiit("all");
+    setFilterStretching("all");
+  };
+
   // Drafts for the active exercise being reviewed
   const [draftSidedness, setDraftSidedness] =
     useState<SidednessValue>("bilateral");
@@ -94,15 +117,39 @@ export default function ExerciseReviews() {
   };
 
   const { data: rows = [], isLoading } = useQuery<Exercise[]>({
-    queryKey: ["/api/exercises", debouncedSearch],
+    queryKey: [
+      "/api/exercises",
+      debouncedSearch,
+      filterEquipment,
+      filterBodyPart,
+      filterLevel,
+      filterHiit,
+      filterStretching,
+    ],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (debouncedSearch) params.set("search", debouncedSearch);
+      if (filterEquipment !== "all") params.set("equipment", filterEquipment);
+      if (filterBodyPart !== "all") params.set("bodyPart", filterBodyPart);
+      if (filterLevel !== "all") params.set("level", filterLevel);
+      if (filterHiit !== "all") params.set("hiit", filterHiit);
+      if (filterStretching !== "all") params.set("stretching", filterStretching);
       const url = `/api/exercises${params.toString() ? "?" + params : ""}`;
       const res = await fetch(url, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to load exercises");
       return res.json();
     },
+  });
+
+  // Filter option lists (independent of current filters so they don't shrink)
+  const { data: equipmentTypes = [] } = useQuery<string[]>({
+    queryKey: ["/api/exercises/equipment-types"],
+  });
+  const { data: bodyParts = [] } = useQuery<string[]>({
+    queryKey: ["/api/exercises/body-parts"],
+  });
+  const { data: fitnessLevels = [] } = useQuery<string[]>({
+    queryKey: ["/api/exercises/fitness-levels"],
   });
 
   // Sort by id for stable navigation order
@@ -467,8 +514,20 @@ export default function ExerciseReviews() {
   }
 
   // ── List view ─────────────────────────────────────────────────────────
+  const sortedEquipment = [...equipmentTypes].sort();
+  const sortedBodyParts = [...bodyParts].sort();
+  // Order difficulty Beginner → Intermediate → Advanced when those values are present
+  const levelOrder: Record<string, number> = {
+    Beginner: 0,
+    Intermediate: 1,
+    Advanced: 2,
+  };
+  const sortedLevels = [...fitnessLevels].sort(
+    (a, b) => (levelOrder[a] ?? 99) - (levelOrder[b] ?? 99) || a.localeCompare(b),
+  );
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="relative">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
         <Input
@@ -479,6 +538,128 @@ export default function ExerciseReviews() {
           data-testid="input-search-exercises"
         />
       </div>
+
+      {/* Filters */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+        <div>
+          <Label className="text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1 block">
+            Equipment
+          </Label>
+          <Select value={filterEquipment} onValueChange={setFilterEquipment}>
+            <SelectTrigger
+              className="h-8 text-xs border-2 border-gray-300"
+              data-testid="filter-equipment"
+            >
+              <SelectValue placeholder="All" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All equipment</SelectItem>
+              {sortedEquipment.map((v) => (
+                <SelectItem key={v} value={v}>
+                  {v}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1 block">
+            Body Part
+          </Label>
+          <Select value={filterBodyPart} onValueChange={setFilterBodyPart}>
+            <SelectTrigger
+              className="h-8 text-xs border-2 border-gray-300"
+              data-testid="filter-body-part"
+            >
+              <SelectValue placeholder="All" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All body parts</SelectItem>
+              {sortedBodyParts.map((v) => (
+                <SelectItem key={v} value={v}>
+                  {v}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1 block">
+            Difficulty
+          </Label>
+          <Select value={filterLevel} onValueChange={setFilterLevel}>
+            <SelectTrigger
+              className="h-8 text-xs border-2 border-gray-300"
+              data-testid="filter-level"
+            >
+              <SelectValue placeholder="All" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All levels</SelectItem>
+              {sortedLevels.map((v) => (
+                <SelectItem key={v} value={v}>
+                  {v}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1 block">
+            HIIT
+          </Label>
+          <Select value={filterHiit} onValueChange={setFilterHiit}>
+            <SelectTrigger
+              className="h-8 text-xs border-2 border-gray-300"
+              data-testid="filter-hiit"
+            >
+              <SelectValue placeholder="All" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="Yes">HIIT only</SelectItem>
+              <SelectItem value="No">Non-HIIT</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1 block">
+            Stretching
+          </Label>
+          <Select value={filterStretching} onValueChange={setFilterStretching}>
+            <SelectTrigger
+              className="h-8 text-xs border-2 border-gray-300"
+              data-testid="filter-stretching"
+            >
+              <SelectValue placeholder="All" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="Yes">Stretching only</SelectItem>
+              <SelectItem value="No">Non-stretching</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {hasActiveFilters && (
+        <div className="flex items-center justify-between gap-2 bg-amber-50 border-2 border-amber-300 rounded px-2.5 py-1.5">
+          <span className="text-[11px] font-semibold text-amber-900">
+            Filters are active — Next/Previous/Update will only navigate within
+            the filtered list.
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs border-2 border-amber-700 text-amber-900 hover:bg-amber-100"
+            onClick={clearFilters}
+            data-testid="button-clear-filters"
+          >
+            <FilterX className="h-3.5 w-3.5 mr-1" />
+            Clear filters
+          </Button>
+        </div>
+      )}
 
       {!isLoading && (
         <p className="text-xs text-gray-500">
