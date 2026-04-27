@@ -205,7 +205,7 @@ export default function Landing() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 mb-10" data-testid="fitness-benefits-grid">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10" data-testid="fitness-benefits-grid">
           <Card className="group border-0 bg-zinc-900/50 backdrop-blur-sm hover:bg-zinc-800/60 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-[#FDD000]/5 rounded-2xl overflow-hidden">
             <CardContent className="p-6">
               <div className="w-12 h-12 rounded-xl bg-[#FDD000]/10 flex items-center justify-center mb-4 group-hover:bg-[#FDD000]/20 transition-colors">
