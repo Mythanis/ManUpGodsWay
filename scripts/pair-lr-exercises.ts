@@ -109,9 +109,13 @@ async function main() {
     if (!side) continue;
     const { matchKey, displayBase } = normalizeBase(row.name);
     if (!matchKey) continue;
-    // Group on body-part + equipment + name minus L/R so we don't accidentally
-    // pair two unrelated exercises that happen to share a base name.
-    const groupKey = `${row.bodyPart || ""}||${row.equipment || ""}||${matchKey}`;
+    // Group on equipment + name minus L/R. body_part is intentionally
+    // EXCLUDED from the group key because the L and R rows of the same
+    // exercise are sometimes mis-tagged with different body parts in the
+    // library (e.g. chair back lunge left = Quads, chair back lunge right
+    // = Glutes). Equipment is reliable enough to prevent pairing across
+    // genuinely different exercises.
+    const groupKey = `${row.equipment || ""}||${matchKey}`;
     const g = groups.get(groupKey) ?? {
       left: [],
       right: [],
