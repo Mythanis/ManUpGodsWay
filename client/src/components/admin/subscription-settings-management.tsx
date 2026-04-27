@@ -165,7 +165,7 @@ export default function SubscriptionSettingsManagement() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FCD000]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FDD000]"></div>
       </div>
     );
   }
@@ -174,11 +174,11 @@ export default function SubscriptionSettingsManagement() {
     <div className="space-y-6">
 
       {/* Pricing & Trial Duration */}
-      <Card className="bg-black border border-[#FCD000]/20">
+      <Card className="bg-black border border-[#FDD000]/20">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2 text-[#FCD000] uppercase tracking-wider" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
+              <CardTitle className="flex items-center gap-2 text-[#FDD000] uppercase tracking-wider" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
                 <Settings className="w-5 h-5" />
                 Subscription Settings
               </CardTitle>
@@ -187,12 +187,12 @@ export default function SubscriptionSettingsManagement() {
               </CardDescription>
             </div>
             {!isEditingPricing ? (
-              <Button onClick={() => setIsEditingPricing(true)} className="bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-bold">
+              <Button onClick={() => setIsEditingPricing(true)} className="bg-[#FDD000] text-black hover:bg-[#FDD000]/90 font-bold">
                 Edit Settings
               </Button>
             ) : (
               <div className="flex gap-2">
-                <Button onClick={handleSavePricing} disabled={updateMutation.isPending} className="bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-bold">
+                <Button onClick={handleSavePricing} disabled={updateMutation.isPending} className="bg-[#FDD000] text-black hover:bg-[#FDD000]/90 font-bold">
                   <Save className="w-4 h-4 mr-1" />
                   Save
                 </Button>
@@ -206,10 +206,10 @@ export default function SubscriptionSettingsManagement() {
       </Card>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card className="bg-black border border-[#FCD000]/20">
+        <Card className="bg-black border border-[#FDD000]/20">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-white text-lg">
-              <DollarSign className="w-5 h-5 text-[#FCD000]" />
+              <DollarSign className="w-5 h-5 text-[#FDD000]" />
               Pricing
             </CardTitle>
           </CardHeader>
@@ -248,13 +248,13 @@ export default function SubscriptionSettingsManagement() {
               <>
                 <div className="bg-white/5 p-3 rounded-lg">
                   <Label className="text-xs text-white/50 block mb-1">Monthly</Label>
-                  <div className="text-2xl font-black text-[#FCD000]" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
+                  <div className="text-2xl font-black text-[#FDD000]" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
                     ${parseFloat(settings?.monthlyPrice || "9.99").toFixed(2)}
                   </div>
                 </div>
                 <div className="bg-white/5 p-3 rounded-lg">
                   <Label className="text-xs text-white/50 block mb-1">Yearly</Label>
-                  <div className="text-2xl font-black text-[#FCD000]" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
+                  <div className="text-2xl font-black text-[#FDD000]" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
                     ${parseFloat(settings?.yearlyPrice || "99.99").toFixed(2)}
                   </div>
                   <p className="text-xs text-green-400 mt-1">
@@ -266,10 +266,10 @@ export default function SubscriptionSettingsManagement() {
           </CardContent>
         </Card>
 
-        <Card className="bg-black border border-[#FCD000]/20">
+        <Card className="bg-black border border-[#FDD000]/20">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-white text-lg">
-              <Clock className="w-5 h-5 text-[#FCD000]" />
+              <Clock className="w-5 h-5 text-[#FDD000]" />
               Free Trial
             </CardTitle>
           </CardHeader>
@@ -290,7 +290,7 @@ export default function SubscriptionSettingsManagement() {
             ) : (
               <div className="bg-white/5 p-3 rounded-lg">
                 <Label className="text-xs text-white/50 block mb-1">Duration</Label>
-                <div className="text-2xl font-black text-[#FCD000]" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
+                <div className="text-2xl font-black text-[#FDD000]" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
                   {settings?.trialDurationDays || 7} DAYS
                 </div>
                 <p className="text-xs text-white/40 mt-1">After trial ends, users must subscribe to continue.</p>
@@ -301,10 +301,10 @@ export default function SubscriptionSettingsManagement() {
       </div>
 
       {/* Trial Content Areas — toggles immediately */}
-      <Card className="bg-black border border-[#FCD000]/20">
+      <Card className="bg-black border border-[#FDD000]/20">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-white text-lg">
-            <Shield className="w-5 h-5 text-[#FCD000]" />
+            <Shield className="w-5 h-5 text-[#FDD000]" />
             Trial Content Access
           </CardTitle>
           <CardDescription className="text-white/50">
@@ -318,18 +318,18 @@ export default function SubscriptionSettingsManagement() {
                 key={key}
                 className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
                   formData.trialContentAreas[key]
-                    ? "bg-[#FCD000]/10 border-[#FCD000]/30"
+                    ? "bg-[#FDD000]/10 border-[#FDD000]/30"
                     : "bg-white/5 border-white/10"
                 }`}
               >
                 <span className="text-sm text-white font-medium">{label}</span>
                 {savingArea === key ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-[#FCD000]" />
+                  <Loader2 className="w-4 h-4 animate-spin text-[#FDD000]" />
                 ) : (
                   <Switch
                     checked={!!formData.trialContentAreas[key]}
                     onCheckedChange={(checked) => handleToggleContentArea(key, checked)}
-                    className="data-[state=checked]:bg-[#FCD000] data-[state=unchecked]:bg-gray-600 border-gray-500"
+                    className="data-[state=checked]:bg-[#FDD000] data-[state=unchecked]:bg-gray-600 border-gray-500"
                   />
                 )}
               </div>
@@ -339,10 +339,10 @@ export default function SubscriptionSettingsManagement() {
       </Card>
 
       {/* Trial Study Access — checkboxes immediately */}
-      <Card className="bg-black border border-[#FCD000]/20">
+      <Card className="bg-black border border-[#FDD000]/20">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-white text-lg">
-            <BookOpen className="w-5 h-5 text-[#FCD000]" />
+            <BookOpen className="w-5 h-5 text-[#FDD000]" />
             Trial Study Access
           </CardTitle>
           <CardDescription className="text-white/50">
@@ -359,17 +359,17 @@ export default function SubscriptionSettingsManagement() {
                   key={study.id}
                   className={`flex items-center gap-3 p-2.5 rounded-lg border cursor-pointer transition-colors ${
                     selectedTrialStudyIds.has(study.id)
-                      ? "bg-[#FCD000]/10 border-[#FCD000]/30"
+                      ? "bg-[#FDD000]/10 border-[#FDD000]/30"
                       : "bg-white/5 border-white/10"
                   } hover:bg-white/10`}
                 >
                   {savingStudy === study.id ? (
-                    <Loader2 className="w-4 h-4 animate-spin text-[#FCD000] flex-shrink-0" />
+                    <Loader2 className="w-4 h-4 animate-spin text-[#FDD000] flex-shrink-0" />
                   ) : (
                     <Checkbox
                       checked={selectedTrialStudyIds.has(study.id)}
                       onCheckedChange={(checked) => handleToggleStudy(study.id, !!checked)}
-                      className="data-[state=checked]:bg-[#FCD000] data-[state=checked]:border-[#FCD000] border-gray-500"
+                      className="data-[state=checked]:bg-[#FDD000] data-[state=checked]:border-[#FDD000] border-gray-500"
                     />
                   )}
                   <span className="text-sm text-white font-medium">{study.title}</span>
@@ -378,16 +378,16 @@ export default function SubscriptionSettingsManagement() {
             </div>
           )}
           {selectedTrialStudyIds.size > 0 && (
-            <p className="text-xs text-[#FCD000]/70 mt-3">{selectedTrialStudyIds.size} {selectedTrialStudyIds.size === 1 ? 'study' : 'studies'} enabled for trial access.</p>
+            <p className="text-xs text-[#FDD000]/70 mt-3">{selectedTrialStudyIds.size} {selectedTrialStudyIds.size === 1 ? 'study' : 'studies'} enabled for trial access.</p>
           )}
         </CardContent>
       </Card>
 
       {/* Subscription Features */}
-      <Card className="bg-black border border-[#FCD000]/20">
+      <Card className="bg-black border border-[#FDD000]/20">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-white text-lg">
-            <Check className="w-5 h-5 text-[#FCD000]" />
+            <Check className="w-5 h-5 text-[#FDD000]" />
             Subscription Features
           </CardTitle>
           <CardDescription className="text-white/50">
@@ -407,7 +407,7 @@ export default function SubscriptionSettingsManagement() {
             <div className="space-y-2">
               {(settings?.features || []).map((feature, index) => (
                 <div key={index} className="flex items-start gap-2 text-sm">
-                  <Check className="w-4 h-4 text-[#FCD000] flex-shrink-0 mt-0.5" />
+                  <Check className="w-4 h-4 text-[#FDD000] flex-shrink-0 mt-0.5" />
                   <span className="text-white/80">{feature}</span>
                 </div>
               ))}

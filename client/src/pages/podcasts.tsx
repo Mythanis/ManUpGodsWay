@@ -84,7 +84,7 @@ function PodcastCard({
   const [expanded, setExpanded] = useState(false);
   
   return (
-    <Card className="liquid-black-white shadow-[3px_3px_0px_0px_rgba(252,208,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all border-2 border-ministry-gold-exact rounded-sm overflow-hidden">
+    <Card className="liquid-black-white shadow-[3px_3px_0px_0px_rgba(253,208,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(253,208,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all border-2 border-ministry-gold-exact rounded-sm overflow-hidden">
       <CardContent className="p-3 sm:p-4 relative z-10">
         <div 
           className="flex items-start space-x-3 cursor-pointer"
@@ -560,7 +560,7 @@ export default function Podcasts() {
               <Headphones className="w-8 h-8 mr-2" />
               Podcasts
             </h1>
-            <p className="text-[#FCD000] text-xs font-bold tracking-widest uppercase">Audio & Video Content</p>
+            <p className="text-[#FDD000] text-xs font-bold tracking-widest uppercase">Audio & Video Content</p>
           </div>
 
         </div>
@@ -614,7 +614,7 @@ export default function Podcasts() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-gold"></div>
           </div>
         ) : filteredPodcasts.length === 0 ? (
-          <Card className="text-center py-12 bg-[#FCD000] text-black border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+          <Card className="text-center py-12 bg-[#FDD000] text-black border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
             <CardContent className="relative z-10">
               <Headphones className="w-12 h-12 mx-auto text-black mb-4" />
               <h3 className="text-lg font-black text-black mb-2 tracking-tight">No Podcasts Found</h3>

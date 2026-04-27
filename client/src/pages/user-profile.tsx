@@ -199,8 +199,8 @@ export default function UserProfile() {
       return {
         label: 'Subscriber',
         icon: <Crown className="w-4 h-4" />,
-        color: 'text-[#FCD000]',
-        bgColor: 'bg-[#FCD000]/20 border border-[#FCD000]/30',
+        color: 'text-[#FDD000]',
+        bgColor: 'bg-[#FDD000]/20 border border-[#FDD000]/30',
       };
     }
     if (status === 'trial') {
@@ -260,15 +260,15 @@ export default function UserProfile() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl pb-20">
       <BackButton fallbackPath="/brothers" />
-      <h1 className="text-2xl font-black uppercase tracking-wider text-[#FCD000] mb-6" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>User Profile</h1>
+      <h1 className="text-2xl font-black uppercase tracking-wider text-[#FDD000] mb-6" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>User Profile</h1>
 
-      <Card className="mb-6 bg-black border border-[#FCD000]/20">
+      <Card className="mb-6 bg-black border border-[#FDD000]/20">
         <CardContent className="pt-6">
           <div className="flex items-start space-x-4">
             <img
               src={profile.user.profileImageUrl || `https://ui-avatars.com/api/?name=${profile.user.firstName}+${profile.user.lastName}&background=FCD000&color=000&size=80&bold=true`}
               alt={`${profile.user.firstName} ${profile.user.lastName}`}
-              className="w-20 h-20 rounded-full object-cover border-2 border-[#FCD000]/40"
+              className="w-20 h-20 rounded-full object-cover border-2 border-[#FDD000]/40"
             />
             <div className="flex-1">
               <div className="flex items-center flex-wrap gap-2 mb-2">
@@ -281,7 +281,7 @@ export default function UserProfile() {
                 </div>
               </div>
               <div className="flex items-center text-sm text-white/50 mb-4">
-                <Calendar className="w-4 h-4 mr-1 text-[#FCD000]/60" />
+                <Calendar className="w-4 h-4 mr-1 text-[#FDD000]/60" />
                 Member since {formatMemberSince(profile.memberSince)}
               </div>
 
@@ -289,7 +289,7 @@ export default function UserProfile() {
                 <Button
                   onClick={handleDirectMessage}
                   size="sm"
-                  className="bg-[#FCD000] hover:bg-[#FCD000]/80 text-black font-bold uppercase tracking-wide text-xs"
+                  className="bg-[#FDD000] hover:bg-[#FDD000]/80 text-black font-bold uppercase tracking-wide text-xs"
                   disabled={createDirectConversation.isPending}
                 >
                   <MessageCircle className="w-4 h-4 mr-2" />
@@ -323,9 +323,9 @@ export default function UserProfile() {
                       Report
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="bg-black border border-[#FCD000]/20 text-white">
+                  <DialogContent className="bg-black border border-[#FDD000]/20 text-white">
                     <DialogHeader>
-                      <DialogTitle className="text-[#FCD000] font-black uppercase tracking-wider" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>Report User</DialogTitle>
+                      <DialogTitle className="text-[#FDD000] font-black uppercase tracking-wider" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>Report User</DialogTitle>
                     </DialogHeader>
                     <Form {...reportForm}>
                       <form onSubmit={reportForm.handleSubmit((data) => createReport.mutate(data))} className="space-y-4">
@@ -411,31 +411,31 @@ export default function UserProfile() {
         </Card>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-          <Card className="overflow-hidden bg-black border border-[#FCD000]/20">
+          <Card className="overflow-hidden bg-black border border-[#FDD000]/20">
             <CardContent className="p-4 text-center">
-              <BookOpen className="w-5 h-5 text-[#FCD000] mx-auto mb-2" />
-              <div className="text-2xl font-black text-[#FCD000]" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>{profile.studiesCompleted}</div>
+              <BookOpen className="w-5 h-5 text-[#FDD000] mx-auto mb-2" />
+              <div className="text-2xl font-black text-[#FDD000]" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>{profile.studiesCompleted}</div>
               <p className="text-[10px] uppercase tracking-wider text-white/50 font-semibold mt-1">Studies Done</p>
             </CardContent>
           </Card>
 
-          <Card className="overflow-hidden bg-black border border-[#FCD000]/20">
+          <Card className="overflow-hidden bg-black border border-[#FDD000]/20">
             <CardContent className="p-4 text-center">
-              <Activity className="w-5 h-5 text-[#FCD000] mx-auto mb-2" />
-              <div className="text-2xl font-black text-[#FCD000]" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>{profile.daysActive}</div>
+              <Activity className="w-5 h-5 text-[#FDD000] mx-auto mb-2" />
+              <div className="text-2xl font-black text-[#FDD000]" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>{profile.daysActive}</div>
               <p className="text-[10px] uppercase tracking-wider text-white/50 font-semibold mt-1">Days Active</p>
             </CardContent>
           </Card>
 
-          <Card className="overflow-hidden bg-black border border-[#FCD000]/20">
+          <Card className="overflow-hidden bg-black border border-[#FDD000]/20">
             <CardContent className="p-4 text-center">
-              <MessageSquare className="w-5 h-5 text-[#FCD000] mx-auto mb-2" />
-              <div className="text-2xl font-black text-[#FCD000]" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>{profile.forumPosts}</div>
+              <MessageSquare className="w-5 h-5 text-[#FDD000] mx-auto mb-2" />
+              <div className="text-2xl font-black text-[#FDD000]" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>{profile.forumPosts}</div>
               <p className="text-[10px] uppercase tracking-wider text-white/50 font-semibold mt-1">Forum Posts</p>
             </CardContent>
           </Card>
 
-          <Card className="overflow-hidden bg-black border border-[#FCD000]/20">
+          <Card className="overflow-hidden bg-black border border-[#FDD000]/20">
             <CardContent className="p-4 text-center">
               {tierInfo.icon ? <div className={`${tierInfo.color} mx-auto mb-2 flex justify-center`}>{tierInfo.icon}</div> : <Star className="w-5 h-5 text-white/40 mx-auto mb-2" />}
               <div className={`text-lg font-black leading-tight uppercase tracking-wide ${tierInfo.color}`} style={{ fontFamily: "'Bebas Neue', sans-serif" }}>

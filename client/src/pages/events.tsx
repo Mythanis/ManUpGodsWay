@@ -142,18 +142,18 @@ function EventPaymentForm({
   if (succeeded) {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-        <div className="w-20 h-20 rounded-full bg-[#FCD000]/20 border-2 border-[#FCD000] flex items-center justify-center mb-6">
-          <CheckCircle className="h-10 w-10 text-[#FCD000]" />
+        <div className="w-20 h-20 rounded-full bg-[#FDD000]/20 border-2 border-[#FDD000] flex items-center justify-center mb-6">
+          <CheckCircle className="h-10 w-10 text-[#FDD000]" />
         </div>
-        <h2 className="text-3xl font-black text-[#FCD000] uppercase tracking-wider mb-2" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
+        <h2 className="text-3xl font-black text-[#FDD000] uppercase tracking-wider mb-2" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
           You're In!
         </h2>
         <p className="text-white/70 text-sm mb-2">{eventTitle}</p>
-        {tierName && <p className="text-[#FCD000] font-bold text-sm mb-6">{tierName}</p>}
+        {tierName && <p className="text-[#FDD000] font-bold text-sm mb-6">{tierName}</p>}
         <p className="text-white/50 text-xs mb-8">Your ticket purchase was successful. Check your email for confirmation.</p>
         <Button
           onClick={onSuccess}
-          className="bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-black uppercase tracking-wide"
+          className="bg-[#FDD000] text-black hover:bg-[#FDD000]/90 font-black uppercase tracking-wide"
         >
           Back to Events
         </Button>
@@ -163,18 +163,18 @@ function EventPaymentForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 px-6 pb-8">
-      <div className="bg-white/5 border border-[#FCD000]/30 rounded-sm p-4 space-y-3">
+      <div className="bg-white/5 border border-[#FDD000]/30 rounded-sm p-4 space-y-3">
         <p className="text-white/50 text-xs uppercase tracking-wide font-bold">Order Summary</p>
         <div className="flex items-center justify-between">
           <div>
             <p className="text-white font-bold text-sm">{eventTitle}</p>
-            {tierName && <p className="text-[#FCD000] text-xs font-semibold">{tierName}</p>}
+            {tierName && <p className="text-[#FDD000] text-xs font-semibold">{tierName}</p>}
           </div>
-          <p className="text-[#FCD000] font-black text-2xl" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
+          <p className="text-[#FDD000] font-black text-2xl" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
             ${amount.toFixed(2)}
           </p>
         </div>
-        <div className="border-t border-[#FCD000]/20 pt-2">
+        <div className="border-t border-[#FDD000]/20 pt-2">
           <p className="text-white/40 text-xs">
             Purchasing as: <span className="text-white/70 font-semibold">{purchaserName}</span>
           </p>
@@ -207,7 +207,7 @@ function EventPaymentForm({
         <Button
           type="submit"
           disabled={!stripe || processing}
-          className="flex-1 bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-black uppercase tracking-wide rounded-sm"
+          className="flex-1 bg-[#FDD000] text-black hover:bg-[#FDD000]/90 font-black uppercase tracking-wide rounded-sm"
         >
           {processing ? (
             <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Processing...</>
@@ -232,7 +232,7 @@ function EventPurchaseModal({
   return createPortal(
     <div className="fixed inset-0 bg-black overflow-y-auto" style={{ zIndex: 9999 }}>
       <div className="min-h-full flex flex-col">
-        <div className="flex items-center gap-3 px-4 py-4 border-b border-[#FCD000]/30">
+        <div className="flex items-center gap-3 px-4 py-4 border-b border-[#FDD000]/30">
           <button
             onClick={onClose}
             className="text-white/60 hover:text-white transition-colors p-1"
@@ -240,18 +240,18 @@ function EventPurchaseModal({
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <div className="w-8 h-8 bg-[#FCD000] rounded-sm flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 bg-[#FDD000] rounded-sm flex items-center justify-center flex-shrink-0">
             <Ticket className="h-4 w-4 text-black" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[#FCD000] font-black uppercase tracking-tight text-sm leading-tight truncate">
+            <p className="text-[#FDD000] font-black uppercase tracking-tight text-sm leading-tight truncate">
               {modal.eventTitle}
             </p>
             {modal.tierName && (
               <p className="text-white/50 text-xs font-semibold truncate">{modal.tierName}</p>
             )}
           </div>
-          <p className="text-[#FCD000] font-black text-xl flex-shrink-0" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
+          <p className="text-[#FDD000] font-black text-xl flex-shrink-0" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
             ${modal.amount.toFixed(2)}
           </p>
         </div>
@@ -265,7 +265,7 @@ function EventPurchaseModal({
                 appearance: {
                   theme: 'night',
                   variables: {
-                    colorPrimary: '#FCD000',
+                    colorPrimary: '#FDD000',
                     colorBackground: '#1a1a1a',
                     colorText: '#ffffff',
                     colorDanger: '#ef4444',
@@ -309,14 +309,14 @@ function TierSelectionModal({
 }) {
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="bg-black border-2 border-[#FCD000] rounded-sm max-w-md p-0 overflow-hidden">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b border-[#FCD000]/30">
+      <DialogContent className="bg-black border-2 border-[#FDD000] rounded-sm max-w-md p-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-[#FDD000]/30">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#FCD000] rounded-sm flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 bg-[#FDD000] rounded-sm flex items-center justify-center flex-shrink-0">
               <Layers className="h-5 w-5 text-black" />
             </div>
             <div>
-              <DialogTitle className="text-[#FCD000] font-black uppercase tracking-tight text-lg leading-tight">
+              <DialogTitle className="text-[#FDD000] font-black uppercase tracking-tight text-lg leading-tight">
                 Select Your Ticket
               </DialogTitle>
               <p className="text-white/60 text-xs font-semibold mt-0.5">{event.title}</p>
@@ -327,16 +327,16 @@ function TierSelectionModal({
           {event.tiers.map((tier) => (
             <div
               key={tier.id}
-              className="flex items-center justify-between p-4 border-2 border-[#FCD000]/30 rounded-sm bg-[#FCD000]/5 hover:bg-[#FCD000]/10 transition-colors"
+              className="flex items-center justify-between p-4 border-2 border-[#FDD000]/30 rounded-sm bg-[#FDD000]/5 hover:bg-[#FDD000]/10 transition-colors"
             >
               <div>
                 <p className="text-white font-black uppercase tracking-wide text-sm">{tier.name}</p>
-                <p className="text-[#FCD000] font-bold text-lg">{tier.price.startsWith('$') ? tier.price : `$${tier.price}`}</p>
+                <p className="text-[#FDD000] font-bold text-lg">{tier.price.startsWith('$') ? tier.price : `$${tier.price}`}</p>
               </div>
               <Button
                 onClick={() => onSelectTier(tier)}
                 disabled={loading}
-                className="bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-black uppercase tracking-wide rounded-sm border-2 border-[#FCD000] text-xs"
+                className="bg-[#FDD000] text-black hover:bg-[#FDD000]/90 font-black uppercase tracking-wide rounded-sm border-2 border-[#FDD000] text-xs"
               >
                 {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Ticket className="h-3 w-3 mr-1.5" />Purchase</>}
               </Button>
@@ -383,7 +383,7 @@ function ExternalTierPurchaseModal({
 
   return createPortal(
     <div className="fixed inset-0 bg-black flex flex-col" style={{ zIndex: 9999 }}>
-      <div className="flex items-center gap-3 px-4 py-4 border-b border-[#FCD000]/30 flex-shrink-0">
+      <div className="flex items-center gap-3 px-4 py-4 border-b border-[#FDD000]/30 flex-shrink-0">
         <button
           onClick={onClose}
           className="text-white/60 hover:text-white transition-colors p-1"
@@ -391,23 +391,23 @@ function ExternalTierPurchaseModal({
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <div className="w-8 h-8 bg-[#FCD000] rounded-sm flex items-center justify-center flex-shrink-0">
+        <div className="w-8 h-8 bg-[#FDD000] rounded-sm flex items-center justify-center flex-shrink-0">
           <Ticket className="h-4 w-4 text-black" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[#FCD000] font-black uppercase tracking-tight text-sm leading-tight truncate">
+          <p className="text-[#FDD000] font-black uppercase tracking-tight text-sm leading-tight truncate">
             {modal.eventTitle}
           </p>
           <p className="text-white/50 text-xs font-semibold truncate">{modal.tier.name}</p>
         </div>
-        <p className="text-[#FCD000] font-black text-xl flex-shrink-0" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
+        <p className="text-[#FDD000] font-black text-xl flex-shrink-0" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
           {price}
         </p>
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center px-8 text-center gap-6">
-        <div className="w-20 h-20 bg-[#FCD000]/10 border-2 border-[#FCD000]/30 rounded-full flex items-center justify-center">
-          <Shield className="h-10 w-10 text-[#FCD000]" />
+        <div className="w-20 h-20 bg-[#FDD000]/10 border-2 border-[#FDD000]/30 rounded-full flex items-center justify-center">
+          <Shield className="h-10 w-10 text-[#FDD000]" />
         </div>
         <div>
           <p className="text-white font-black uppercase tracking-tight text-xl mb-2">Secure Checkout</p>
@@ -415,24 +415,24 @@ function ExternalTierPurchaseModal({
             Your payment is processed securely by Stripe. Tap the button below to open the checkout page, then return here once your purchase is complete.
           </p>
         </div>
-        <div className="w-full max-w-sm bg-[#FCD000]/5 border border-[#FCD000]/20 rounded-sm px-4 py-3">
-          <p className="text-[#FCD000] font-bold text-sm uppercase tracking-wide">{modal.tier.name}</p>
+        <div className="w-full max-w-sm bg-[#FDD000]/5 border border-[#FDD000]/20 rounded-sm px-4 py-3">
+          <p className="text-[#FDD000] font-bold text-sm uppercase tracking-wide">{modal.tier.name}</p>
           <p className="text-white font-black text-2xl" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>{price}</p>
         </div>
         <button
           onClick={openPaymentLink}
-          className="w-full max-w-sm py-3 bg-[#FCD000] text-black font-black uppercase tracking-wide rounded-sm border-2 border-[#FCD000] text-sm flex items-center justify-center gap-2"
+          className="w-full max-w-sm py-3 bg-[#FDD000] text-black font-black uppercase tracking-wide rounded-sm border-2 border-[#FDD000] text-sm flex items-center justify-center gap-2"
         >
           <ExternalLink className="h-4 w-4" />
           Open Secure Checkout
         </button>
       </div>
 
-      <div className="flex-shrink-0 px-4 py-4 border-t border-[#FCD000]/30 bg-black space-y-2">
+      <div className="flex-shrink-0 px-4 py-4 border-t border-[#FDD000]/30 bg-black space-y-2">
         <button
           onClick={onConfirm}
           disabled={confirming}
-          className="w-full py-3 bg-[#FCD000]/10 text-[#FCD000] font-black uppercase tracking-wide rounded-sm border-2 border-[#FCD000]/50 text-sm disabled:opacity-60 flex items-center justify-center gap-2 hover:bg-[#FCD000]/20 transition-colors"
+          className="w-full py-3 bg-[#FDD000]/10 text-[#FDD000] font-black uppercase tracking-wide rounded-sm border-2 border-[#FDD000]/50 text-sm disabled:opacity-60 flex items-center justify-center gap-2 hover:bg-[#FDD000]/20 transition-colors"
         >
           {confirming ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -562,8 +562,8 @@ export default function Events() {
   if (!user) {
     return (
       <div className="min-h-screen bg-ministry-light-gray flex items-center justify-center px-6">
-        <div className="text-center liquid-black border-2 border-[#FCD000]/30 rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)] p-8">
-          <h1 className="text-2xl font-black uppercase tracking-tighter mb-4 text-[#FCD000] relative z-10">Please Sign In</h1>
+        <div className="text-center liquid-black border-2 border-[#FDD000]/30 rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,0.3)] p-8">
+          <h1 className="text-2xl font-black uppercase tracking-tighter mb-4 text-[#FDD000] relative z-10">Please Sign In</h1>
           <p className="text-white/70 font-medium relative z-10">You need to be logged in to access the events page.</p>
         </div>
       </div>
@@ -616,10 +616,10 @@ export default function Events() {
         {eventsLoading ? (
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
-              <Card key={i} className="liquid-black border-2 border-[#FCD000]/30 rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)] overflow-hidden">
+              <Card key={i} className="liquid-black border-2 border-[#FDD000]/30 rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,0.3)] overflow-hidden">
                 <CardHeader className="relative">
                   <div className="flex items-start gap-4 relative z-10">
-                    <div className="w-16 h-16 bg-gray-800 flex-shrink-0 border-2 border-[#FCD000]/30 animate-pulse rounded-sm"></div>
+                    <div className="w-16 h-16 bg-gray-800 flex-shrink-0 border-2 border-[#FDD000]/30 animate-pulse rounded-sm"></div>
                     <div className="flex-1 animate-pulse">
                       <div className="h-5 bg-gray-700 rounded-sm w-3/4 mb-3"></div>
                       <div className="h-3 bg-gray-700 rounded-sm w-1/2"></div>
@@ -630,10 +630,10 @@ export default function Events() {
             ))}
           </div>
         ) : events.length === 0 ? (
-          <Card className="liquid-black border-2 border-[#FCD000]/30 rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)] text-center py-12 overflow-hidden">
+          <Card className="liquid-black border-2 border-[#FDD000]/30 rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,0.3)] text-center py-12 overflow-hidden">
             <CardContent className="relative">
-              <Calendar className="mx-auto mb-4 h-16 w-16 text-[#FCD000] relative z-10" />
-              <h3 className="text-xl font-black uppercase tracking-tighter mb-2 text-[#FCD000] relative z-10">No Events Scheduled</h3>
+              <Calendar className="mx-auto mb-4 h-16 w-16 text-[#FDD000] relative z-10" />
+              <h3 className="text-xl font-black uppercase tracking-tighter mb-2 text-[#FDD000] relative z-10">No Events Scheduled</h3>
               <p className="text-white/70 font-medium relative z-10">
                 There are no upcoming events at this time. Check back soon for new announcements!
               </p>
@@ -650,15 +650,15 @@ export default function Events() {
                   : !!event.price);
 
               return (
-                <Card key={event.id} className={`liquid-black border-2 border-[#FCD000]/30 rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(252,208,0,0.3)] transition-all duration-200 overflow-hidden ${isPastEvent ? 'opacity-70' : ''}`}>
+                <Card key={event.id} className={`liquid-black border-2 border-[#FDD000]/30 rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,0.3)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(253,208,0,0.3)] transition-all duration-200 overflow-hidden ${isPastEvent ? 'opacity-70' : ''}`}>
                   <CardHeader className="relative">
                     <div className="relative z-10">
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="w-12 h-12 bg-[#FCD000] flex-shrink-0 flex items-center justify-center rounded-sm">
+                        <div className="w-12 h-12 bg-[#FDD000] flex-shrink-0 flex items-center justify-center rounded-sm">
                           <Calendar className="h-6 w-6 text-black" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <CardTitle className="text-lg font-black uppercase tracking-tighter text-[#FCD000] leading-tight">
+                          <CardTitle className="text-lg font-black uppercase tracking-tighter text-[#FDD000] leading-tight">
                             {event.title}
                           </CardTitle>
                         </div>
@@ -670,44 +670,44 @@ export default function Events() {
                           </Badge>
                         )}
                         {isRegistered && (
-                          <Badge className="font-bold uppercase tracking-wide text-xs rounded-sm border border-[#FCD000]/50 bg-[#FCD000]/20 text-[#FCD000]">
+                          <Badge className="font-bold uppercase tracking-wide text-xs rounded-sm border border-[#FDD000]/50 bg-[#FDD000]/20 text-[#FDD000]">
                             <Users className="h-3 w-3 mr-1" />
                             Registered
                           </Badge>
                         )}
                         {event.requiresPurchase && !isPastEvent && (
-                          <Badge className="bg-[#FCD000]/20 text-[#FCD000] font-bold uppercase tracking-wide text-xs rounded-sm border border-[#FCD000]/50">
+                          <Badge className="bg-[#FDD000]/20 text-[#FDD000] font-bold uppercase tracking-wide text-xs rounded-sm border border-[#FDD000]/50">
                             {event.multiTier ? (
                               <><Layers className="h-3 w-3 mr-1" />Multi-Tier</>
                             ) : 'Paid Event'}
                           </Badge>
                         )}
                         {!event.requiresPurchase && !isPastEvent && (
-                          <Badge className="bg-[#FCD000]/20 text-[#FCD000] font-bold uppercase tracking-wide text-xs rounded-sm border border-[#FCD000]/50">
+                          <Badge className="bg-[#FDD000]/20 text-[#FDD000] font-bold uppercase tracking-wide text-xs rounded-sm border border-[#FDD000]/50">
                             Free Event
                           </Badge>
                         )}
                       </div>
                       <div className="space-y-1.5 text-sm font-bold text-white">
                         <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-[#FCD000] flex-shrink-0" />
+                          <Calendar className="h-4 w-4 text-[#FDD000] flex-shrink-0" />
                           <span>{formatDate(event.eventDate)}{event.eventTime ? ` at ${formatTime(event.eventTime)}` : ''}</span>
                         </div>
                         {event.endDate && (
                           <div className="flex items-center gap-2">
-                            <CalendarRange className="h-4 w-4 text-[#FCD000] flex-shrink-0" />
+                            <CalendarRange className="h-4 w-4 text-[#FDD000] flex-shrink-0" />
                             <span>Ends {formatDate(event.endDate)}{event.endTime ? ` at ${formatTime(event.endTime)}` : ''}</span>
                           </div>
                         )}
                         {event.location && (
                           <div className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4 text-[#FCD000] flex-shrink-0" />
+                            <MapPin className="h-4 w-4 text-[#FDD000] flex-shrink-0" />
                             <span>{event.location}</span>
                           </div>
                         )}
                         {event.requiresPurchase && !event.multiTier && event.price && (
                           <div className="flex items-center gap-2">
-                            <DollarSign className="h-4 w-4 text-[#FCD000] flex-shrink-0" />
+                            <DollarSign className="h-4 w-4 text-[#FDD000] flex-shrink-0" />
                             <span>${event.price}</span>
                           </div>
                         )}
@@ -726,7 +726,7 @@ export default function Events() {
                   <CardContent className="pt-0 relative">
                     <div className="flex flex-wrap gap-3 relative z-10">
                       {event.address && (
-                        <Button variant="outline" size="sm" asChild className="border-2 border-[#FCD000]/50 rounded-sm font-bold uppercase tracking-wide shadow-[2px_2px_0px_0px_rgba(252,208,0,0.2)] bg-[#FCD000] text-black hover:bg-[#FCD000]/90">
+                        <Button variant="outline" size="sm" asChild className="border-2 border-[#FDD000]/50 rounded-sm font-bold uppercase tracking-wide shadow-[2px_2px_0px_0px_rgba(253,208,0,0.2)] bg-[#FDD000] text-black hover:bg-[#FDD000]/90">
                           <a href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.address)}`} target="_blank" rel="noopener noreferrer">
                             <Navigation className="h-4 w-4 mr-2" />
                             Get Directions
@@ -734,7 +734,7 @@ export default function Events() {
                         </Button>
                       )}
                       {event.url && (
-                        <Button variant="outline" size="sm" asChild className="border-2 border-[#FCD000]/50 rounded-sm font-bold uppercase tracking-wide shadow-[2px_2px_0px_0px_rgba(252,208,0,0.2)] bg-[#FCD000] text-black hover:bg-[#FCD000]/90">
+                        <Button variant="outline" size="sm" asChild className="border-2 border-[#FDD000]/50 rounded-sm font-bold uppercase tracking-wide shadow-[2px_2px_0px_0px_rgba(253,208,0,0.2)] bg-[#FDD000] text-black hover:bg-[#FDD000]/90">
                           <a href={event.url} target="_blank" rel="noopener noreferrer">
                             <ExternalLink className="h-4 w-4 mr-2" />
                             Event Details
@@ -746,7 +746,7 @@ export default function Events() {
                         <Button
                           onClick={() => registerMutation.mutate(event.id)}
                           disabled={registerMutation.isPending}
-                          className="bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-black uppercase tracking-wide rounded-sm border-2 border-[#FCD000] shadow-[3px_3px_0px_0px_rgba(252,208,0,0.3)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
+                          className="bg-[#FDD000] text-black hover:bg-[#FDD000]/90 font-black uppercase tracking-wide rounded-sm border-2 border-[#FDD000] shadow-[3px_3px_0px_0px_rgba(253,208,0,0.3)] hover:shadow-[4px_4px_0px_0px_rgba(253,208,0,0.3)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
                           size="sm"
                           data-testid={`button-register-${event.id}`}
                         >
@@ -758,7 +758,7 @@ export default function Events() {
                         <Button
                           onClick={() => handlePurchaseClick(event)}
                           disabled={loadingPayment}
-                          className="bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-black uppercase tracking-wide rounded-sm border-2 border-[#FCD000] shadow-[3px_3px_0px_0px_rgba(252,208,0,0.3)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
+                          className="bg-[#FDD000] text-black hover:bg-[#FDD000]/90 font-black uppercase tracking-wide rounded-sm border-2 border-[#FDD000] shadow-[3px_3px_0px_0px_rgba(253,208,0,0.3)] hover:shadow-[4px_4px_0px_0px_rgba(253,208,0,0.3)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
                           size="sm"
                           data-testid={`button-purchase-${event.id}`}
                         >
@@ -778,7 +778,7 @@ export default function Events() {
                       {!isPastEvent && !isRegistered && event.requiresPurchase && !hasPurchaseAction && (
                         <Button
                           disabled
-                          className="bg-[#FCD000]/50 text-black font-black uppercase tracking-wide rounded-sm border-2 border-[#FCD000]/50 cursor-not-allowed"
+                          className="bg-[#FDD000]/50 text-black font-black uppercase tracking-wide rounded-sm border-2 border-[#FDD000]/50 cursor-not-allowed"
                           size="sm"
                         >
                           <Ticket className="h-4 w-4 mr-2" />

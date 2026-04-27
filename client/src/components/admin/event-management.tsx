@@ -603,7 +603,7 @@ export default function EventManagement() {
                       variant="outline"
                       size="sm"
                       onClick={() => navigate(`/admin/events/${event.id}/registrants`)}
-                      className="border-[#FCD000]/50 text-[#FCD000] hover:bg-[#FCD000]/10"
+                      className="border-[#FDD000]/50 text-[#FDD000] hover:bg-[#FDD000]/10"
                       title="View Registrants"
                     >
                       <Users className="h-4 w-4" />

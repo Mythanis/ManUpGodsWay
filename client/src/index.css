@@ -31,7 +31,7 @@
   --popover: hsl(0 0% 6%);
   --popover-foreground: hsl(0 0% 95%);
 
-  --primary: hsl(49 100% 49%);
+  --primary: hsl(49 100% 50%);
   --primary-foreground: hsl(0 0% 4%);
 
   --secondary: hsl(0 0% 12%);
@@ -41,16 +41,16 @@
   --muted-foreground: hsl(0 0% 55%);
 
   --accent: hsl(49 100% 20%);
-  --accent-foreground: hsl(49 100% 49%);
+  --accent-foreground: hsl(49 100% 50%);
 
   --destructive: hsl(0 84% 60%);
   --destructive-foreground: hsl(0 0% 100%);
 
   --border: hsl(0 0% 15%);
   --input: hsl(0 0% 15%);
-  --ring: hsl(49 100% 49%);
+  --ring: hsl(49 100% 50%);
 
-  --chart-1: hsl(49 100% 49%);
+  --chart-1: hsl(49 100% 50%);
   --chart-2: hsl(142 71% 50%);
   --chart-3: hsl(220 90% 65%);
   --chart-4: hsl(280 65% 65%);
@@ -58,12 +58,12 @@
 
   --sidebar: hsl(0 0% 7%);
   --sidebar-foreground: hsl(0 0% 90%);
-  --sidebar-primary: hsl(49 100% 49%);
+  --sidebar-primary: hsl(49 100% 50%);
   --sidebar-primary-foreground: hsl(0 0% 4%);
   --sidebar-accent: hsl(49 100% 20%);
-  --sidebar-accent-foreground: hsl(49 100% 49%);
+  --sidebar-accent-foreground: hsl(49 100% 50%);
   --sidebar-border: hsl(0 0% 15%);
-  --sidebar-ring: hsl(49 100% 49%);
+  --sidebar-ring: hsl(49 100% 50%);
 
   --font-sans: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-serif: 'Crimson Pro', Georgia, serif;
@@ -87,7 +87,7 @@
   --ministry-charcoal: 220 14% 20%;
   --ministry-steel: 220 10% 60%;
   --ministry-slate: 220 12% 50%;
-  --ministry-gold: 49 100% 49%;
+  --ministry-gold: 49 100% 50%;
   --ministry-success: 142 71% 50%;
   --ministry-warm: 25 95% 58%;
 }
@@ -116,23 +116,23 @@
 
 /* Exact hex color overrides for ministry gold */
 .bg-ministry-gold-exact {
-  background-color: #FCD000 !important;
+  background-color: #FDD000 !important;
 }
 
 .text-ministry-gold-exact {
-  color: #FCD000 !important;
+  color: #FDD000 !important;
 }
 
 .bg-ministry-gold-exact\/10 {
-  background-color: #FCD00019 !important; /* #FCD000 with 10% opacity */
+  background-color: #FDD00019 !important; /* #FDD000 with 10% opacity */
 }
 
 .bg-ministry-gold-exact\/20 {
-  background-color: #FCD000 !important; /* #FCD000 with 100% opacity (full color) */
+  background-color: #FDD000 !important; /* #FDD000 with 100% opacity (full color) */
 }
 
 .bg-ministry-gold-exact\/30 {
-  background-color: #FCD0004D !important; /* #FCD000 with 30% opacity */
+  background-color: #FDD0004D !important; /* #FDD000 with 30% opacity */
 }
 
 /* Mobile viewport fixes for keyboards */
@@ -241,7 +241,7 @@
   --popover-foreground: hsl(0 0% 95%);
   
   /* Primary - bright gold stands out in dark mode */
-  --primary: hsl(49 100% 49%);
+  --primary: hsl(49 100% 50%);
   --primary-foreground: hsl(0 0% 4%);
   
   /* Secondary - subtle dark surface */
@@ -254,7 +254,7 @@
   
   /* Accent */
   --accent: hsl(49 100% 20%);
-  --accent-foreground: hsl(49 100% 49%);
+  --accent-foreground: hsl(49 100% 50%);
   
   /* Destructive */
   --destructive: hsl(0 84% 60%);
@@ -263,10 +263,10 @@
   /* Borders */
   --border: hsl(0 0% 15%);
   --input: hsl(0 0% 15%);
-  --ring: hsl(49 100% 49%);
+  --ring: hsl(49 100% 50%);
   
   /* Chart colors */
-  --chart-1: hsl(49 100% 49%);
+  --chart-1: hsl(49 100% 50%);
   --chart-2: hsl(142 71% 50%);
   --chart-3: hsl(220 90% 65%);
   --chart-4: hsl(280 65% 65%);
@@ -275,12 +275,12 @@
   /* Sidebar */
   --sidebar: hsl(0 0% 7%);
   --sidebar-foreground: hsl(0 0% 90%);
-  --sidebar-primary: hsl(49 100% 49%);
+  --sidebar-primary: hsl(49 100% 50%);
   --sidebar-primary-foreground: hsl(0 0% 4%);
   --sidebar-accent: hsl(49 100% 20%);
-  --sidebar-accent-foreground: hsl(49 100% 49%);
+  --sidebar-accent-foreground: hsl(49 100% 50%);
   --sidebar-border: hsl(0 0% 15%);
-  --sidebar-ring: hsl(49 100% 49%);
+  --sidebar-ring: hsl(49 100% 50%);
   
   /* Typography */
   --font-sans: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -304,7 +304,7 @@
   --ministry-charcoal: 220 14% 20%;
   --ministry-steel: 220 10% 60%;
   --ministry-slate: 220 12% 50%;
-  --ministry-gold: 49 100% 49%;
+  --ministry-gold: 49 100% 50%;
   --ministry-success: 142 71% 50%;
   --ministry-warm: 25 95% 58%;
 }
@@ -535,11 +535,11 @@
 .liquid-gold-card {
   background: linear-gradient(
     145deg,
-    #FCD000 0%,
+    #FDD000 0%,
     #ffe14d 15%,
-    #FCD000 35%,
+    #FDD000 35%,
     #e6bc00 55%,
-    #FCD000 75%,
+    #FDD000 75%,
     #ffe14d 100%
   ) !important;
   background-size: 200% 200% !important;
@@ -759,9 +759,9 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    #FCD000 20%,
+    #FDD000 20%,
     #ffd633 50%,
-    #FCD000 80%,
+    #FDD000 80%,
     transparent 100%
   );
   margin: 1.5rem 0;
@@ -786,7 +786,7 @@
 .liquid-orbs::before {
   width: 150px;
   height: 150px;
-  background: #FCD000;
+  background: #FDD000;
   top: -50px;
   right: -30px;
 }
@@ -794,7 +794,7 @@
 .liquid-orbs::after {
   width: 100px;
   height: 100px;
-  background: #FCD000;
+  background: #FDD000;
   bottom: 50px;
   left: -20px;
   animation-delay: 2s;
@@ -818,7 +818,7 @@
 /* Leaflet tooltip styling for war groups map */
 .leaflet-tooltip {
   background-color: #18181b !important;
-  border: 2px solid #FCD000 !important;
+  border: 2px solid #FDD000 !important;
   border-radius: 8px !important;
   padding: 0 !important;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
@@ -827,23 +827,23 @@
 }
 
 .leaflet-tooltip::before {
-  border-top-color: #FCD000 !important;
+  border-top-color: #FDD000 !important;
 }
 
 .leaflet-tooltip-top::before {
-  border-top-color: #FCD000 !important;
+  border-top-color: #FDD000 !important;
 }
 
 .leaflet-tooltip-bottom::before {
-  border-bottom-color: #FCD000 !important;
+  border-bottom-color: #FDD000 !important;
 }
 
 .leaflet-tooltip-left::before {
-  border-left-color: #FCD000 !important;
+  border-left-color: #FDD000 !important;
 }
 
 .leaflet-tooltip-right::before {
-  border-right-color: #FCD000 !important;
+  border-right-color: #FDD000 !important;
 }
 
 /* Make sure tooltips appear above map panes */
@@ -855,7 +855,7 @@
 [data-testid="content-lesson-body"] strong,
 [data-testid="content-lesson-body"] b {
   font-weight: 700 !important;
-  color: #FCD000 !important;
+  color: #FDD000 !important;
 }
 
 [data-testid="content-lesson-body"] em,
@@ -890,13 +890,13 @@
 [data-testid="content-lesson-body"] h3,
 [data-testid="content-lesson-body"] h4 {
   font-weight: 900 !important;
-  color: #FCD000 !important;
+  color: #FDD000 !important;
   margin-top: 1.25rem !important;
   margin-bottom: 0.5rem !important;
 }
 
 [data-testid="content-lesson-body"] blockquote {
-  border-left: 4px solid #FCD000 !important;
+  border-left: 4px solid #FDD000 !important;
   padding-left: 1rem !important;
   font-style: italic !important;
   color: #9ca3af !important;

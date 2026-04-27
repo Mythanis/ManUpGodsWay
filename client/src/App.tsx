@@ -87,7 +87,7 @@ function TrialPageGuard({ area, children }: { area: string; children: React.Reac
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#FCD000]" />
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#FDD000]" />
       </div>
     );
   }

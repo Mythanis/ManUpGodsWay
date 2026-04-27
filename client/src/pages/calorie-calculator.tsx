@@ -203,15 +203,15 @@ export default function CalorieCalculator() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex items-center gap-2">
-            <Flame className="w-6 h-6 text-[#FCD000]" />
+            <Flame className="w-6 h-6 text-[#FDD000]" />
             <h1 className="text-xl font-black uppercase tracking-wide">Calorie Calculator</h1>
           </div>
         </div>
 
         {step === "disclaimer" && (
-          <div className="liquid-black border-2 border-[#FCD000]/40 rounded-sm p-5 space-y-4" data-testid="step-disclaimer">
+          <div className="liquid-black border-2 border-[#FDD000]/40 rounded-sm p-5 space-y-4" data-testid="step-disclaimer">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="w-6 h-6 text-[#FCD000] shrink-0 mt-0.5" />
+              <AlertTriangle className="w-6 h-6 text-[#FDD000] shrink-0 mt-0.5" />
               <div>
                 <h2 className="font-black uppercase tracking-wide text-base">Before You Begin</h2>
                 <p className="text-white/70 text-sm mt-2">
@@ -265,7 +265,7 @@ export default function CalorieCalculator() {
             <Button
               onClick={next}
               disabled={!acknowledged || isContraindicated}
-              className="w-full bg-[#FCD000] text-black font-black uppercase hover:bg-[#FCD000]/90 rounded-sm border-2 border-black"
+              className="w-full bg-[#FDD000] text-black font-black uppercase hover:bg-[#FDD000]/90 rounded-sm border-2 border-black"
               data-testid="button-next-disclaimer"
             >
               Continue <ArrowRight className="w-4 h-4 ml-2" />
@@ -274,7 +274,7 @@ export default function CalorieCalculator() {
         )}
 
         {step === "basics" && (
-          <div className="liquid-black border-2 border-[#FCD000]/40 rounded-sm p-5 space-y-5" data-testid="step-basics">
+          <div className="liquid-black border-2 border-[#FDD000]/40 rounded-sm p-5 space-y-5" data-testid="step-basics">
             <h2 className="font-black uppercase tracking-wide text-base">Your Basics</h2>
 
             <div>
@@ -285,7 +285,7 @@ export default function CalorieCalculator() {
                     key={s}
                     type="button"
                     onClick={() => setForm({ ...form, sex: s })}
-                    className={`flex items-center justify-center py-3 rounded-sm border-2 ${form.sex === s ? "bg-[#FCD000] text-black border-black" : "border-white/20 text-white/70 hover:border-white/40"}`}
+                    className={`flex items-center justify-center py-3 rounded-sm border-2 ${form.sex === s ? "bg-[#FDD000] text-black border-black" : "border-white/20 text-white/70 hover:border-white/40"}`}
                     data-testid={`button-sex-${s}`}
                   >
                     <span className="font-black uppercase text-sm">{s}</span>
@@ -392,7 +392,7 @@ export default function CalorieCalculator() {
             <Button
               onClick={next}
               disabled={!basicsValid}
-              className="w-full bg-[#FCD000] text-black font-black uppercase hover:bg-[#FCD000]/90 rounded-sm border-2 border-black"
+              className="w-full bg-[#FDD000] text-black font-black uppercase hover:bg-[#FDD000]/90 rounded-sm border-2 border-black"
               data-testid="button-next-basics"
             >
               Continue <ArrowRight className="w-4 h-4 ml-2" />
@@ -401,7 +401,7 @@ export default function CalorieCalculator() {
         )}
 
         {step === "goal" && (
-          <div className="liquid-black border-2 border-[#FCD000]/40 rounded-sm p-5 space-y-4" data-testid="step-goal">
+          <div className="liquid-black border-2 border-[#FDD000]/40 rounded-sm p-5 space-y-4" data-testid="step-goal">
             <h2 className="font-black uppercase tracking-wide text-base">Your Goal</h2>
             <RadioGroup
               value={form.goalType}
@@ -413,7 +413,7 @@ export default function CalorieCalculator() {
                 return (
                   <label
                     key={g}
-                    className={`flex items-start gap-3 p-4 rounded-sm border-2 cursor-pointer transition-colors ${selected ? "bg-[#FCD000]/20 border-[#FCD000]" : "border-white/20 hover:border-white/40"}`}
+                    className={`flex items-start gap-3 p-4 rounded-sm border-2 cursor-pointer transition-colors ${selected ? "bg-[#FDD000]/20 border-[#FDD000]" : "border-white/20 hover:border-white/40"}`}
                     data-testid={`card-goal-${g}`}
                   >
                     <RadioGroupItem value={g} className="mt-1" data-testid={`radio-goal-${g}`} />
@@ -427,7 +427,7 @@ export default function CalorieCalculator() {
             </RadioGroup>
             <Button
               onClick={next}
-              className="w-full bg-[#FCD000] text-black font-black uppercase hover:bg-[#FCD000]/90 rounded-sm border-2 border-black"
+              className="w-full bg-[#FDD000] text-black font-black uppercase hover:bg-[#FDD000]/90 rounded-sm border-2 border-black"
               data-testid="button-next-goal"
             >
               Continue <ArrowRight className="w-4 h-4 ml-2" />
@@ -436,7 +436,7 @@ export default function CalorieCalculator() {
         )}
 
         {step === "activity" && (
-          <div className="liquid-black border-2 border-[#FCD000]/40 rounded-sm p-5 space-y-4" data-testid="step-activity">
+          <div className="liquid-black border-2 border-[#FDD000]/40 rounded-sm p-5 space-y-4" data-testid="step-activity">
             <h2 className="font-black uppercase tracking-wide text-base">Activity Level</h2>
             <p className="text-white/50 text-[11px] leading-relaxed -mt-2" data-testid="text-activity-hint">
               Choose based on what you will be doing, for example if you plan to start working out with this app 3 days a week choose Lightly Active or Moderately. This is to ensure calorie intake is not to low based on your planned activity level.
@@ -451,14 +451,14 @@ export default function CalorieCalculator() {
                 return (
                   <label
                     key={a}
-                    className={`flex items-start gap-3 p-4 rounded-sm border-2 cursor-pointer transition-colors ${selected ? "bg-[#FCD000]/20 border-[#FCD000]" : "border-white/20 hover:border-white/40"}`}
+                    className={`flex items-start gap-3 p-4 rounded-sm border-2 cursor-pointer transition-colors ${selected ? "bg-[#FDD000]/20 border-[#FDD000]" : "border-white/20 hover:border-white/40"}`}
                     data-testid={`card-activity-${a}`}
                   >
                     <RadioGroupItem value={a} className="mt-1" data-testid={`radio-activity-${a}`} />
                     <div className="flex-1">
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-black uppercase text-sm tracking-wide">{ACTIVITY_LABELS[a]}</span>
-                        <span className="text-[#FCD000] font-black text-xs tabular-nums">×{ACTIVITY_MULTIPLIERS[a]}</span>
+                        <span className="text-[#FDD000] font-black text-xs tabular-nums">×{ACTIVITY_MULTIPLIERS[a]}</span>
                       </div>
                       <div className="text-white/60 text-xs mt-0.5">{ACTIVITY_DESCRIPTIONS[a]}</div>
                     </div>
@@ -469,7 +469,7 @@ export default function CalorieCalculator() {
             <Button
               onClick={next}
               disabled={!computed}
-              className="w-full bg-[#FCD000] text-black font-black uppercase hover:bg-[#FCD000]/90 rounded-sm border-2 border-black"
+              className="w-full bg-[#FDD000] text-black font-black uppercase hover:bg-[#FDD000]/90 rounded-sm border-2 border-black"
               data-testid="button-next-activity"
             >
               See My Target <ArrowRight className="w-4 h-4 ml-2" />
@@ -479,10 +479,10 @@ export default function CalorieCalculator() {
 
         {step === "result" && computed && (
           <div className="space-y-4" data-testid="step-result">
-            <div className="liquid-black border-2 border-[#FCD000] rounded-sm p-6 text-center space-y-5">
+            <div className="liquid-black border-2 border-[#FDD000] rounded-sm p-6 text-center space-y-5">
               <div>
                 <div className="text-white/60 text-xs font-black uppercase tracking-wider">Your Daily Calorie Target</div>
-                <div className="text-[#FCD000] font-black text-5xl tabular-nums mt-2 leading-none" data-testid="text-result-target">
+                <div className="text-[#FDD000] font-black text-5xl tabular-nums mt-2 leading-none" data-testid="text-result-target">
                   {computed.targetKcal.toLocaleString()}
                 </div>
                 <div className="text-white/60 text-sm font-bold uppercase mt-1">calories</div>
@@ -536,7 +536,7 @@ export default function CalorieCalculator() {
             <Button
               onClick={() => saveMutation.mutate()}
               disabled={saveMutation.isPending}
-              className="w-full bg-[#FCD000] text-black font-black uppercase hover:bg-[#FCD000]/90 rounded-sm border-2 border-black"
+              className="w-full bg-[#FDD000] text-black font-black uppercase hover:bg-[#FDD000]/90 rounded-sm border-2 border-black"
               data-testid="button-save-target"
             >
               {saveMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}

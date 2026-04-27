@@ -107,7 +107,7 @@ export function WelcomeIntro({ open, onClose }: WelcomeIntroProps) {
 
   return (
     <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="max-w-2xl p-0 overflow-hidden bg-black border-4 border-[#FCD000]">
+      <DialogContent className="max-w-2xl p-0 overflow-hidden bg-black border-4 border-[#FDD000]">
         <button
           onClick={handleClose}
           className="absolute right-4 top-4 z-50 text-white/70 hover:text-white"
@@ -119,13 +119,13 @@ export function WelcomeIntro({ open, onClose }: WelcomeIntroProps) {
         {currentPage === 0 && (
           <div className="p-8 text-center">
             <div className="mb-6">
-              <div className="w-24 h-24 mx-auto mb-4 bg-[#FCD000] rounded-full flex items-center justify-center">
+              <div className="w-24 h-24 mx-auto mb-4 bg-[#FDD000] rounded-full flex items-center justify-center">
                 <Shield className="w-12 h-12 text-black" />
               </div>
               <h1 className="text-3xl font-black text-white mb-2">
                 WELCOME, SOLDIER
               </h1>
-              <p className="text-[#FCD000] text-lg font-bold">
+              <p className="text-[#FDD000] text-lg font-bold">
                 MAN UP GOD'S WAY
               </p>
             </div>
@@ -135,8 +135,8 @@ export function WelcomeIntro({ open, onClose }: WelcomeIntroProps) {
               This platform is your training ground for biblical masculinity, spiritual growth, and iron-sharpening-iron accountability.
             </p>
 
-            <div className="bg-[#FCD000]/10 border-2 border-[#FCD000] p-6 mb-8">
-              <p className="text-[#FCD000] font-bold text-lg">
+            <div className="bg-[#FDD000]/10 border-2 border-[#FDD000] p-6 mb-8">
+              <p className="text-[#FDD000] font-bold text-lg">
                 "As iron sharpens iron, so one man sharpens another."
               </p>
               <p className="text-gray-400 mt-2">— Proverbs 27:17</p>
@@ -161,7 +161,7 @@ export function WelcomeIntro({ open, onClose }: WelcomeIntroProps) {
               {features.slice(0, 4).map((feature, index) => (
                 <div 
                   key={index}
-                  className="bg-white/5 border border-white/10 p-4 hover:border-[#FCD000]/50 transition-colors"
+                  className="bg-white/5 border border-white/10 p-4 hover:border-[#FDD000]/50 transition-colors"
                 >
                   <div className={`w-10 h-10 ${feature.color} flex items-center justify-center mb-3`}>
                     <feature.icon className="w-5 h-5 text-white" />
@@ -187,7 +187,7 @@ export function WelcomeIntro({ open, onClose }: WelcomeIntroProps) {
               {features.slice(4).map((feature, index) => (
                 <div 
                   key={index}
-                  className="bg-white/5 border border-white/10 p-4 hover:border-[#FCD000]/50 transition-colors"
+                  className="bg-white/5 border border-white/10 p-4 hover:border-[#FDD000]/50 transition-colors"
                 >
                   <div className={`w-10 h-10 ${feature.color} flex items-center justify-center mb-3`}>
                     <feature.icon className="w-5 h-5 text-white" />
@@ -198,7 +198,7 @@ export function WelcomeIntro({ open, onClose }: WelcomeIntroProps) {
               ))}
             </div>
 
-            <div className="bg-[#FCD000] p-6 text-center">
+            <div className="bg-[#FDD000] p-6 text-center">
               <h3 className="text-black font-black text-xl mb-2">
                 READY TO BEGIN?
               </h3>
@@ -221,7 +221,7 @@ export function WelcomeIntro({ open, onClose }: WelcomeIntroProps) {
             variant="ghost"
             onClick={prevPage}
             disabled={currentPage === 0}
-            className="text-white hover:text-[#FCD000] disabled:opacity-30"
+            className="text-white hover:text-[#FDD000] disabled:opacity-30"
             data-testid="button-prev-page"
           >
             <ChevronLeft className="w-5 h-5 mr-1" />
@@ -233,7 +233,7 @@ export function WelcomeIntro({ open, onClose }: WelcomeIntroProps) {
               <div
                 key={index}
                 className={`w-3 h-3 rounded-full transition-colors ${
-                  index === currentPage ? "bg-[#FCD000]" : "bg-white/30"
+                  index === currentPage ? "bg-[#FDD000]" : "bg-white/30"
                 }`}
               />
             ))}
@@ -241,7 +241,7 @@ export function WelcomeIntro({ open, onClose }: WelcomeIntroProps) {
 
           <Button
             onClick={nextPage}
-            className="bg-[#FCD000] hover:bg-yellow-400 text-black font-bold"
+            className="bg-[#FDD000] hover:bg-yellow-400 text-black font-bold"
             data-testid="button-next-page"
           >
             {currentPage === totalPages - 1 ? "Get Started" : "Next"}

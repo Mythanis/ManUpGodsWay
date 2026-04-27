@@ -238,7 +238,7 @@ export function LiveBroadcaster({ streamKey, streamId, onBroadcastStart, onBroad
         )}
         {state === "connecting" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FCD000] mb-3" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FDD000] mb-3" />
             <p className="text-white text-sm font-bold">Connecting to Mux…</p>
           </div>
         )}

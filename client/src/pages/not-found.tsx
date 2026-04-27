@@ -28,7 +28,7 @@ export default function NotFound() {
           </p>
           <Button
             onClick={() => navigate("/")}
-            className="bg-[#FCD000] text-black hover:bg-[#e6bc00] font-semibold"
+            className="bg-[#FDD000] text-black hover:bg-[#e6bc00] font-semibold"
           >
             Go Home
           </Button>

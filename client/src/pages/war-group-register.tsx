@@ -95,7 +95,7 @@ export default function WarGroupRegister() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6">
-        <Card className="liquid-black border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]">
+        <Card className="liquid-black border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,0.3)]">
           <CardHeader>
             <CardDescription className="text-gray-300 relative z-10">
               Apply to start a licensed "Man Up God's Way" discipleship group in your city.
@@ -352,7 +352,7 @@ export default function WarGroupRegister() {
                   <Button
                     type="submit"
                     disabled={registerMutation.isPending}
-                    className="flex-1 bg-[#FCD000] text-black border-2 border-black rounded-sm font-black uppercase tracking-wide hover:brightness-110 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden"
+                    className="flex-1 bg-[#FDD000] text-black border-2 border-black rounded-sm font-black uppercase tracking-wide hover:brightness-110 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden"
                     data-testid="button-submit-registration"
                   >
                     <span className="relative z-10">

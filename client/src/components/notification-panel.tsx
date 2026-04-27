@@ -627,7 +627,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
         className={`relative flex items-center gap-1.5 px-2 ${hasUnread ? 'text-white' : ''}`}
       >
         <div className="relative">
-          <Bell className={`h-5 w-5 transition-transform ${hasUnread ? 'text-[#FCD000]' : ''} ${isRinging ? 'animate-bounce' : ''}`} />
+          <Bell className={`h-5 w-5 transition-transform ${hasUnread ? 'text-[#FDD000]' : ''} ${isRinging ? 'animate-bounce' : ''}`} />
           {hasUnread && (
             <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
@@ -636,7 +636,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
           )}
         </div>
         {hasUnread && (
-          <span className="text-xs font-bold text-[#FCD000] leading-none">
+          <span className="text-xs font-bold text-[#FDD000] leading-none">
             {totalUnreadAll}
           </span>
         )}
@@ -650,13 +650,13 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
           onTouchMove={(e) => e.preventDefault()}
         />
         <Card 
-          className="fixed right-4 top-16 w-[340px] max-h-[80vh] z-[9999] shadow-[0_8px_32px_rgba(0,0,0,0.4)] flex flex-col bg-black border border-[#FCD000]/30 rounded-lg overflow-hidden"
+          className="fixed right-4 top-16 w-[340px] max-h-[80vh] z-[9999] shadow-[0_8px_32px_rgba(0,0,0,0.4)] flex flex-col bg-black border border-[#FDD000]/30 rounded-lg overflow-hidden"
           onTouchMove={(e) => e.stopPropagation()}
           onWheel={(e) => e.stopPropagation()}
         >
-          <CardHeader className="pb-2 flex-shrink-0 bg-gradient-to-r from-black to-zinc-900 border-b border-[#FCD000]/20">
+          <CardHeader className="pb-2 flex-shrink-0 bg-gradient-to-r from-black to-zinc-900 border-b border-[#FDD000]/20">
             <div className="flex items-center justify-between mb-2">
-              <CardTitle className="text-sm font-semibold tracking-wide text-[#FCD000]">Notifications</CardTitle>
+              <CardTitle className="text-sm font-semibold tracking-wide text-[#FDD000]">Notifications</CardTitle>
               <Button
                 variant="ghost"
                 size="sm"
@@ -698,13 +698,13 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
               {pendingRequests.map((request) => (
                 <div
                   key={request.id}
-                  className="flex bg-zinc-900 border border-[#FCD000]/30 rounded-lg overflow-hidden hover:border-[#FCD000]/50 transition-colors"
+                  className="flex bg-zinc-900 border border-[#FDD000]/30 rounded-lg overflow-hidden hover:border-[#FDD000]/50 transition-colors"
                 >
-                  <div className="w-10 bg-[#FCD000] flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 bg-[#FDD000] flex items-center justify-center flex-shrink-0">
                     <MessageSquare className="h-4 w-4 text-black" />
                   </div>
                   <div className="flex-1 p-2.5">
-                    <p className="text-xs font-medium text-[#FCD000]">Message Request</p>
+                    <p className="text-xs font-medium text-[#FDD000]">Message Request</p>
                     <p className="text-[10px] text-white/60">
                       From {request.fromUser.firstName || request.fromUser.email}
                     </p>
@@ -714,7 +714,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                         size="sm"
                         onClick={() => handleRequestResponse(request.id, 'accept')}
                         disabled={respondToRequestMutation.isPending}
-                        className="flex-1 text-[10px] h-6 bg-[#FCD000] text-black hover:bg-[#FCD000]/80 rounded-md font-medium"
+                        className="flex-1 text-[10px] h-6 bg-[#FDD000] text-black hover:bg-[#FDD000]/80 rounded-md font-medium"
                       >
                         Accept
                       </Button>
@@ -736,16 +736,16 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
               {filteredNotifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className="flex bg-zinc-900 border border-white/10 rounded-lg overflow-hidden transition-all hover:border-[#FCD000]/40 hover:bg-zinc-800"
+                  className="flex bg-zinc-900 border border-white/10 rounded-lg overflow-hidden transition-all hover:border-[#FDD000]/40 hover:bg-zinc-800"
                 >
                   <div className={cn(
                     "w-10 flex items-center justify-center flex-shrink-0 self-stretch",
-                    notification.isRead ? "bg-[#FCD000]" : "bg-zinc-800"
+                    notification.isRead ? "bg-[#FDD000]" : "bg-zinc-800"
                   )}>
                     {notification.isRead ? (
                       <Check className="h-4 w-4 text-black" />
                     ) : (
-                      <div className="text-[#FCD000]">{getNotificationIcon(notification.type)}</div>
+                      <div className="text-[#FDD000]">{getNotificationIcon(notification.type)}</div>
                     )}
                   </div>
                   <div 
@@ -758,7 +758,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                         notification.isRead ? "text-white/60" : "text-white"
                       )}>{notification.title}</p>
                       {!notification.isRead && (
-                        <div className="h-1.5 w-1.5 bg-[#FCD000] rounded-full flex-shrink-0 ml-1" />
+                        <div className="h-1.5 w-1.5 bg-[#FDD000] rounded-full flex-shrink-0 ml-1" />
                       )}
                     </div>
                     <p className="text-[10px] text-white/50 break-words line-clamp-1 mt-0.5">
@@ -777,7 +777,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
                           size="sm"
                           onClick={(e) => { e.stopPropagation(); handleBrotherhoodResponse(notification.relatedId!, 'approved'); }}
                           disabled={respondToBrotherhoodMutation.isPending}
-                          className="flex-1 text-[10px] h-6 bg-[#FCD000] text-black hover:bg-[#FCD000]/80 rounded-md font-medium"
+                          className="flex-1 text-[10px] h-6 bg-[#FDD000] text-black hover:bg-[#FDD000]/80 rounded-md font-medium"
                         >
                           <UserCheck className="h-3 w-3 mr-1" />
                           Approve

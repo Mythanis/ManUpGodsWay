@@ -56,7 +56,7 @@ interface StoreRedemption {
 }
 
 const TIER_OPTIONS = [
-  { value: "subscriber", label: "Subscriber", color: "bg-[#FCD000]" },
+  { value: "subscriber", label: "Subscriber", color: "bg-[#FDD000]" },
 ];
 
 const PRODUCT_TYPE_OPTIONS = [

@@ -511,7 +511,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
       
       <div ref={contentRef} className="space-y-4 print:space-y-2" data-testid="embedded-lesson-viewer">
       {/* Lesson Navigation */}
-      <div className="bg-[#FCD000] text-black border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] p-3 print:hidden">
+      <div className="bg-[#FDD000] text-black border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] p-3 print:hidden">
         <div className="flex items-center justify-between gap-2 relative z-10">
           <Button
             size="sm"
@@ -563,13 +563,13 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="mb-1" data-testid="text-lesson-title">
-                <span className="text-lg font-bold text-[#FCD000] tracking-wide">Day {currentLesson.dayNumber}:</span>
+                <span className="text-lg font-bold text-[#FDD000] tracking-wide">Day {currentLesson.dayNumber}:</span>
                 <CardTitle className="text-2xl font-black text-white tracking-tight mt-1">
                   {currentLesson.title}
                 </CardTitle>
               </div>
               {currentLesson.estimatedMinutes && (
-                <p className="text-sm text-[#FCD000] font-bold">
+                <p className="text-sm text-[#FDD000] font-bold">
                   ⏱️ {currentLesson.estimatedMinutes} min read
                 </p>
               )}
@@ -589,7 +589,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
                 <button
                   onClick={() => adjustFontSize(-1)}
                   disabled={fontSizeLevel === 0}
-                  className="w-7 h-7 flex items-center justify-center rounded bg-[#FCD000] text-black hover:bg-yellow-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs font-black"
+                  className="w-7 h-7 flex items-center justify-center rounded bg-[#FDD000] text-black hover:bg-yellow-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs font-black"
                   title="Decrease font size"
                   aria-label="Decrease font size"
                 >
@@ -598,7 +598,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
                 <button
                   onClick={() => adjustFontSize(1)}
                   disabled={fontSizeLevel === 2}
-                  className="w-7 h-7 flex items-center justify-center rounded bg-[#FCD000] text-black hover:bg-yellow-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm font-black"
+                  className="w-7 h-7 flex items-center justify-center rounded bg-[#FDD000] text-black hover:bg-yellow-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm font-black"
                   title="Increase font size"
                   aria-label="Increase font size"
                 >
@@ -619,7 +619,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
                 <p className="text-xl font-black text-zinc-200 uppercase tracking-wide">Day {currentLesson.dayNumber} Locked</p>
                 <p className="text-sm text-zinc-400 font-medium">
                   Complete one day at a time. This lesson unlocks{" "}
-                  <span className="text-[#FCD000] font-black">{formatUnlockTime(currentLesson.unlocksAt)}</span>.
+                  <span className="text-[#FDD000] font-black">{formatUnlockTime(currentLesson.unlocksAt)}</span>.
                 </p>
               </div>
               <p className="text-xs text-zinc-600 max-w-xs">
@@ -631,7 +631,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
 
           {/* Scripture Reference */}
           {currentLesson.scripture && (
-            <div className="p-4 bg-[#FCD000] rounded-sm border-l-4 border-black">
+            <div className="p-4 bg-[#FDD000] rounded-sm border-l-4 border-black">
               <p className="text-xs font-black text-black mb-1 uppercase tracking-wide">Scripture</p>
               <p className={`font-serif ${fontConfig.scripture} text-black`} data-testid="text-scripture">
                 {currentLesson.scripture}
@@ -641,14 +641,14 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
 
           {/* Main Content */}
           <div
-            className={`prose ${fontConfig.prose} max-w-none prose-invert prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tight prose-p:text-gray-200 ${fontConfig.p} prose-strong:text-[#FCD000] prose-strong:font-bold prose-em:italic prose-em:text-gray-300 prose-ul:list-disc prose-ul:pl-4 prose-ol:list-decimal prose-ol:pl-4 prose-li:text-gray-200 prose-blockquote:border-l-4 prose-blockquote:border-[#FCD000] prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-300 prose-a:text-[#FCD000] prose-a:underline`}
+            className={`prose ${fontConfig.prose} max-w-none prose-invert prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tight prose-p:text-gray-200 ${fontConfig.p} prose-strong:text-[#FDD000] prose-strong:font-bold prose-em:italic prose-em:text-gray-300 prose-ul:list-disc prose-ul:pl-4 prose-ol:list-decimal prose-ol:pl-4 prose-li:text-gray-200 prose-blockquote:border-l-4 prose-blockquote:border-[#FDD000] prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-300 prose-a:text-[#FDD000] prose-a:underline`}
             dangerouslySetInnerHTML={{ __html: sanitizeHtml(currentLesson.content) }}
             data-testid="content-lesson-body"
           />
 
           {/* Key Takeaway */}
           {currentLesson.keyTakeaway && (
-            <div className="p-4 bg-[#FCD000] rounded-sm border-2 border-black">
+            <div className="p-4 bg-[#FDD000] rounded-sm border-2 border-black">
               <p className="text-xs font-black text-black mb-2 uppercase tracking-wide">
                 💡 Key Takeaway
               </p>
@@ -659,18 +659,18 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
           )}
 
           {/* Personal Study Notes */}
-          <div className="border-2 border-[#FCD000] rounded-sm print:hidden bg-black/50">
+          <div className="border-2 border-[#FDD000] rounded-sm print:hidden bg-black/50">
             <button
               onClick={() => setNotesExpanded(!notesExpanded)}
               className="w-full p-4 flex items-center justify-between text-left hover:bg-white/10 transition-colors"
               data-testid="button-toggle-notes"
             >
               <div className="flex items-center gap-2">
-                <StickyNote className="w-5 h-5 text-[#FCD000]" />
+                <StickyNote className="w-5 h-5 text-[#FDD000]" />
                 <span className="font-black text-white uppercase tracking-wide text-sm">My Study Notes</span>
-                {notes && <Badge className="text-xs bg-[#FCD000] text-black font-bold rounded-sm">Notes Added</Badge>}
+                {notes && <Badge className="text-xs bg-[#FDD000] text-black font-bold rounded-sm">Notes Added</Badge>}
               </div>
-              <ChevronRight className={`w-4 h-4 text-[#FCD000] transition-transform ${notesExpanded ? 'rotate-90' : ''}`} />
+              <ChevronRight className={`w-4 h-4 text-[#FDD000] transition-transform ${notesExpanded ? 'rotate-90' : ''}`} />
             </button>
             {notesExpanded && (
               <div className="px-4 pb-4 space-y-3">
@@ -686,7 +686,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
                   size="sm"
                   onClick={() => saveNotesMutation.mutate()}
                   disabled={saveNotesMutation.isPending}
-                  className="bg-[#FCD000] hover:bg-yellow-400 text-black font-black uppercase tracking-wide border-2 border-black rounded-sm"
+                  className="bg-[#FDD000] hover:bg-yellow-400 text-black font-black uppercase tracking-wide border-2 border-black rounded-sm"
                   data-testid="button-save-notes"
                 >
                   {saveNotesMutation.isPending ? (
@@ -708,7 +708,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
           {/* Reflection Questions */}
           {currentLesson.questions && currentLesson.questions.length > 0 && (
             <div className="space-y-4 print:break-inside-avoid">
-              <h3 className="font-black text-lg text-[#FCD000] uppercase tracking-tight">Reflection Questions</h3>
+              <h3 className="font-black text-lg text-[#FDD000] uppercase tracking-tight">Reflection Questions</h3>
               {currentLesson.questions.map((q, index) => {
                 const isFillInBlank = q.type?.toLowerCase() === 'fill_in_blank' || q.type?.toLowerCase() === 'fill-in-blank' || q.type?.toLowerCase() === 'fillinblank';
                 
@@ -727,7 +727,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
                           
                           if (isCompleted && currentProgress?.answers?.[blankKey]) {
                             return (
-                              <span key={partIdx} className="inline-block mx-1 px-2 py-0.5 bg-[#FCD000] text-black font-bold border-b-2 border-black min-w-[80px] text-center">
+                              <span key={partIdx} className="inline-block mx-1 px-2 py-0.5 bg-[#FDD000] text-black font-bold border-b-2 border-black min-w-[80px] text-center">
                                 {currentProgress.answers[blankKey]}
                               </span>
                             );
@@ -740,7 +740,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
                               placeholder="________"
                               value={answers[blankKey] || ""}
                               onChange={(e) => handleAnswerChange(blankKey, e.target.value)}
-                              className="inline-block mx-1 px-2 py-0.5 bg-white text-black border-b-2 border-[#FCD000] min-w-[100px] max-w-[200px] font-medium focus:outline-none focus:border-black"
+                              className="inline-block mx-1 px-2 py-0.5 bg-white text-black border-b-2 border-[#FDD000] min-w-[100px] max-w-[200px] font-medium focus:outline-none focus:border-black"
                               disabled={isCompleted}
                               data-testid={`input-blank-${index}-${currentBlankIndex}`}
                             />
@@ -755,7 +755,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
                 return (
                   <div key={q.id} className="space-y-2">
                     <div className="flex items-start gap-2">
-                      <Badge className="mt-1 bg-[#FCD000] text-black font-bold rounded-sm uppercase text-xs shrink-0">
+                      <Badge className="mt-1 bg-[#FDD000] text-black font-bold rounded-sm uppercase text-xs shrink-0">
                         {isFillInBlank ? 'Fill In' : q.type}
                       </Badge>
                       {isFillInBlank ? (
@@ -780,7 +780,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
                       />
                     )}
                     {!isFillInBlank && isCompleted && currentProgress?.answers?.[q.id] && (
-                      <div className="p-3 bg-[#FCD000] rounded-sm border-2 border-black">
+                      <div className="p-3 bg-[#FDD000] rounded-sm border-2 border-black">
                         <p className="text-xs text-black/70 mb-1 font-bold uppercase">Your answer:</p>
                         <p className="text-sm text-black font-medium">{currentProgress.answers[q.id]}</p>
                       </div>
@@ -805,7 +805,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
                 <Button
                   onClick={() => markCompleteMutation.mutate()}
                   disabled={markCompleteMutation.isPending}
-                  className="bg-[#FCD000] hover:bg-yellow-400 text-black font-black uppercase tracking-wide border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all px-6 py-3"
+                  className="bg-[#FDD000] hover:bg-yellow-400 text-black font-black uppercase tracking-wide border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all px-6 py-3"
                   data-testid="button-mark-complete"
                 >
                   {markCompleteMutation.isPending ? (
@@ -826,7 +826,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
       </Card>
 
       {/* Lesson Navigation Dots */}
-      <div className="flex justify-center gap-2 print:hidden flex-wrap p-2 bg-black/50 border-2 border-[#FCD000] rounded-sm">
+      <div className="flex justify-center gap-2 print:hidden flex-wrap p-2 bg-black/50 border-2 border-[#FDD000] rounded-sm">
         {lessons.map((lesson, index) => {
           const progress = lessonProgressData.find(p => p.lessonId === lesson.id);
           // Primary: lesson.isCompleted from server; fallback: optimistic completedAt from progress cache
@@ -845,7 +845,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
               }}
               className={`p-1 transition-all border-2 ${
                 index === currentDayIndex
-                  ? "bg-[#FCD000] border-black scale-110"
+                  ? "bg-[#FDD000] border-black scale-110"
                   : completed
                   ? "bg-green-600 border-green-800"
                   : locked
@@ -870,13 +870,13 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
 
       {/* Study Complete Modal */}
       <Dialog open={showCompleteModal} onOpenChange={setShowCompleteModal}>
-        <DialogContent className="bg-[#1a1a1a] border-2 border-[#FCD000] text-white max-w-md mx-auto">
+        <DialogContent className="bg-[#1a1a1a] border-2 border-[#FDD000] text-white max-w-md mx-auto">
           <DialogHeader>
             <div className="flex flex-col items-center text-center gap-3 pt-2">
-              <div className="bg-[#FCD000] rounded-full p-4">
+              <div className="bg-[#FDD000] rounded-full p-4">
                 <Trophy className="w-8 h-8 text-black" />
               </div>
-              <DialogTitle className="text-2xl font-black text-[#FCD000] uppercase tracking-wide">
+              <DialogTitle className="text-2xl font-black text-[#FDD000] uppercase tracking-wide">
                 Study Complete!
               </DialogTitle>
               <p className="text-gray-300 text-sm">
@@ -900,7 +900,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
                 )}
                 <div className="p-3 bg-[#111]">
                   <div className="flex items-center gap-2 mb-1">
-                    <BookOpen className="w-4 h-4 text-[#FCD000]" />
+                    <BookOpen className="w-4 h-4 text-[#FDD000]" />
                     <span className="font-bold text-white text-sm">{nextStudySuggestion.title}</span>
                   </div>
                   {nextStudySuggestion.totalDays && (
@@ -920,7 +920,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
                   Stay Here
                 </Button>
                 <Button
-                  className="flex-1 bg-[#FCD000] hover:bg-yellow-400 text-black font-black uppercase"
+                  className="flex-1 bg-[#FDD000] hover:bg-yellow-400 text-black font-black uppercase"
                   onClick={() => {
                     setShowCompleteModal(false);
                     setLocation(`/studies/${nextStudySuggestion.id}`);
@@ -933,7 +933,7 @@ export function EmbeddedLessonViewer({ studyId, totalDays, userId }: EmbeddedLes
           ) : (
             <div className="mt-2 flex flex-col gap-3">
               <Button
-                className="w-full bg-[#FCD000] hover:bg-yellow-400 text-black font-black uppercase"
+                className="w-full bg-[#FDD000] hover:bg-yellow-400 text-black font-black uppercase"
                 onClick={() => {
                   setShowCompleteModal(false);
                   setLocation("/studies");

@@ -187,7 +187,7 @@ export default function SeriesDetail() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FCD000]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FDD000]"></div>
       </div>
     );
   }
@@ -198,7 +198,7 @@ export default function SeriesDetail() {
         <div className="text-center">
           <p className="text-gray-400 mb-4 font-bold uppercase">Series not found</p>
           <Link href="/library">
-            <Button className="bg-[#FCD000] text-black font-black uppercase tracking-wide rounded-sm border-2 border-black hover:bg-yellow-400">
+            <Button className="bg-[#FDD000] text-black font-black uppercase tracking-wide rounded-sm border-2 border-black hover:bg-yellow-400">
               Back to Library
             </Button>
           </Link>
@@ -211,16 +211,16 @@ export default function SeriesDetail() {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center px-6 text-center">
         <BackButton />
-        <div className="bg-black border-2 border-[#FCD000] rounded-sm p-8 max-w-sm w-full shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <div className="w-14 h-14 rounded-sm bg-[#FCD000] flex items-center justify-center mx-auto mb-4 border-2 border-black">
+        <div className="bg-black border-2 border-[#FDD000] rounded-sm p-8 max-w-sm w-full shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <div className="w-14 h-14 rounded-sm bg-[#FDD000] flex items-center justify-center mx-auto mb-4 border-2 border-black">
             <Lock className="w-8 h-8 text-black" />
           </div>
-          <h2 className="text-xl font-black uppercase tracking-tight text-[#FCD000] mb-2">Series Locked</h2>
+          <h2 className="text-xl font-black uppercase tracking-tight text-[#FDD000] mb-2">Series Locked</h2>
           <p className="text-white/80 text-sm mb-6">
             You can only work on one series at a time. Complete your current series before starting a new one.
           </p>
           <Link href="/library">
-            <Button className="w-full bg-[#FCD000] text-black font-black uppercase tracking-wide rounded-sm border-2 border-black hover:bg-yellow-400 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+            <Button className="w-full bg-[#FDD000] text-black font-black uppercase tracking-wide rounded-sm border-2 border-black hover:bg-yellow-400 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
               Back to Library
             </Button>
           </Link>
@@ -234,16 +234,16 @@ export default function SeriesDetail() {
       <BackButton />
       
       {/* Header */}
-      <div className="liquid-black text-white px-6 pt-12 pb-6 border-b-4 border-[#FCD000]">
+      <div className="liquid-black text-white px-6 pt-12 pb-6 border-b-4 border-[#FDD000]">
         <Link href="/library">
-          <button className="flex items-center text-[#FCD000] hover:text-yellow-300 mb-4 text-sm font-bold uppercase tracking-wide" data-testid="button-back">
+          <button className="flex items-center text-[#FDD000] hover:text-yellow-300 mb-4 text-sm font-bold uppercase tracking-wide" data-testid="button-back">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Library
           </button>
         </Link>
         
         <div className="flex items-start gap-4 relative z-10">
-          <div className="flex-shrink-0 w-16 h-16 bg-[#FCD000] rounded-sm flex items-center justify-center border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+          <div className="flex-shrink-0 w-16 h-16 bg-[#FDD000] rounded-sm flex items-center justify-center border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
             {series.thumbnailUrl ? (
               <img 
                 src={series.thumbnailUrl} 
@@ -257,9 +257,9 @@ export default function SeriesDetail() {
           <div className="flex-1">
             <h1 className="text-2xl font-black tracking-tight uppercase mb-1" data-testid="text-series-title">
               <span className="text-white">{series.title.split(' ')[0]}</span>{' '}
-              <span className="text-[#FCD000]">{series.title.split(' ').slice(1).join(' ')}</span>
+              <span className="text-[#FDD000]">{series.title.split(' ').slice(1).join(' ')}</span>
             </h1>
-            <p className="text-[#FCD000] text-sm font-bold uppercase tracking-wide">
+            <p className="text-[#FDD000] text-sm font-bold uppercase tracking-wide">
               {series.category}
             </p>
             <p className="text-gray-300 text-sm mt-2">
@@ -272,7 +272,7 @@ export default function SeriesDetail() {
       {/* Progress Overview */}
       {isAuthenticated && studies.length > 0 && (
         <div className="px-6 mt-6 mb-6">
-          <Card className="bg-[#FCD000] text-black border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <Card className="bg-[#FDD000] text-black border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <CardContent className="p-4 relative z-10">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm text-black font-bold uppercase tracking-wide">Series Progress</span>
@@ -303,7 +303,7 @@ export default function SeriesDetail() {
 
         {studies.length === 0 && (
           <div className="text-center py-8">
-            <div className="w-16 h-16 bg-[#FCD000] rounded-sm flex items-center justify-center mx-auto mb-4 border-2 border-black">
+            <div className="w-16 h-16 bg-[#FDD000] rounded-sm flex items-center justify-center mx-auto mb-4 border-2 border-black">
               <BookOpen className="w-8 h-8 text-black" />
             </div>
             <p className="text-gray-400 font-bold uppercase">No studies in this series yet.</p>
@@ -327,7 +327,7 @@ export default function SeriesDetail() {
                 <div className={`relative flex items-center gap-3 px-4 py-3 border-2 border-black rounded-sm mb-2 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${
                   study.progress?.isCompleted
                     ? 'bg-green-900/60 border-green-700'
-                    : 'bg-[#FCD000]'
+                    : 'bg-[#FDD000]'
                 }`}>
                   {/* Week thumbnail / badge */}
                   <div className={`relative flex-shrink-0 w-16 h-16 rounded-sm border-2 border-black overflow-hidden flex flex-col items-center justify-center ${
@@ -346,7 +346,7 @@ export default function SeriesDetail() {
                           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                             {study.progress?.isCompleted
                               ? <CheckCircle className="w-6 h-6 text-green-400" />
-                              : <Lock className="w-5 h-5 text-[#FCD000]" />
+                              : <Lock className="w-5 h-5 text-[#FDD000]" />
                             }
                           </div>
                         )}
@@ -356,11 +356,11 @@ export default function SeriesDetail() {
                         {study.progress?.isCompleted ? (
                           <CheckCircle className="w-6 h-6 text-green-400" />
                         ) : isConsecutiveLocked ? (
-                          <Lock className="w-5 h-5 text-[#FCD000]" />
+                          <Lock className="w-5 h-5 text-[#FDD000]" />
                         ) : (
                           <>
-                            <span className="text-[9px] font-black uppercase tracking-widest leading-none text-[#FCD000]">WK</span>
-                            <span className="text-xl font-black leading-none text-[#FCD000]">{study.seriesOrder ?? studyIndex + 1}</span>
+                            <span className="text-[9px] font-black uppercase tracking-widest leading-none text-[#FDD000]">WK</span>
+                            <span className="text-xl font-black leading-none text-[#FDD000]">{study.seriesOrder ?? studyIndex + 1}</span>
                           </>
                         )}
                       </div>
@@ -390,7 +390,7 @@ export default function SeriesDetail() {
                   {/* Action / lock indicator */}
                   <div className="flex-shrink-0">
                     {isConsecutiveLocked ? (
-                      <Button size="sm" variant="outline" disabled className="border-2 border-black text-black bg-[#FCD000]/60 rounded-sm font-bold uppercase text-xs px-2 h-8 opacity-70">
+                      <Button size="sm" variant="outline" disabled className="border-2 border-black text-black bg-[#FDD000]/60 rounded-sm font-bold uppercase text-xs px-2 h-8 opacity-70">
                         <Lock className="w-3 h-3 mr-1" />Locked
                       </Button>
                     ) : hasAccess ? (
@@ -435,7 +435,7 @@ export default function SeriesDetail() {
                       <div className="flex items-center gap-2 ml-4">
                         <div className="flex-1 h-1 bg-zinc-800 rounded-full overflow-hidden max-w-[120px]">
                           <div
-                            className="h-full bg-[#FCD000]/60 rounded-full transition-all"
+                            className="h-full bg-[#FDD000]/60 rounded-full transition-all"
                             style={{ width: `${Math.round((prevProgress.completed / prevProgress.total) * 100)}%` }}
                           />
                         </div>
@@ -447,7 +447,7 @@ export default function SeriesDetail() {
 
                 {/* ── Lesson rows (only shown when unlocked) ── */}
                 {!isConsecutiveLocked && study.lessons && study.lessons.length > 0 && (
-                  <div className="ml-3 border-l-2 border-[#FCD000]/30 pl-3 space-y-1.5">
+                  <div className="ml-3 border-l-2 border-[#FDD000]/30 pl-3 space-y-1.5">
                     {study.lessons.map((lesson, lessonIndex) => {
                       const isCompleted = lesson.isCompleted;
                       // Completed lessons are always accessible — never show as locked
@@ -466,14 +466,14 @@ export default function SeriesDetail() {
                         >
                           {/* Day status dot */}
                           <div className={`flex-shrink-0 w-6 h-6 rounded-sm border border-black flex items-center justify-center text-[10px] font-black ${
-                            isCompleted ? 'bg-green-700 text-white' : isDripLocked ? 'bg-zinc-700 text-zinc-500' : 'bg-[#FCD000]/20 text-[#FCD000]'
+                            isCompleted ? 'bg-green-700 text-white' : isDripLocked ? 'bg-zinc-700 text-zinc-500' : 'bg-[#FDD000]/20 text-[#FDD000]'
                           }`}>
                             {isCompleted ? <CheckCircle className="w-3.5 h-3.5" /> : isDripLocked ? <Lock className="w-3 h-3" /> : lesson.dayNumber}
                           </div>
 
                           {/* Title */}
                           <div className="flex-1 min-w-0">
-                            <p className={`text-[10px] font-black uppercase tracking-widest leading-none mb-0.5 ${isDripLocked ? 'text-zinc-600' : isCompleted ? 'text-green-400' : 'text-[#FCD000]'}`}>
+                            <p className={`text-[10px] font-black uppercase tracking-widest leading-none mb-0.5 ${isDripLocked ? 'text-zinc-600' : isCompleted ? 'text-green-400' : 'text-[#FDD000]'}`}>
                               Day {lesson.dayNumber}
                             </p>
                             <p className={`text-xs font-semibold leading-tight line-clamp-1 ${isDripLocked ? 'text-zinc-500' : isCompleted ? 'text-green-300/80' : 'text-white'}`}>
@@ -485,7 +485,7 @@ export default function SeriesDetail() {
                           {!isDripLocked && hasAccess && (
                             <Link href={`/studies/${study.id}?day=${lessonIndex}`}>
                               <button
-                                className="flex-shrink-0 text-[#FCD000] hover:text-yellow-300 transition-colors"
+                                className="flex-shrink-0 text-[#FDD000] hover:text-yellow-300 transition-colors"
                                 data-testid={`button-lesson-${lesson.id}`}
                               >
                                 <ChevronRight className="w-4 h-4" />

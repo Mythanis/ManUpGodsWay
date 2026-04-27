@@ -1035,7 +1035,7 @@ export default function Home() {
                 className="w-12 h-12 rounded-sm object-cover border-2 border-ministry-gold-exact"
               />
               <Link href="/rations">
-                <div className="bg-[#FCD000] text-black px-3 py-1 rounded-sm text-xs font-black uppercase tracking-wide border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:bg-[#e6bc00] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center gap-1">
+                <div className="bg-[#FDD000] text-black px-3 py-1 rounded-sm text-xs font-black uppercase tracking-wide border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:bg-[#e6bc00] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center gap-1">
                   <Coins className="w-3 h-3 relative z-10" />
                   <span className="relative z-10">{rations?.balance?.toLocaleString() || 0} rations</span>
                 </div>
@@ -1051,7 +1051,7 @@ export default function Home() {
           <h1 className="text-4xl font-black tracking-tighter uppercase" data-testid="text-greeting">
             <span className="text-white">Welcome,</span> <span className="text-ministry-gold-exact">{user?.firstName || 'Brother'}</span>
           </h1>
-          <p className="text-[#FCD000] text-xs font-bold tracking-widest uppercase" data-testid="text-motivation">
+          <p className="text-[#FDD000] text-xs font-bold tracking-widest uppercase" data-testid="text-motivation">
             {systemSettings?.homepageTagline || "Ready to grow in God's strength?"}
           </p>
         </div>
@@ -1059,7 +1059,7 @@ export default function Home() {
         {/* Subscription Banner */}
         {!((user as any)?.subscriptionStatus === 'active' ||
           ((user as any)?.subscriptionStatus === 'cancelled' && (user as any)?.subscriptionExpiresAt && new Date((user as any).subscriptionExpiresAt) > new Date())) && (
-          <div className="bg-[#FCD000] glow-gold text-black rounded-sm border-2 border-black p-4 mb-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" data-testid="banner-subscription">
+          <div className="bg-[#FDD000] glow-gold text-black rounded-sm border-2 border-black p-4 mb-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" data-testid="banner-subscription">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-black text-sm text-black uppercase tracking-tight">Subscribe Now</h3>
@@ -1085,15 +1085,15 @@ export default function Home() {
         {/* Brotherhood Feed */}
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
+            <div className="w-1 h-6 bg-[#FDD000] rounded-full flex-shrink-0" />
             <h2 className="text-xl font-coalition text-white uppercase tracking-widest">Brotherhood Feed</h2>
             <div className="flex-1 h-px bg-white/10" />
-            <Link href="/community" className="text-xs font-black text-[#FCD000] uppercase tracking-wide hover:opacity-80">
+            <Link href="/community" className="text-xs font-black text-[#FDD000] uppercase tracking-wide hover:opacity-80">
               View All
             </Link>
           </div>
 
-          <div className="border-2 border-[#FCD000] rounded-sm p-3">
+          <div className="border-2 border-[#FDD000] rounded-sm p-3">
           {feedLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
@@ -1111,7 +1111,7 @@ export default function Home() {
           ) : recentDiscussions.length === 0 ? (
             <Link href="/community" className="block">
               <div className="bg-black border-2 border-dashed border-white/20 rounded-sm p-6 text-center">
-                <MessageSquare className="w-8 h-8 text-[#FCD000] mx-auto mb-2" />
+                <MessageSquare className="w-8 h-8 text-[#FDD000] mx-auto mb-2" />
                 <p className="text-sm font-black text-white uppercase tracking-wide mb-1">Start the Conversation</p>
                 <p className="text-xs text-white/50">Be the first brother to post today</p>
               </div>
@@ -1131,12 +1131,12 @@ export default function Home() {
               return (
                 <div className="space-y-3">
                   <Link href={`/community?discussion=${discussion.id}`} className="block">
-                    <div className="bg-black border-2 border-[#FCD000]/30 rounded-sm p-4 hover:border-[#FCD000] transition-colors shadow-[2px_2px_0px_0px_rgba(252,208,0,0.15)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]">
+                    <div className="bg-black border-2 border-[#FDD000]/30 rounded-sm p-4 hover:border-[#FDD000] transition-colors shadow-[2px_2px_0px_0px_rgba(253,208,0,0.15)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]">
                       <div className="flex items-center gap-2 mb-2">
                         {discussion.user?.profileImageUrl ? (
-                          <img src={discussion.user.profileImageUrl} alt={name} className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-[#FCD000]/40" />
+                          <img src={discussion.user.profileImageUrl} alt={name} className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-[#FDD000]/40" />
                         ) : (
-                          <div className="w-8 h-8 rounded-full bg-[#FCD000] flex items-center justify-center flex-shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-[#FDD000] flex items-center justify-center flex-shrink-0">
                             <span className="text-xs font-black text-black">{initials}</span>
                           </div>
                         )}
@@ -1159,12 +1159,12 @@ export default function Home() {
                           </span>
                         )}
                         {discussion.category && (
-                          <span className="text-xs text-[#FCD000]/60 font-bold uppercase tracking-wide ml-auto">{discussion.category}</span>
+                          <span className="text-xs text-[#FDD000]/60 font-bold uppercase tracking-wide ml-auto">{discussion.category}</span>
                         )}
                       </div>
                     </div>
                   </Link>
-                  <Link href="/community" className="block h-16 w-full flex items-center justify-between bg-[#FCD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold">
+                  <Link href="/community" className="block h-16 w-full flex items-center justify-between bg-[#FDD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold">
                     <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
                       <Plus className="w-6 h-6 text-white relative z-10" />
                     </div>
@@ -1182,11 +1182,11 @@ export default function Home() {
         </div>
 
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
+          <div className="w-1 h-6 bg-[#FDD000] rounded-full flex-shrink-0" />
           <h2 className="text-xl font-coalition text-white uppercase tracking-widest">Today's Devotional</h2>
           <div className="flex-1 h-px bg-white/10" />
         </div>
-        <Card className="shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] border-2 border-ministry-gold-exact liquid-black-white mb-6 rounded-sm overflow-hidden" data-testid="card-devotional">
+        <Card className="shadow-[4px_4px_0px_0px_rgba(253,208,0,1)] border-2 border-ministry-gold-exact liquid-black-white mb-6 rounded-sm overflow-hidden" data-testid="card-devotional">
           <CardContent className="p-6 relative z-10">
             {devotional ? (
               <>
@@ -1246,7 +1246,7 @@ export default function Home() {
       {/* Current Progress Section */}
       <div className="px-6 mb-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
+          <div className="w-1 h-6 bg-[#FDD000] rounded-full flex-shrink-0" />
           <h2 className="text-xl font-coalition text-white uppercase tracking-widest">Your Journey</h2>
           <div className="flex-1 h-px bg-white/10" />
         </div>
@@ -1260,7 +1260,7 @@ export default function Home() {
         ) : (
           <>
             {/* No Current Study - Show Recommendations */}
-            <Card className="border-2 border-ministry-gold-exact p-6 mb-4 liquid-black-white rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] overflow-hidden" data-testid="card-no-current-study">
+            <Card className="border-2 border-ministry-gold-exact p-6 mb-4 liquid-black-white rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,1)] overflow-hidden" data-testid="card-no-current-study">
               <div className="text-center relative z-10">
                 <p className="text-white/80 mb-4">
                   {completedCount > 0 
@@ -1281,14 +1281,14 @@ export default function Home() {
             {recommendedStudies.length > 0 && (
               <>
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
+                  <div className="w-1 h-6 bg-[#FDD000] rounded-full flex-shrink-0" />
                   <h3 className="text-xl font-coalition text-white uppercase tracking-widest">Recommended for You</h3>
                   <div className="flex-1 h-px bg-white/10" />
                 </div>
-                <p className="text-sm text-[#FCD000] mb-4 font-black uppercase tracking-wide">{completedCount > 0 ? "Continue Your Faith Journey" : "Start Your Growth Today"}</p>
+                <p className="text-sm text-[#FDD000] mb-4 font-black uppercase tracking-wide">{completedCount > 0 ? "Continue Your Faith Journey" : "Start Your Growth Today"}</p>
                 <div className="space-y-3">
                   {recommendedStudies.slice(0, 3).map((study: any) => (
-                    <Card key={study.id} className="border-2 border-black hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all rounded-sm overflow-hidden bg-[#FCD000]" onClick={() => navigate(`/studies/${study.id}`)} style={{ cursor: 'pointer', boxShadow: '0 4px 15px rgba(252, 208, 0, 0.3), 0 0 30px rgba(252, 208, 0, 0.15)' }}>
+                    <Card key={study.id} className="border-2 border-black hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all rounded-sm overflow-hidden bg-[#FDD000]" onClick={() => navigate(`/studies/${study.id}`)} style={{ cursor: 'pointer', boxShadow: '0 4px 15px rgba(252, 208, 0, 0.3), 0 0 30px rgba(252, 208, 0, 0.15)' }}>
                       <CardContent className="p-0">
                         <div className="flex">
                           <img
@@ -1322,7 +1322,7 @@ export default function Home() {
       {/* Quick Access */}
       <div className="px-6 mb-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
+          <div className="w-1 h-6 bg-[#FDD000] rounded-full flex-shrink-0" />
           <h2 className="text-xl font-coalition text-white uppercase tracking-widest">Popular</h2>
           <div className="flex-1 h-px bg-white/10" />
         </div>
@@ -1330,7 +1330,7 @@ export default function Home() {
         <div className="space-y-2">
           <Button 
             variant="outline"
-            className="h-16 w-full flex items-center justify-between bg-[#FCD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
+            className="h-16 w-full flex items-center justify-between bg-[#FDD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
             data-testid="button-current-challenge"
             onClick={() => setShowChallengeDialog(true)}
           >
@@ -1345,7 +1345,7 @@ export default function Home() {
             </div>
           </Button>
 
-          <Link href="/videos" className="block h-16 w-full flex items-center justify-between bg-[#FCD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-watch-videos">
+          <Link href="/videos" className="block h-16 w-full flex items-center justify-between bg-[#FDD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-watch-videos">
             <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
               <Play className="w-6 h-6 text-white relative z-10" />
             </div>
@@ -1357,7 +1357,7 @@ export default function Home() {
             </div>
           </Link>
           
-          <Link href="/hurdle-wall" className="block h-16 w-full flex items-center justify-between bg-[#FCD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-hurdle-wall">
+          <Link href="/hurdle-wall" className="block h-16 w-full flex items-center justify-between bg-[#FDD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-hurdle-wall">
             <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
               <Shield className="w-6 h-6 text-white relative z-10" />
             </div>
@@ -1369,7 +1369,7 @@ export default function Home() {
             </div>
           </Link>
 
-          <Link href="/community" className="block h-16 w-full flex items-center justify-between bg-[#FCD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-join-discussion">
+          <Link href="/community" className="block h-16 w-full flex items-center justify-between bg-[#FDD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-join-discussion">
             <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
               <MessageSquare className="w-6 h-6 text-white relative z-10" />
             </div>
@@ -1381,7 +1381,7 @@ export default function Home() {
             </div>
           </Link>
 
-          <Link href="/blog" className="block h-16 w-full flex items-center justify-between bg-[#FCD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-blog">
+          <Link href="/blog" className="block h-16 w-full flex items-center justify-between bg-[#FDD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-blog">
             <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
               <Newspaper className="w-6 h-6 text-white relative z-10" />
             </div>
@@ -1395,7 +1395,7 @@ export default function Home() {
 
           <Button 
             variant="outline"
-            className="h-16 w-full flex items-center justify-between bg-[#FCD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
+            className="h-16 w-full flex items-center justify-between bg-[#FDD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
             data-testid="button-prayer-time"
             onClick={() => isPraying ? endPrayerTime() : setShowPrayerDialog(true)}
           >
@@ -1418,7 +1418,7 @@ export default function Home() {
 
           <Button 
             variant="outline"
-            className="h-16 w-full flex items-center justify-between bg-[#FCD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
+            className="h-16 w-full flex items-center justify-between bg-[#FDD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
             data-testid="button-track-progress"
             onClick={() => setShowProgressDialog(true)}
           >
@@ -1438,17 +1438,17 @@ export default function Home() {
       {/* Recent Activity */}
       <div className="px-6 mb-8">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
+          <div className="w-1 h-6 bg-[#FDD000] rounded-full flex-shrink-0" />
           <h2 className="text-xl font-coalition text-white uppercase tracking-widest">Recent Activity</h2>
           <div className="flex-1 h-px bg-white/10" />
         </div>
         
         <div className="space-y-3">
           {completedCount > 0 && (
-            <Card className="bg-black border-2 border-[#FCD000] rounded-sm shadow-[3px_3px_0px_0px_rgba(252,208,0,0.3)]" data-testid="activity-completed-study">
+            <Card className="bg-black border-2 border-[#FDD000] rounded-sm shadow-[3px_3px_0px_0px_rgba(253,208,0,0.3)]" data-testid="activity-completed-study">
               <CardContent className="p-4 relative z-10">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-sm bg-[#FCD000] flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-sm bg-[#FDD000] flex items-center justify-center">
                     <svg className="w-5 h-5 text-black relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
@@ -1464,10 +1464,10 @@ export default function Home() {
             </Card>
           )}
           
-          <Card className="bg-black border-2 border-[#FCD000] rounded-sm shadow-[3px_3px_0px_0px_rgba(252,208,0,0.3)]" data-testid="activity-streak">
+          <Card className="bg-black border-2 border-[#FDD000] rounded-sm shadow-[3px_3px_0px_0px_rgba(253,208,0,0.3)]" data-testid="activity-streak">
             <CardContent className="p-4 relative z-10">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-sm bg-[#FCD000] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-sm bg-[#FDD000] flex items-center justify-center">
                   <svg className="w-5 h-5 text-black relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
                   </svg>
@@ -1489,10 +1489,10 @@ export default function Home() {
         <button
           onClick={handleShareApp}
           disabled={shareAppMutation.isPending}
-          className="w-full flex items-center justify-between p-4 bg-black border-2 border-[#FCD000] rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all active:shadow-none active:translate-x-[4px] active:translate-y-[4px]"
+          className="w-full flex items-center justify-between p-4 bg-black border-2 border-[#FDD000] rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(253,208,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all active:shadow-none active:translate-x-[4px] active:translate-y-[4px]"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-sm bg-[#FCD000] flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-sm bg-[#FDD000] flex items-center justify-center flex-shrink-0">
               <Share2 className="w-5 h-5 text-black" />
             </div>
             <div className="text-left">
@@ -1501,8 +1501,8 @@ export default function Home() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-black text-[#FCD000] bg-[#FCD000]/10 border border-[#FCD000]/30 px-2 py-0.5 rounded-sm">+10</span>
-            <svg className="w-4 h-4 text-[#FCD000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <span className="text-xs font-black text-[#FDD000] bg-[#FDD000]/10 border border-[#FDD000]/30 px-2 py-0.5 rounded-sm">+10</span>
+            <svg className="w-4 h-4 text-[#FDD000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
             </svg>
           </div>
@@ -1574,7 +1574,7 @@ export default function Home() {
             </div>
 
             {/* Progress Insights */}
-            <div className="liquid-black-white p-4 rounded-sm border-2 border-ministry-gold-exact shadow-[3px_3px_0px_0px_rgba(252,208,0,1)] overflow-hidden">
+            <div className="liquid-black-white p-4 rounded-sm border-2 border-ministry-gold-exact shadow-[3px_3px_0px_0px_rgba(253,208,0,1)] overflow-hidden">
               <h4 className="font-black text-white mb-2 uppercase tracking-tight relative z-10">Your Journey</h4>
               <div className="space-y-2 text-sm text-white/80 relative z-10">
                 {completedCount === 0 && (
@@ -1608,13 +1608,13 @@ export default function Home() {
 
       {/* Prayer Time Dialog */}
       <Dialog open={showPrayerDialog} onOpenChange={(open) => { setShowPrayerDialog(open); if (!open) { setShowPushPrompt(false); setPendingToggle(null); } }}>
-        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85svh] overflow-y-auto bg-black border-2 border-[#FCD000] rounded-sm shadow-[6px_6px_0px_0px_rgba(252,208,0,0.35)] p-0">
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85svh] overflow-y-auto bg-black border-2 border-[#FDD000] rounded-sm shadow-[6px_6px_0px_0px_rgba(253,208,0,0.35)] p-0">
 
           {/* Header */}
-          <div className="relative px-5 pt-5 pb-4 border-b border-[#FCD000]/20">
+          <div className="relative px-5 pt-5 pb-4 border-b border-[#FDD000]/20">
             <div className="flex items-center gap-2 mb-1">
-              <Clock className="w-3.5 h-3.5 text-[#FCD000]" />
-              <p className="text-[#FCD000] text-[9px] font-black uppercase tracking-[0.25em]">Prayer Time</p>
+              <Clock className="w-3.5 h-3.5 text-[#FDD000]" />
+              <p className="text-[#FDD000] text-[9px] font-black uppercase tracking-[0.25em]">Prayer Time</p>
             </div>
             <DialogTitle className="text-white text-xl font-black tracking-tight uppercase leading-tight" style={{ fontFamily: "'Inter', sans-serif" }}>
               Start Your Prayer
@@ -1625,32 +1625,32 @@ export default function Home() {
 
             {/* Duration */}
             <div>
-              <label className="text-[#FCD000] text-[9px] font-black uppercase tracking-[0.2em] mb-2 block">Duration</label>
+              <label className="text-[#FDD000] text-[9px] font-black uppercase tracking-[0.2em] mb-2 block">Duration</label>
               <Select value={prayerDuration} onValueChange={setPrayerDuration}>
-                <SelectTrigger className="bg-[#111111] border border-[#FCD000]/30 text-white rounded-sm h-11 focus:ring-0 focus:ring-offset-0 focus:border-[#FCD000]">
+                <SelectTrigger className="bg-[#111111] border border-[#FDD000]/30 text-white rounded-sm h-11 focus:ring-0 focus:ring-offset-0 focus:border-[#FDD000]">
                   <SelectValue placeholder="Select duration" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#111111] border border-[#FCD000]/40 rounded-sm text-white">
-                  <SelectItem value="1" className="focus:bg-[#FCD000]/10 focus:text-white">1 minute</SelectItem>
-                  <SelectItem value="3" className="focus:bg-[#FCD000]/10 focus:text-white">3 minutes</SelectItem>
-                  <SelectItem value="5" className="focus:bg-[#FCD000]/10 focus:text-white">5 minutes</SelectItem>
-                  <SelectItem value="10" className="focus:bg-[#FCD000]/10 focus:text-white">10 minutes</SelectItem>
-                  <SelectItem value="15" className="focus:bg-[#FCD000]/10 focus:text-white">15 minutes</SelectItem>
-                  <SelectItem value="20" className="focus:bg-[#FCD000]/10 focus:text-white">20 minutes</SelectItem>
-                  <SelectItem value="30" className="focus:bg-[#FCD000]/10 focus:text-white">30 minutes</SelectItem>
-                  <SelectItem value="60" className="focus:bg-[#FCD000]/10 focus:text-white">1 hour</SelectItem>
+                <SelectContent className="bg-[#111111] border border-[#FDD000]/40 rounded-sm text-white">
+                  <SelectItem value="1" className="focus:bg-[#FDD000]/10 focus:text-white">1 minute</SelectItem>
+                  <SelectItem value="3" className="focus:bg-[#FDD000]/10 focus:text-white">3 minutes</SelectItem>
+                  <SelectItem value="5" className="focus:bg-[#FDD000]/10 focus:text-white">5 minutes</SelectItem>
+                  <SelectItem value="10" className="focus:bg-[#FDD000]/10 focus:text-white">10 minutes</SelectItem>
+                  <SelectItem value="15" className="focus:bg-[#FDD000]/10 focus:text-white">15 minutes</SelectItem>
+                  <SelectItem value="20" className="focus:bg-[#FDD000]/10 focus:text-white">20 minutes</SelectItem>
+                  <SelectItem value="30" className="focus:bg-[#FDD000]/10 focus:text-white">30 minutes</SelectItem>
+                  <SelectItem value="60" className="focus:bg-[#FDD000]/10 focus:text-white">1 hour</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Tip box */}
-            <div className="bg-[#FCD000]/10 border border-[#FCD000]/20 rounded-sm p-3 flex items-start gap-2">
+            <div className="bg-[#FDD000]/10 border border-[#FDD000]/20 rounded-sm p-3 flex items-start gap-2">
               <p className="text-xs text-white/60 leading-relaxed flex-1">
-                <span className="text-[#FCD000] font-black">TIP —</span> Turn on Do Not Disturb mode on your phone before you begin to minimize distractions. Add <span className="text-white/80 font-semibold">Man Up God's Way</span> to your allowed apps list so you'll still receive prayer timer notifications while DND is active.
+                <span className="text-[#FDD000] font-black">TIP —</span> Turn on Do Not Disturb mode on your phone before you begin to minimize distractions. Add <span className="text-white/80 font-semibold">Man Up God's Way</span> to your allowed apps list so you'll still receive prayer timer notifications while DND is active.
               </p>
               <button
                 onClick={() => setShowDndHelpDialog(true)}
-                className="flex-shrink-0 w-5 h-5 rounded-full border border-[#FCD000]/50 text-[#FCD000] text-[10px] font-black flex items-center justify-center hover:bg-[#FCD000]/20 transition-colors mt-0.5"
+                className="flex-shrink-0 w-5 h-5 rounded-full border border-[#FDD000]/50 text-[#FDD000] text-[10px] font-black flex items-center justify-center hover:bg-[#FDD000]/20 transition-colors mt-0.5"
                 aria-label="How to allow notifications in Do Not Disturb"
               >
                 ?
@@ -1658,10 +1658,10 @@ export default function Home() {
             </div>
 
             {/* Prayer Reminders section */}
-            <div className="border-t border-[#FCD000]/20 pt-5">
+            <div className="border-t border-[#FDD000]/20 pt-5">
               <div className="flex items-center gap-2 mb-1">
-                <BellRing className="w-3.5 h-3.5 text-[#FCD000]" />
-                <p className="text-[#FCD000] text-[9px] font-black uppercase tracking-[0.25em]">Prayer Reminders</p>
+                <BellRing className="w-3.5 h-3.5 text-[#FDD000]" />
+                <p className="text-[#FDD000] text-[9px] font-black uppercase tracking-[0.25em]">Prayer Reminders</p>
               </div>
               <p className="text-white/50 text-xs mb-4 leading-relaxed">
                 Receive push notifications to remind you to pray throughout the day.
@@ -1687,16 +1687,16 @@ export default function Home() {
 
               {/* Inline push notification prompt */}
               {showPushPrompt && (
-                <div className="bg-[#FCD000]/10 border border-[#FCD000]/30 rounded-sm p-3 mb-4">
+                <div className="bg-[#FDD000]/10 border border-[#FDD000]/30 rounded-sm p-3 mb-4">
                   <div className="flex items-start gap-2.5">
-                    <BellRing className="w-4 h-4 text-[#FCD000] mt-0.5 shrink-0" />
+                    <BellRing className="w-4 h-4 text-[#FDD000] mt-0.5 shrink-0" />
                     <div className="flex-1">
                       <p className="text-xs font-black text-white uppercase tracking-wide mb-1">Enable Notifications</p>
                       <p className="text-xs text-white/50 mb-3">
                         Prayer reminders require push notifications. Tap below to allow them.
                       </p>
                       <div className="flex gap-2">
-                        <Button size="sm" className="bg-[#FCD000] text-black font-black text-xs uppercase tracking-wide rounded-sm hover:bg-[#FCD000]/90 h-8" onClick={handleEnableNotifications}>
+                        <Button size="sm" className="bg-[#FDD000] text-black font-black text-xs uppercase tracking-wide rounded-sm hover:bg-[#FDD000]/90 h-8" onClick={handleEnableNotifications}>
                           Enable Now
                         </Button>
                         <Button size="sm" variant="ghost" className="text-xs text-white/50 hover:text-white hover:bg-white/10 h-8" onClick={handleDismissPushPrompt}>
@@ -1709,7 +1709,7 @@ export default function Home() {
               )}
 
               {/* Midday reminder row */}
-              <div className="h-14 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] mb-2">
+              <div className="h-14 w-full flex items-center bg-[#FDD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] mb-2">
                 <div className="h-full w-12 liquid-black flex items-center justify-center shrink-0">
                   <Sun className="w-5 h-5 text-white relative z-10" />
                 </div>
@@ -1724,7 +1724,7 @@ export default function Home() {
 
               {/* Hourly reminders row */}
               <div className="mb-2">
-                <div className="h-14 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                <div className="h-14 w-full flex items-center bg-[#FDD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                   <div className="h-full w-12 liquid-black flex items-center justify-center shrink-0">
                     <RefreshCw className="w-5 h-5 text-white relative z-10" />
                   </div>
@@ -1739,21 +1739,21 @@ export default function Home() {
                 {remindersHourlyEnabled && (
                   <div className="mt-2 flex items-center gap-2 px-1">
                     <div className="flex-1">
-                      <label className="text-[#FCD000] text-[9px] font-black uppercase tracking-[0.15em] mb-1 block">From</label>
+                      <label className="text-[#FDD000] text-[9px] font-black uppercase tracking-[0.15em] mb-1 block">From</label>
                       <input
                         type="time"
                         value={remindersHourlyStart}
                         onChange={(e) => setRemindersHourlyStart(e.target.value)}
-                        className="block w-full bg-[#111111] border border-[#FCD000]/30 rounded-sm px-2 py-1.5 text-sm text-white focus:outline-none focus:border-[#FCD000]"
+                        className="block w-full bg-[#111111] border border-[#FDD000]/30 rounded-sm px-2 py-1.5 text-sm text-white focus:outline-none focus:border-[#FDD000]"
                       />
                     </div>
                     <div className="flex-1">
-                      <label className="text-[#FCD000] text-[9px] font-black uppercase tracking-[0.15em] mb-1 block">To</label>
+                      <label className="text-[#FDD000] text-[9px] font-black uppercase tracking-[0.15em] mb-1 block">To</label>
                       <input
                         type="time"
                         value={remindersHourlyEnd}
                         onChange={(e) => setRemindersHourlyEnd(e.target.value)}
-                        className="block w-full bg-[#111111] border border-[#FCD000]/30 rounded-sm px-2 py-1.5 text-sm text-white focus:outline-none focus:border-[#FCD000]"
+                        className="block w-full bg-[#111111] border border-[#FDD000]/30 rounded-sm px-2 py-1.5 text-sm text-white focus:outline-none focus:border-[#FDD000]"
                       />
                     </div>
                   </div>
@@ -1763,15 +1763,15 @@ export default function Home() {
               {/* Custom times */}
               <div className="mb-4">
                 <div className="h-10 w-full flex items-center mb-2">
-                  <p className="text-[#FCD000] text-[9px] font-black uppercase tracking-[0.2em]">Custom Times</p>
+                  <p className="text-[#FDD000] text-[9px] font-black uppercase tracking-[0.2em]">Custom Times</p>
                 </div>
                 {pushSupported && !pushSubscribed ? (
-                  <div className="bg-[#FCD000]/10 border border-[#FCD000]/30 rounded-sm p-3">
+                  <div className="bg-[#FDD000]/10 border border-[#FDD000]/30 rounded-sm p-3">
                     <div className="flex items-start gap-2.5">
-                      <BellRing className="w-4 h-4 text-[#FCD000] mt-0.5 shrink-0" />
+                      <BellRing className="w-4 h-4 text-[#FDD000] mt-0.5 shrink-0" />
                       <div className="flex-1">
                         <p className="text-xs text-white/60 mb-2">Enable notifications to add custom reminder times.</p>
-                        <Button size="sm" className="bg-[#FCD000] text-black font-black text-xs uppercase tracking-wide rounded-sm hover:bg-[#FCD000]/90 h-8" onClick={handleEnableNotifications}>
+                        <Button size="sm" className="bg-[#FDD000] text-black font-black text-xs uppercase tracking-wide rounded-sm hover:bg-[#FDD000]/90 h-8" onClick={handleEnableNotifications}>
                           Enable Now
                         </Button>
                       </div>
@@ -1783,9 +1783,9 @@ export default function Home() {
                       type="time"
                       value={newCustomTime}
                       onChange={(e) => setNewCustomTime(e.target.value)}
-                      className="flex-1 bg-[#111111] border border-[#FCD000]/30 rounded-sm px-2 py-1.5 text-sm text-white focus:outline-none focus:border-[#FCD000]"
+                      className="flex-1 bg-[#111111] border border-[#FDD000]/30 rounded-sm px-2 py-1.5 text-sm text-white focus:outline-none focus:border-[#FDD000]"
                     />
-                    <Button size="sm" className="bg-[#FCD000] text-black hover:bg-[#FCD000]/90 rounded-sm h-9 px-3 font-black" onClick={addCustomTime}>
+                    <Button size="sm" className="bg-[#FDD000] text-black hover:bg-[#FDD000]/90 rounded-sm h-9 px-3 font-black" onClick={addCustomTime}>
                       <Plus className="w-4 h-4" />
                     </Button>
                   </div>
@@ -1793,7 +1793,7 @@ export default function Home() {
                 {remindersCustomTimes.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-3">
                     {remindersCustomTimes.map((t) => (
-                      <div key={t} className="flex items-center gap-1.5 bg-[#FCD000] text-black border border-black rounded-sm px-2 py-1 text-xs font-black uppercase">
+                      <div key={t} className="flex items-center gap-1.5 bg-[#FDD000] text-black border border-black rounded-sm px-2 py-1 text-xs font-black uppercase">
                         <span>{t}</span>
                         <button onClick={() => removeCustomTime(t)} className="text-black/50 hover:text-black">
                           <X className="w-3 h-3" />
@@ -1805,7 +1805,7 @@ export default function Home() {
               </div>
 
               <Button
-                className="w-full h-11 liquid-black text-[#FCD000] border-2 border-[#FCD000] rounded-sm font-black uppercase tracking-wide text-xs shadow-[2px_2px_0px_0px_rgba(252,208,0,0.4)] hover:opacity-90"
+                className="w-full h-11 liquid-black text-[#FDD000] border-2 border-[#FDD000] rounded-sm font-black uppercase tracking-wide text-xs shadow-[2px_2px_0px_0px_rgba(253,208,0,0.4)] hover:opacity-90"
                 onClick={saveReminders}
                 disabled={remindersSaving}
               >
@@ -1833,7 +1833,7 @@ export default function Home() {
             </div>
 
             {/* Start / Cancel buttons */}
-            <div className="border-t border-[#FCD000]/20 pt-5 flex gap-3">
+            <div className="border-t border-[#FDD000]/20 pt-5 flex gap-3">
               <Button
                 className="flex-1 h-12 bg-transparent border border-white/20 text-white/70 hover:text-white hover:bg-white/5 rounded-sm font-black uppercase tracking-wide text-xs"
                 onClick={() => setShowPrayerDialog(false)}
@@ -1841,7 +1841,7 @@ export default function Home() {
                 Cancel
               </Button>
               <Button
-                className="flex-1 h-12 bg-[#FCD000] text-black hover:bg-[#FCD000]/90 rounded-sm font-black uppercase tracking-wide text-xs shadow-[2px_2px_0px_0px_rgba(252,208,0,0.4)]"
+                className="flex-1 h-12 bg-[#FDD000] text-black hover:bg-[#FDD000]/90 rounded-sm font-black uppercase tracking-wide text-xs shadow-[2px_2px_0px_0px_rgba(253,208,0,0.4)]"
                 onClick={startPrayerTime}
               >
                 Start Prayer
@@ -1874,12 +1874,12 @@ export default function Home() {
 
       {/* Full Devotional Modal */}
       <Dialog open={showFullDevotional} onOpenChange={(open) => { if (!open) handleDevotionalClose(); }}>
-        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[88svh] flex flex-col liquid-header border-2 border-[#FCD000] rounded-sm shadow-[6px_6px_0px_0px_rgba(252,208,0,0.4)] p-0 overflow-hidden">
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[88svh] flex flex-col liquid-header border-2 border-[#FDD000] rounded-sm shadow-[6px_6px_0px_0px_rgba(253,208,0,0.4)] p-0 overflow-hidden">
           {/* Sticky Header */}
           <div className="relative flex-shrink-0 p-5 pb-4">
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#FCD000] to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#FDD000] to-transparent" />
             <DialogHeader>
-              <p className="text-[#FCD000] text-[10px] font-black uppercase tracking-[0.2em] mb-1.5 relative z-10">
+              <p className="text-[#FDD000] text-[10px] font-black uppercase tracking-[0.2em] mb-1.5 relative z-10">
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
               </p>
               <DialogTitle className="text-white text-xl font-black tracking-tight leading-tight relative z-10">
@@ -1906,7 +1906,7 @@ export default function Home() {
               )}
               
               {/* Verse block */}
-              <div className="relative bg-[#FCD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+              <div className="relative bg-[#FDD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
                 <span className="absolute -top-4 left-2 text-black/10 font-serif select-none pointer-events-none" style={{ fontSize: '7rem', lineHeight: 1 }}>"</span>
                 <div className="relative z-10 p-4 pb-3">
                   <p className="text-black text-base font-semibold leading-relaxed italic">
@@ -1977,7 +1977,7 @@ export default function Home() {
 
           {/* Sticky Footer — always visible */}
           {devotional && (
-            <div className="flex-shrink-0 border-t border-[#FCD000]/30 p-3 bg-black">
+            <div className="flex-shrink-0 border-t border-[#FDD000]/30 p-3 bg-black">
               <div className="flex items-center gap-2">
                 <Button 
                   variant="outline" 
@@ -2343,9 +2343,9 @@ export default function Home() {
             return (
               <div className="space-y-4">
                 {/* Challenge info */}
-                <div className="bg-black border border-[#FCD000]/30 rounded-sm p-4">
+                <div className="bg-black border border-[#FDD000]/30 rounded-sm p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-[#FCD000] font-bold uppercase tracking-wide">
+                    <span className="text-xs text-[#FDD000] font-bold uppercase tracking-wide">
                       Week of {formatLocalDate(releaseDate, { month: 'short', day: 'numeric' })}
                     </span>
                     {challenge.topic && (
@@ -2357,16 +2357,16 @@ export default function Home() {
                 </div>
 
                 {/* 7-Day Check-in Grid */}
-                <div className="bg-black border-2 border-[#FCD000] rounded-sm p-4">
+                <div className="bg-black border-2 border-[#FDD000] rounded-sm p-4">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs font-black text-white uppercase tracking-widest">Daily Check-in</span>
-                    <span className="text-xs font-bold text-[#FCD000]">{totalChecked}/7 Days</span>
+                    <span className="text-xs font-bold text-[#FDD000]">{totalChecked}/7 Days</span>
                   </div>
 
                   {/* Progress bar */}
                   <div className="h-2 bg-white/10 rounded-full mb-4 overflow-hidden">
                     <div
-                      className="h-full bg-[#FCD000] rounded-full transition-all duration-500"
+                      className="h-full bg-[#FDD000] rounded-full transition-all duration-500"
                       style={{ width: `${(totalChecked / 7) * 100}%` }}
                     />
                   </div>
@@ -2384,10 +2384,10 @@ export default function Home() {
                           onClick={() => checkinMutation.mutate({ challengeId: challenge.id, dayNumber: dayNum })}
                           className={`flex flex-col items-center justify-center rounded-sm py-2 transition-all border-2 ${
                             isChecked
-                              ? 'bg-[#FCD000] border-[#FCD000] text-black'
+                              ? 'bg-[#FDD000] border-[#FDD000] text-black'
                               : isFuture
                               ? 'bg-white/5 border-white/10 text-white/30 cursor-not-allowed'
-                              : 'bg-black border-white/20 text-white hover:border-[#FCD000] active:scale-95 cursor-pointer'
+                              : 'bg-black border-white/20 text-white hover:border-[#FDD000] active:scale-95 cursor-pointer'
                           }`}
                         >
                           <span className="text-[10px] font-bold uppercase">{label}</span>
@@ -2401,7 +2401,7 @@ export default function Home() {
 
                   {/* Completion banner */}
                   {isAllDone && (
-                    <div className="mt-4 bg-[#FCD000] rounded-sm p-3 text-center">
+                    <div className="mt-4 bg-[#FDD000] rounded-sm p-3 text-center">
                       <p className="text-black font-black text-sm uppercase tracking-wide">🏆 Challenge Complete! Rations Earned!</p>
                     </div>
                   )}
@@ -2416,7 +2416,7 @@ export default function Home() {
 
                 {/* Participant count */}
                 <div className="flex items-center gap-2 px-1">
-                  <Users className="w-4 h-4 text-[#FCD000]" />
+                  <Users className="w-4 h-4 text-[#FDD000]" />
                   <span className="text-xs text-white/60">
                     {(challengeParticipants as any)?.count || 0} {((challengeParticipants as any)?.count || 0) === 1 ? 'brother' : 'brothers'} in this challenge
                   </span>
@@ -2532,14 +2532,14 @@ export default function Home() {
 
       {/* DND Allow-List Help Dialog */}
       <Dialog open={showDndHelpDialog} onOpenChange={setShowDndHelpDialog}>
-        <DialogContent className="max-w-sm bg-[#0d0d0d] border-2 border-[#FCD000] rounded-sm p-0 overflow-hidden">
-          <div className="bg-[#FCD000] px-4 py-3 flex items-center gap-2">
+        <DialogContent className="max-w-sm bg-[#0d0d0d] border-2 border-[#FDD000] rounded-sm p-0 overflow-hidden">
+          <div className="bg-[#FDD000] px-4 py-3 flex items-center gap-2">
             <span className="text-black font-black text-sm uppercase tracking-wide">Allow Notifications in DND Mode</span>
           </div>
           <div className="px-4 py-4 space-y-5 text-white/80 text-sm">
             {/* iPhone */}
             <div>
-              <p className="text-[#FCD000] font-black text-xs uppercase tracking-widest mb-2">iPhone (iOS)</p>
+              <p className="text-[#FDD000] font-black text-xs uppercase tracking-widest mb-2">iPhone (iOS)</p>
               <ol className="space-y-1.5 text-xs text-white/70 leading-relaxed list-none">
                 <li><span className="text-white font-semibold">1.</span> Open <span className="text-white font-semibold">Settings</span> → <span className="text-white font-semibold">Focus</span> → <span className="text-white font-semibold">Do Not Disturb</span></li>
                 <li><span className="text-white font-semibold">2.</span> Tap <span className="text-white font-semibold">Apps</span> under "Allowed Notifications"</li>
@@ -2552,7 +2552,7 @@ export default function Home() {
 
             {/* Android */}
             <div>
-              <p className="text-[#FCD000] font-black text-xs uppercase tracking-widest mb-2">Android</p>
+              <p className="text-[#FDD000] font-black text-xs uppercase tracking-widest mb-2">Android</p>
               <ol className="space-y-1.5 text-xs text-white/70 leading-relaxed list-none">
                 <li><span className="text-white font-semibold">1.</span> Open <span className="text-white font-semibold">Settings</span> → <span className="text-white font-semibold">Notifications</span> → <span className="text-white font-semibold">Do Not Disturb</span></li>
                 <li><span className="text-white font-semibold">2.</span> Tap <span className="text-white font-semibold">Exceptions</span> or <span className="text-white font-semibold">Apps</span> (wording varies by device)</li>
@@ -2568,7 +2568,7 @@ export default function Home() {
           <div className="px-4 pb-4">
             <button
               onClick={() => setShowDndHelpDialog(false)}
-              className="w-full h-10 bg-[#FCD000] text-black font-black text-xs uppercase tracking-wide rounded-sm hover:opacity-90 transition-opacity"
+              className="w-full h-10 bg-[#FDD000] text-black font-black text-xs uppercase tracking-wide rounded-sm hover:opacity-90 transition-opacity"
             >
               Got It
             </button>

@@ -101,7 +101,7 @@ export default function RationsPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-14 h-14 bg-[#FCD000] text-black border-2 border-black rounded-sm flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                  <div className="w-14 h-14 bg-[#FDD000] text-black border-2 border-black rounded-sm flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                     <Coins className="w-8 h-8 text-black" />
                   </div>
                   <div>
@@ -454,7 +454,7 @@ export default function RationsPage() {
             ))}
 
             {/* Grace Bonus */}
-            <Card className="bg-zinc-900 border-2 border-ministry-gold/40 rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]">
+            <Card className="bg-zinc-900 border-2 border-ministry-gold/40 rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,0.3)]">
               <CardContent className="p-4 flex items-start gap-3">
                 <div className="w-10 h-10 bg-ministry-gold/10 border border-ministry-gold/40 rounded-sm flex items-center justify-center flex-shrink-0">
                   <Star className="w-5 h-5 text-ministry-gold" />

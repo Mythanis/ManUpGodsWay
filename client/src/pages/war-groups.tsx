@@ -198,7 +198,7 @@ export default function WarGroups() {
         {/* About War Groups Content */}
         {activeTab === 'about' && (
           <div className="space-y-6">
-            <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] overflow-hidden">
+            <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,1)] overflow-hidden">
               <CardHeader className="relative z-10">
                 <div className="flex items-center gap-3 mb-2">
                   <Shield className="h-8 w-8 text-ministry-gold-exact" />
@@ -300,7 +300,7 @@ export default function WarGroups() {
 
             {/* Schedule a Call Section (Calendly) */}
             {systemSettings?.warGroupsCalendlyUrl && (
-              <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] overflow-hidden">
+              <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,1)] overflow-hidden">
                 <CardHeader className="pb-3 relative z-10">
                   <div className="flex items-center gap-3">
                     <div className="bg-ministry-gold-exact w-12 h-12 flex items-center justify-center border-2 border-black">
@@ -332,7 +332,7 @@ export default function WarGroups() {
             {/* Search Section */}
             <div className="relative z-10">
               <h2 className="text-xl font-coalition text-white uppercase tracking-widest mb-4">Discover Groups</h2>
-          <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] overflow-hidden">
+          <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,1)] overflow-hidden">
             <CardContent className="pt-6 relative z-10">
               <div className="space-y-3">
                 <div className="relative">
@@ -448,7 +448,7 @@ export default function WarGroups() {
             </div>
           ) : groups.length === 0 ? (
             <div className="space-y-4">
-              <Card className="bg-[#FCD000] text-black border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+              <Card className="bg-[#FDD000] text-black border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                 <CardContent className="text-center py-12">
                   <MapPin className="h-12 w-12 text-black mx-auto mb-4 relative z-10" />
                   <p className="text-black font-black text-lg mb-2 uppercase tracking-tight relative z-10">No groups found in your area</p>
@@ -457,7 +457,7 @@ export default function WarGroups() {
               </Card>
               
               {/* Start a Group Section */}
-              <Card className="liquid-black border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]">
+              <Card className="liquid-black border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,0.3)]">
                 <CardContent className="py-8">
                   <div className="text-center">
                     <h3 className="text-ministry-gold-exact text-2xl font-black mb-3 uppercase tracking-tight">
@@ -497,7 +497,7 @@ export default function WarGroups() {
             <div className="space-y-2">
               {groups.map((group) => (
                 <Link key={group.id} href={`/war-groups/${group.id}`}>
-                  <Card className="bg-[#FCD000] text-black border-2 border-black rounded-sm hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all cursor-pointer shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                  <Card className="bg-[#FDD000] text-black border-2 border-black rounded-sm hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all cursor-pointer shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                     <CardContent className="py-3 px-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">

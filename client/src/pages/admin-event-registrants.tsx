@@ -130,7 +130,7 @@ export default function AdminEventRegistrants() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <div className="w-8 h-8 bg-[#FCD000] rounded-sm flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 bg-[#FDD000] rounded-sm flex items-center justify-center flex-shrink-0">
                   <Users className="h-4 w-4 text-black" />
                 </div>
                 <h1 className="text-xl font-black text-white uppercase tracking-tight">
@@ -138,7 +138,7 @@ export default function AdminEventRegistrants() {
                 </h1>
               </div>
               {event && (
-                <p className="text-[#FCD000] font-bold text-sm ml-10">{event.title}</p>
+                <p className="text-[#FDD000] font-bold text-sm ml-10">{event.title}</p>
               )}
             </div>
             {registrants.length > 0 && (
@@ -217,7 +217,7 @@ export default function AdminEventRegistrants() {
                           </div>
                         )}
                         {r.tierName && (
-                          <p className="text-[#FCD000] text-xs font-semibold mt-1 truncate">
+                          <p className="text-[#FDD000] text-xs font-semibold mt-1 truncate">
                             {r.tierName}
                           </p>
                         )}
@@ -229,7 +229,7 @@ export default function AdminEventRegistrants() {
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         {r.amountPaid && r.registrationType !== 'free' && (
-                          <span className="text-[#FCD000] font-bold text-sm">${parseFloat(r.amountPaid).toFixed(2)}</span>
+                          <span className="text-[#FDD000] font-bold text-sm">${parseFloat(r.amountPaid).toFixed(2)}</span>
                         )}
                         <PaymentBadge status={r.paymentStatus} type={r.registrationType} />
                       </div>

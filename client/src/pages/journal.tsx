@@ -29,7 +29,7 @@ export default function Journal() {
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "#0a0a0a" }}>
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FCD000]" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FDD000]" />
       </div>
     );
   }
@@ -49,7 +49,7 @@ export default function Journal() {
               All Study Notes &amp; Entries
             </p>
           </div>
-          <div className="bg-[#FCD000] rounded-sm border-2 border-black p-2">
+          <div className="bg-[#FDD000] rounded-sm border-2 border-black p-2">
             <PenLine className="w-5 h-5 text-black" />
           </div>
         </div>
@@ -57,7 +57,7 @@ export default function Journal() {
         {/* Count badge */}
         {entries.length > 0 && (
           <div className="mb-4">
-            <Badge className="bg-[#FCD000] text-black font-black uppercase text-xs border-2 border-black rounded-sm px-3 py-1">
+            <Badge className="bg-[#FDD000] text-black font-black uppercase text-xs border-2 border-black rounded-sm px-3 py-1">
               {entries.length} {entries.length === 1 ? "Entry" : "Entries"}
             </Badge>
           </div>
@@ -83,11 +83,11 @@ export default function Journal() {
           {entries.map((entry) => (
             <Card
               key={entry.id}
-              className="border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(252,208,0,0.4)] overflow-hidden"
+              className="border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(253,208,0,0.4)] overflow-hidden"
               style={{ background: "#111" }}
             >
               {/* Entry header */}
-              <div className={`px-4 py-3 border-b-2 border-black ${entry.type === "lesson_note" ? "bg-[#FCD000]" : "bg-white/10"}`}>
+              <div className={`px-4 py-3 border-b-2 border-black ${entry.type === "lesson_note" ? "bg-[#FDD000]" : "bg-white/10"}`}>
                 <div
                   className="flex items-start gap-2 cursor-pointer"
                   onClick={() => entry.studyId && setLocation(`/studies/${entry.studyId}`)}
@@ -95,7 +95,7 @@ export default function Journal() {
                   {entry.type === "lesson_note" ? (
                     <BookOpen className="w-4 h-4 text-black shrink-0 mt-0.5" />
                   ) : (
-                    <PenLine className="w-4 h-4 text-[#FCD000] shrink-0 mt-0.5" />
+                    <PenLine className="w-4 h-4 text-[#FDD000] shrink-0 mt-0.5" />
                   )}
                   <div className="flex-1 min-w-0">
                     <p className={`font-black uppercase tracking-tight text-sm leading-tight truncate ${entry.type === "lesson_note" ? "text-black" : "text-white"}`}>
@@ -111,12 +111,12 @@ export default function Journal() {
                     )}
                   </div>
                   {entry.type === "lesson_note" && (
-                    <Badge className="bg-black text-[#FCD000] font-bold text-xs border border-black rounded-sm shrink-0">
+                    <Badge className="bg-black text-[#FDD000] font-bold text-xs border border-black rounded-sm shrink-0">
                       Note
                     </Badge>
                   )}
                   {entry.type === "journal_entry" && (
-                    <Badge className="bg-[#FCD000]/20 text-[#FCD000] font-bold text-xs border border-[#FCD000]/40 rounded-sm shrink-0">
+                    <Badge className="bg-[#FDD000]/20 text-[#FDD000] font-bold text-xs border border-[#FDD000]/40 rounded-sm shrink-0">
                       Entry
                     </Badge>
                   )}

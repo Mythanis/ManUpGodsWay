@@ -18,7 +18,7 @@ export function BackButton() {
       className="rounded-full w-10 h-10 bg-black hover:bg-black/80 mb-4"
       data-testid="button-back"
     >
-      <ArrowLeft className="h-5 w-5 text-[#FCD000]" />
+      <ArrowLeft className="h-5 w-5 text-[#FDD000]" />
     </Button>
   );
 }

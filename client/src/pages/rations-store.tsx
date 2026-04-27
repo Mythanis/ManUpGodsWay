@@ -150,7 +150,7 @@ export default function RationsStorePage() {
     return (
       <Card 
         key={product.id} 
-        className="bg-black border-2 border-zinc-700 rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)] hover:shadow-[6px_6px_0px_0px_rgba(252,208,0,0.4)] transition-all"
+        className="bg-black border-2 border-zinc-700 rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,0.3)] hover:shadow-[6px_6px_0px_0px_rgba(253,208,0,0.4)] transition-all"
       >
         <CardContent className="p-4">
           {product.imageUrl ? (

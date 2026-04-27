@@ -549,13 +549,13 @@ export default function StudyDetail() {
     <div className="pb-20 min-h-screen bg-black">
       <BackButton fallbackPath="/library" />
       {/* Header */}
-      <div className="liquid-black text-white px-6 pt-12 pb-6 border-b-4 border-[#FCD000]">
+      <div className="liquid-black text-white px-6 pt-12 pb-6 border-b-4 border-[#FDD000]">
         <div className="flex items-center mb-4 relative z-10">
           <Link href="/library">
             <Button 
               variant="ghost" 
               size="icon"
-              className="mr-3 p-2 hover:bg-[#FCD000] hover:text-black text-white rounded-sm border-2 border-[#FCD000]"
+              className="mr-3 p-2 hover:bg-[#FDD000] hover:text-black text-white rounded-sm border-2 border-[#FDD000]"
               data-testid="button-back"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -564,9 +564,9 @@ export default function StudyDetail() {
           <div className="flex-1">
             <h1 className="text-2xl font-black tracking-tighter uppercase" data-testid="text-study-title">
               <span className="text-white">{study.title.split(' ')[0]}</span>{' '}
-              <span className="text-[#FCD000]">{study.title.split(' ').slice(1).join(' ')}</span>
+              <span className="text-[#FDD000]">{study.title.split(' ').slice(1).join(' ')}</span>
             </h1>
-            <p className="text-[#FCD000] text-sm font-bold uppercase tracking-wide" data-testid="text-study-category">
+            <p className="text-[#FDD000] text-sm font-bold uppercase tracking-wide" data-testid="text-study-category">
               {study.category}
             </p>
           </div>
@@ -575,13 +575,13 @@ export default function StudyDetail() {
 
       {/* Study Info */}
       <div className="px-6 mt-4 mb-6">
-        <div className="liquid-black border-2 border-[#FCD000] rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]" data-testid="card-study-info">
+        <div className="liquid-black border-2 border-[#FDD000] rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,0.3)]" data-testid="card-study-info">
           <div className="p-6 relative z-10">
             {study.thumbnailUrl && (
               <img 
                 src={study.thumbnailUrl} 
                 alt={study.title}
-                className="w-full h-48 object-cover rounded-sm mb-4 border-2 border-[#FCD000]/30"
+                className="w-full h-48 object-cover rounded-sm mb-4 border-2 border-[#FDD000]/30"
                 data-testid="img-study-thumbnail"
               />
             )}
@@ -589,25 +589,25 @@ export default function StudyDetail() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
                 {!(study.requiresPurchase && study.purchaseRequiredTiers?.includes(user?.subscriptionTier || 'free') && !hasPurchased) && (
-                  <Badge className="bg-[#FCD000] text-black font-bold uppercase tracking-wide rounded-sm border-2 border-[#FCD000]" data-testid="badge-study-tier">
+                  <Badge className="bg-[#FDD000] text-black font-bold uppercase tracking-wide rounded-sm border-2 border-[#FDD000]" data-testid="badge-study-tier">
                     {study.requiredTier !== 'free' ? 'Subscribers Only' : 'Free'}
                   </Badge>
                 )}
                 {(study.rating && parseFloat(study.rating.toString()) > 0) && (
-                  <div className="flex items-center space-x-1 bg-black/50 px-2 py-1 rounded-sm border border-[#FCD000]/30" data-testid="rating-display">
-                    <Star className="w-4 h-4 text-[#FCD000] fill-current" />
+                  <div className="flex items-center space-x-1 bg-black/50 px-2 py-1 rounded-sm border border-[#FDD000]/30" data-testid="rating-display">
+                    <Star className="w-4 h-4 text-[#FDD000] fill-current" />
                     <span className="text-sm font-bold text-white">{study.rating}</span>
                     <span className="text-xs text-gray-400">({study.ratingCount})</span>
                   </div>
                 )}
               </div>
               <div className="flex items-center space-x-4 text-sm">
-                <div className="flex items-center space-x-1 bg-black/50 px-2 py-1 rounded-sm border border-[#FCD000]/30">
-                  <Clock className="w-4 h-4 text-[#FCD000]" />
+                <div className="flex items-center space-x-1 bg-black/50 px-2 py-1 rounded-sm border border-[#FDD000]/30">
+                  <Clock className="w-4 h-4 text-[#FDD000]" />
                   <span className="text-white font-bold">{study.estimatedHours}h</span>
                 </div>
-                <div className="flex items-center space-x-1 bg-black/50 px-2 py-1 rounded-sm border border-[#FCD000]/30">
-                  <Users className="w-4 h-4 text-[#FCD000]" />
+                <div className="flex items-center space-x-1 bg-black/50 px-2 py-1 rounded-sm border border-[#FDD000]/30">
+                  <Users className="w-4 h-4 text-[#FDD000]" />
                   <span className="text-white font-bold">{study.difficulty}</span>
                 </div>
               </div>
@@ -800,7 +800,7 @@ export default function StudyDetail() {
           {/* Progress Section - Only show for studies with lessons */}
           {lessonsForThisStudy.length > 0 && (
             <div className="px-6 mb-6">
-              <div className="liquid-black border-2 border-[#FCD000] rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-progress">
+              <div className="liquid-black border-2 border-[#FDD000] rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-progress">
                 <div className="p-6 relative z-10">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-black uppercase tracking-tight text-white">Your Progress</h2>
@@ -851,7 +851,7 @@ export default function StudyDetail() {
           {/* Video Section */}
           {study.videoUrl && (
             <div className="px-6 mb-6">
-              <div className="liquid-black border-2 border-[#FCD000] rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-video">
+              <div className="liquid-black border-2 border-[#FDD000] rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" data-testid="card-video">
                 <div className="p-6 relative z-10">
                   <h2 className="text-lg font-black uppercase tracking-tight text-white mb-4">Study Video</h2>
                   <div className="relative bg-gray-900 rounded-sm overflow-hidden border-2 border-black">
@@ -948,9 +948,9 @@ export default function StudyDetail() {
 
           {/* Rating Section — shown on standalone studies or the last study in a series */}
           {showRating && <div className="px-6 mb-6">
-            <div className="liquid-black border-2 border-[#FCD000]/30 rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]" data-testid="card-rating">
+            <div className="liquid-black border-2 border-[#FDD000]/30 rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,0.3)]" data-testid="card-rating">
               <div className="p-6 relative z-10">
-                <h2 className="text-lg font-black uppercase tracking-tight text-[#FCD000] mb-4">Rate This Study</h2>
+                <h2 className="text-lg font-black uppercase tracking-tight text-[#FDD000] mb-4">Rate This Study</h2>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmitRating)} className="space-y-4">
                     <FormField
@@ -958,10 +958,10 @@ export default function StudyDetail() {
                       name="rating"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[#FCD000] font-bold uppercase tracking-wide">Rating</FormLabel>
+                          <FormLabel className="text-[#FDD000] font-bold uppercase tracking-wide">Rating</FormLabel>
                           <FormControl>
                             <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value?.toString()}>
-                              <SelectTrigger className="bg-gray-800 border-2 border-[#FCD000]/30 text-white rounded-sm" data-testid="select-rating">
+                              <SelectTrigger className="bg-gray-800 border-2 border-[#FDD000]/30 text-white rounded-sm" data-testid="select-rating">
                                 <SelectValue placeholder="Select rating" />
                               </SelectTrigger>
                               <SelectContent className="bg-black border-2 border-ministry-gold-exact rounded-sm">
@@ -982,12 +982,12 @@ export default function StudyDetail() {
                       name="review"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[#FCD000] font-bold uppercase tracking-wide">Review (Optional)</FormLabel>
+                          <FormLabel className="text-[#FDD000] font-bold uppercase tracking-wide">Review (Optional)</FormLabel>
                           <FormControl>
                             <Textarea
                               {...field}
                               placeholder="Share your thoughts about this study..."
-                              className="min-h-[100px] bg-gray-800 border-2 border-[#FCD000]/30 text-white placeholder:text-gray-400 rounded-sm"
+                              className="min-h-[100px] bg-gray-800 border-2 border-[#FDD000]/30 text-white placeholder:text-gray-400 rounded-sm"
                               data-testid="textarea-review"
                             />
                           </FormControl>
@@ -998,7 +998,7 @@ export default function StudyDetail() {
                     <Button
                       type="submit"
                       disabled={rateStudy.isPending}
-                      className="w-full bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-bold uppercase tracking-wide rounded-sm border-2 border-[#FCD000]"
+                      className="w-full bg-[#FDD000] text-black hover:bg-[#FDD000]/90 font-bold uppercase tracking-wide rounded-sm border-2 border-[#FDD000]"
                       data-testid="button-submit-rating"
                     >
                       {rateStudy.isPending ? "Submitting..." : "Submit Rating"}
@@ -1013,7 +1013,7 @@ export default function StudyDetail() {
 
       {/* Study Discussion Dialog Pop-out */}
       <Dialog open={discussionDialogOpen} onOpenChange={setDiscussionDialogOpen}>
-        <DialogContent className="!max-w-2xl !w-[95vw] max-h-[85svh] flex flex-col p-0 overflow-hidden border border-[#FCD000]/30" style={{ backgroundColor: '#111111', color: 'white' }}>
+        <DialogContent className="!max-w-2xl !w-[95vw] max-h-[85svh] flex flex-col p-0 overflow-hidden border border-[#FDD000]/30" style={{ backgroundColor: '#111111', color: 'white' }}>
           <DialogHeader className="flex-shrink-0 px-4 pt-4 pb-3 border-b border-white/10">
             <DialogTitle className="flex items-center gap-2 text-base text-white">
               <MessageCircle className="w-4 h-4 text-ministry-gold-exact" />

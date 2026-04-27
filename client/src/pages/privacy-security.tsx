@@ -28,7 +28,7 @@ export default function PrivacySecurity() {
       </div>
       
       <div className="px-6 py-6">
-        <Card className="liquid-black border-2 border-ministry-gold-exact overflow-hidden rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]">
+        <Card className="liquid-black border-2 border-ministry-gold-exact overflow-hidden rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,1)]">
           <CardContent className="p-0">
             <Link href="/privacy-policy">
               <div className="flex items-center justify-between p-4 border-b-2 border-ministry-gold-exact/30 hover:bg-gray-800 cursor-pointer transition-colors">

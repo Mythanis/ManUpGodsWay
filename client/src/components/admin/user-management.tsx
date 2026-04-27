@@ -468,14 +468,14 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
 
   const getTierBadge = (_tier: string, subscriptionStatus: string) => {
     if (subscriptionStatus === 'active') {
-      return <Badge className="bg-[#FCD000] text-black text-[10px] font-black uppercase border-2 border-black rounded-sm px-1.5 py-0">Sub</Badge>;
+      return <Badge className="bg-[#FDD000] text-black text-[10px] font-black uppercase border-2 border-black rounded-sm px-1.5 py-0">Sub</Badge>;
     }
     return null;
   };
 
   const getRoleBadge = (role: string) => {
     if (role === 'owner') {
-      return <Badge className="bg-black text-[#FCD000] text-[10px] font-black uppercase border-2 border-[#FCD000] rounded-sm px-1.5 py-0">Owner</Badge>;
+      return <Badge className="bg-black text-[#FDD000] text-[10px] font-black uppercase border-2 border-[#FDD000] rounded-sm px-1.5 py-0">Owner</Badge>;
     }
     if (role === 'admin') {
       return <Badge className="bg-black text-white text-[10px] font-black uppercase border-2 border-black rounded-sm px-1.5 py-0">Admin</Badge>;
@@ -546,7 +546,7 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                 <span className="text-xs text-gray-500">Quick filter:</span>
                 <button
                   onClick={onClearSubscriptionFilter}
-                  className="flex items-center gap-1 bg-[#FCD000] text-black text-xs font-bold px-2 py-0.5 rounded-full hover:bg-yellow-400 transition-colors"
+                  className="flex items-center gap-1 bg-[#FDD000] text-black text-xs font-bold px-2 py-0.5 rounded-full hover:bg-yellow-400 transition-colors"
                 >
                   {subscriptionFilter === 'active' && 'Active Subscribers'}
                   {subscriptionFilter === 'cancelled' && 'Cancelled'}
@@ -611,7 +611,7 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                       setExpandedStudies(new Set());
                       setShowUserDialog(true);
                     }}
-                    className="bg-[#FCD000] text-black border-2 border-black font-black uppercase text-xs rounded-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-400 hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all"
+                    className="bg-[#FDD000] text-black border-2 border-black font-black uppercase text-xs rounded-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-400 hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all"
                     data-testid={`view-user-${user.id}`}
                   >
                     <Eye className="w-3 h-3 mr-1" />

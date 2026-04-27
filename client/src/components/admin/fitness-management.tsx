@@ -1050,7 +1050,7 @@ export default function FitnessManagement() {
                         <span className="text-xs text-ministry-slate flex items-center"><Timer className="w-3 h-3 mr-1" />{plan.duration} min</span>
                         {plan.isPublished ? <Badge className="bg-green-100 text-green-800 text-xs">Published</Badge> : <Badge variant="secondary" className="text-xs">Draft</Badge>}
                         {plan.downloadUrl && <Badge className="bg-blue-100 text-blue-800 text-xs flex items-center"><Download className="w-3 h-3 mr-1" />Has Document</Badge>}
-                        {plan.isPurchasable && plan.price && <Badge className="bg-[#FCD000]/20 text-[#b8960a] text-xs">${(plan.price / 100).toFixed(2)}</Badge>}
+                        {plan.isPurchasable && plan.price && <Badge className="bg-[#FDD000]/20 text-[#b8960a] text-xs">${(plan.price / 100).toFixed(2)}</Badge>}
                       </div>
                     </div>
                   </div>
@@ -1482,7 +1482,7 @@ export default function FitnessManagement() {
             </div>
             <div className="border-t pt-4 space-y-3">
               <div className="flex items-center gap-3">
-                <input type="checkbox" id="plan-purchasable" checked={planFormData.isPurchasable} onChange={(e) => setPlanFormData({ ...planFormData, isPurchasable: e.target.checked, priceInCents: e.target.checked ? planFormData.priceInCents : "" })} className="w-4 h-4 accent-[#FCD000]" />
+                <input type="checkbox" id="plan-purchasable" checked={planFormData.isPurchasable} onChange={(e) => setPlanFormData({ ...planFormData, isPurchasable: e.target.checked, priceInCents: e.target.checked ? planFormData.priceInCents : "" })} className="w-4 h-4 accent-[#FDD000]" />
                 <Label htmlFor="plan-purchasable" className="cursor-pointer">Sell this plan individually (Stripe checkout)</Label>
               </div>
               {planFormData.isPurchasable && (

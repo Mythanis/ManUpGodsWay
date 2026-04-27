@@ -675,7 +675,7 @@ export default function BlogManagement() {
             <Button
               onClick={handleSubmit}
               disabled={createMutation.isPending || updateMutation.isPending}
-              className="bg-black text-white rounded-sm border-2 border-black hover:bg-gray-800 shadow-[3px_3px_0px_0px_rgba(252,208,0,1)]"
+              className="bg-black text-white rounded-sm border-2 border-black hover:bg-gray-800 shadow-[3px_3px_0px_0px_rgba(253,208,0,1)]"
               data-testid="button-save-blog"
             >
               {createMutation.isPending || updateMutation.isPending ? "Saving..." : "Save Blog Post"}
@@ -736,7 +736,7 @@ export default function BlogManagement() {
             <Button
               onClick={() => importRssMutation.mutate(rssUrl)}
               disabled={!rssUrl || importRssMutation.isPending}
-              className="bg-black text-white rounded-sm border-2 border-black hover:bg-gray-800 shadow-[3px_3px_0px_0px_rgba(252,208,0,1)]"
+              className="bg-black text-white rounded-sm border-2 border-black hover:bg-gray-800 shadow-[3px_3px_0px_0px_rgba(253,208,0,1)]"
               data-testid="button-import-rss-confirm"
             >
               {importRssMutation.isPending ? "Importing..." : "Import Posts"}
@@ -798,7 +798,7 @@ export default function BlogManagement() {
             <Button
               onClick={() => importWordPressMutation.mutate(wpSiteUrl)}
               disabled={!wpSiteUrl || importWordPressMutation.isPending}
-              className="bg-black text-white rounded-sm border-2 border-black hover:bg-gray-800 shadow-[3px_3px_0px_0px_rgba(252,208,0,1)]"
+              className="bg-black text-white rounded-sm border-2 border-black hover:bg-gray-800 shadow-[3px_3px_0px_0px_rgba(253,208,0,1)]"
             >
               {importWordPressMutation.isPending ? "Importing all posts…" : "Import All Posts"}
             </Button>

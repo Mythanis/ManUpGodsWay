@@ -235,14 +235,14 @@ export default function Videos() {
       <div className="liquid-header text-white px-6 pt-12 pb-6">
         <BackButton />
         <h1 className="text-4xl font-black mb-2 tracking-tighter uppercase"><span className="text-white">Video</span> <span className="text-ministry-gold-exact">Library</span></h1>
-        <p className="text-[#FCD000] text-xs font-bold tracking-widest uppercase">
+        <p className="text-[#FDD000] text-xs font-bold tracking-widest uppercase">
           Watch Inspiring Content And Grow In Faith
         </p>
       </div>
 
       {/* Search Bar */}
       <div className="px-6 -mt-3 relative z-10 mb-6">
-        <Card className="liquid-black-white shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] border-2 border-ministry-gold-exact rounded-sm overflow-hidden">
+        <Card className="liquid-black-white shadow-[4px_4px_0px_0px_rgba(253,208,0,1)] border-2 border-ministry-gold-exact rounded-sm overflow-hidden">
           <CardContent className="p-4 relative z-10">
             <div className="relative">
               <Input
@@ -278,7 +278,7 @@ export default function Videos() {
         ) : (
           <div className="flex flex-col gap-4">
             {filteredVideos.map((video: Video) => (
-              <Card key={video.id} className={`overflow-hidden shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all border-2 border-ministry-gold-exact rounded-sm ${
+              <Card key={video.id} className={`overflow-hidden shadow-[4px_4px_0px_0px_rgba(253,208,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(253,208,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all border-2 border-ministry-gold-exact rounded-sm ${
                 video.isFeatured ? 'ring-2 ring-yellow-400' : ''
               }`} style={{ fontFamily: "'Inter', sans-serif" }}>
                 <div className="aspect-video bg-gradient-to-br from-gray-900 via-gray-800 to-black relative cursor-pointer group"

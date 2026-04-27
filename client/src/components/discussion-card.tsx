@@ -511,7 +511,7 @@ export default function DiscussionCard({
           <img
             src={discussion.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent((discussion.user?.firstName || '') + '+' + (discussion.user?.lastName || ''))}&background=FCD000&color=000`}
             alt={`${discussion.user?.firstName} ${discussion.user?.lastName}`}
-            className="w-10 h-10 rounded-full object-cover cursor-pointer border-2 border-[#FCD000] flex-shrink-0"
+            className="w-10 h-10 rounded-full object-cover cursor-pointer border-2 border-[#FDD000] flex-shrink-0"
             onClick={(e) => { e.stopPropagation(); setLocation(`/users/${discussion.userId}`); }}
             data-testid="img-user-avatar"
           />
@@ -522,7 +522,7 @@ export default function DiscussionCard({
               </span>
               {getTierBadge(discussion.user?.subscriptionTier)}
               {discussion.studyId && (
-                <Badge className="text-[10px] bg-[#FCD000] text-black font-black uppercase tracking-wide px-1.5 py-0 rounded-full border-0">Study</Badge>
+                <Badge className="text-[10px] bg-[#FDD000] text-black font-black uppercase tracking-wide px-1.5 py-0 rounded-full border-0">Study</Badge>
               )}
             </div>
             <span className="text-xs text-white/40" data-testid="text-time-ago">{getTimeAgo(discussion.createdAt)}</span>
@@ -533,7 +533,7 @@ export default function DiscussionCard({
             <button
               onClick={(e) => { e.stopPropagation(); adjustFontSize(-1); }}
               disabled={fontSizeLevel === 0}
-              className="w-7 h-7 flex items-center justify-center rounded bg-[#FCD000] text-black hover:bg-yellow-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs font-black"
+              className="w-7 h-7 flex items-center justify-center rounded bg-[#FDD000] text-black hover:bg-yellow-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs font-black"
               title="Decrease font size"
               aria-label="Decrease font size"
             >
@@ -542,7 +542,7 @@ export default function DiscussionCard({
             <button
               onClick={(e) => { e.stopPropagation(); adjustFontSize(1); }}
               disabled={fontSizeLevel === 2}
-              className="w-7 h-7 flex items-center justify-center rounded bg-[#FCD000] text-black hover:bg-yellow-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm font-black"
+              className="w-7 h-7 flex items-center justify-center rounded bg-[#FDD000] text-black hover:bg-yellow-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm font-black"
               title="Increase font size"
               aria-label="Increase font size"
             >
@@ -594,7 +594,7 @@ export default function DiscussionCard({
                 </p>
               )}
               {isLongContent && (
-                <span className="text-xs font-bold text-[#FCD000] mt-1 block">
+                <span className="text-xs font-bold text-[#FDD000] mt-1 block">
                   {isExpanded ? 'Show less' : 'See more'}
                 </span>
               )}
@@ -635,7 +635,7 @@ export default function DiscussionCard({
                 onClick={() => setShowLikersDialog(true)}
                 className="flex items-center gap-1 hover:text-white/70 transition-colors"
               >
-                <span className="w-4 h-4 rounded-full bg-[#FCD000] flex items-center justify-center">
+                <span className="w-4 h-4 rounded-full bg-[#FDD000] flex items-center justify-center">
                   <ChristianCross className="w-2.5 h-2.5 text-black" />
                 </span>
                 {likeCount}
@@ -653,7 +653,7 @@ export default function DiscussionCard({
         <Dialog open={showLikersDialog} onOpenChange={setShowLikersDialog}>
           <DialogContent className="bg-[#1a1a1a] border-white/10 text-white max-w-sm">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-[#FCD000]">
+              <DialogTitle className="flex items-center gap-2 text-[#FDD000]">
                 <ChristianCross className="w-4 h-4" />
                 Who said Amen
               </DialogTitle>
@@ -669,7 +669,7 @@ export default function DiscussionCard({
                     <img
                       src={liker.profileImageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent((liker.firstName || '') + '+' + (liker.lastName || ''))}&background=FCD000&color=000`}
                       alt={`${liker.firstName} ${liker.lastName}`}
-                      className="w-8 h-8 rounded-full object-cover border border-[#FCD000]/30 flex-shrink-0"
+                      className="w-8 h-8 rounded-full object-cover border border-[#FDD000]/30 flex-shrink-0"
                     />
                     <span className="text-sm font-medium text-white">
                       {liker.firstName} {liker.lastName?.charAt(0)}.
@@ -687,7 +687,7 @@ export default function DiscussionCard({
           <button
             onClick={() => toggleLike.mutate()}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-semibold transition-colors border-r border-white/8 ${
-              userHasLiked ? 'text-[#FCD000]' : 'text-white/50 hover:text-white'
+              userHasLiked ? 'text-[#FDD000]' : 'text-white/50 hover:text-white'
             }`}
             data-testid="button-like-discussion"
           >
@@ -710,7 +710,7 @@ export default function DiscussionCard({
           {/* Comment */}
           <button
             onClick={() => { setShowReplyForm(!showReplyForm); if (!showReplies && discussion.replyCount > 0) setShowReplies(true); }}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold transition-colors border-x border-white/8 ${showReplyForm ? 'text-[#FCD000]' : 'text-white/50 hover:text-white'}`}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold transition-colors border-x border-white/8 ${showReplyForm ? 'text-[#FDD000]' : 'text-white/50 hover:text-white'}`}
             data-testid="button-reply"
           >
             <MessageCircle className="w-4 h-4" />
@@ -771,11 +771,11 @@ export default function DiscussionCard({
                     rows={2}
                     disabled={createReply.isPending}
                     {...form.register('content')}
-                    className="w-full bg-white border border-white/15 rounded-xl px-3 py-2 text-sm text-black placeholder:text-black/40 resize-none focus:outline-none focus:border-[#FCD000]"
+                    className="w-full bg-white border border-white/15 rounded-xl px-3 py-2 text-sm text-black placeholder:text-black/40 resize-none focus:outline-none focus:border-[#FDD000]"
                   />
                 </div>
                 <Button type="submit" disabled={createReply.isPending}
-                  className="h-9 w-9 p-0 rounded-full bg-[#FCD000] text-black hover:bg-yellow-300 flex-shrink-0">
+                  className="h-9 w-9 p-0 rounded-full bg-[#FDD000] text-black hover:bg-yellow-300 flex-shrink-0">
                   <Send className="w-4 h-4" />
                 </Button>
               </form>
@@ -801,7 +801,7 @@ export default function DiscussionCard({
                     <img
                       src={reply.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent((reply.user?.firstName || '') + '+' + (reply.user?.lastName || ''))}&background=FCD000&color=000&size=32`}
                       alt={`${reply.user?.firstName} ${reply.user?.lastName}`}
-                      className="w-7 h-7 rounded-full object-cover cursor-pointer flex-shrink-0 border border-[#FCD000]/30"
+                      className="w-7 h-7 rounded-full object-cover cursor-pointer flex-shrink-0 border border-[#FDD000]/30"
                       onClick={(e) => { e.stopPropagation(); setLocation(`/users/${reply.userId}`); }}
                     />
                     <div className="flex-1 min-w-0">
@@ -810,7 +810,7 @@ export default function DiscussionCard({
                           {reply.user?.firstName} {reply.user?.lastName?.charAt(0)}.
                         </span>
                         {isNested && reply.parentReplyId && (
-                          <span className="text-[10px] text-[#FCD000]/60 block -mt-0.5 mb-0.5">
+                          <span className="text-[10px] text-[#FDD000]/60 block -mt-0.5 mb-0.5">
                             ↩ reply
                           </span>
                         )}
@@ -823,7 +823,7 @@ export default function DiscussionCard({
                               autoFocus
                             />
                             <div className="flex gap-2 mt-1.5">
-                              <Button size="sm" className="h-6 px-2 text-xs bg-[#FCD000] text-black hover:bg-[#FCD000]/90"
+                              <Button size="sm" className="h-6 px-2 text-xs bg-[#FDD000] text-black hover:bg-[#FDD000]/90"
                                 onClick={() => editReply.mutate({ replyId: reply.id, content: editReplyContent })}
                                 disabled={editReply.isPending || !editReplyContent.trim()}>
                                 Save
@@ -843,8 +843,8 @@ export default function DiscussionCard({
                         <button
                           className={`text-xs font-bold transition-colors flex items-center gap-1 ${
                             (replyLikedByMe[reply.id] ?? (reply as any).likedByMe ?? false)
-                              ? 'text-[#FCD000]'
-                              : 'text-white/40 hover:text-[#FCD000]'
+                              ? 'text-[#FDD000]'
+                              : 'text-white/40 hover:text-[#FDD000]'
                           }`}
                           onClick={() => toggleReplyLike.mutate(reply.id)}
                           data-testid={`button-like-reply-${reply.id}`}>
@@ -870,7 +870,7 @@ export default function DiscussionCard({
                         </button>
                         {!isNested && canReply && (
                           <button
-                            className="text-xs font-bold text-white/40 hover:text-[#FCD000] transition-colors"
+                            className="text-xs font-bold text-white/40 hover:text-[#FDD000] transition-colors"
                             onClick={() => {
                               if (replyingToReplyId === reply.id) {
                                 setReplyingToReplyId(null);
@@ -894,7 +894,7 @@ export default function DiscussionCard({
                             }
                           />
                           {(user && (user as any).id === reply.userId) && (
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-white/30 hover:text-[#FCD000] hover:bg-[#FCD000]/10 rounded-full"
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-white/30 hover:text-[#FDD000] hover:bg-[#FDD000]/10 rounded-full"
                               onClick={() => {
                                 setEditingReplyId(reply.id);
                                 setEditReplyContent(reply.content);
@@ -928,7 +928,7 @@ export default function DiscussionCard({
                                 <FormControl>
                                   <textarea
                                     placeholder={`Reply to ${replyingToName}…`}
-                                    className="w-full border border-white/15 rounded-xl px-3 py-2 text-sm text-white placeholder:text-white/35 focus:outline-none focus:border-[#FCD000]/50 resize-none"
+                                    className="w-full border border-white/15 rounded-xl px-3 py-2 text-sm text-white placeholder:text-white/35 focus:outline-none focus:border-[#FDD000]/50 resize-none"
                                     style={{ backgroundColor: 'rgba(255,255,255,0.08)', colorScheme: 'dark' }}
                                     rows={2}
                                     autoFocus
@@ -944,7 +944,7 @@ export default function DiscussionCard({
                               type="submit"
                               size="sm"
                               disabled={createReply.isPending}
-                              className="bg-[#FCD000] text-black font-bold text-xs h-8 px-3 rounded-lg hover:bg-[#FCD000]/90"
+                              className="bg-[#FDD000] text-black font-bold text-xs h-8 px-3 rounded-lg hover:bg-[#FDD000]/90"
                             >
                               {createReply.isPending ? '...' : 'Post'}
                             </Button>
@@ -980,7 +980,7 @@ export default function DiscussionCard({
 
       {/* Edit Discussion Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="bg-black border-2 border-ministry-gold-exact text-white max-w-md rounded-sm shadow-[6px_6px_0px_0px_rgba(252,208,0,1)]">
+        <DialogContent className="bg-black border-2 border-ministry-gold-exact text-white max-w-md rounded-sm shadow-[6px_6px_0px_0px_rgba(253,208,0,1)]">
           <DialogHeader>
             <DialogTitle className="text-ministry-gold-exact font-black uppercase tracking-wide">Edit Discussion</DialogTitle>
             <DialogDescription className="text-gray-400">

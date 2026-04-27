@@ -97,7 +97,7 @@ export default function Blog() {
         {isLoading ? (
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
-              <Card key={i} className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] overflow-hidden">
+              <Card key={i} className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,1)] overflow-hidden">
                 <CardContent className="p-3 relative z-10">
                   <div className="animate-pulse flex gap-3">
                     <div className="w-20 h-20 bg-white/20 flex-shrink-0"></div>
@@ -112,7 +112,7 @@ export default function Blog() {
             ))}
           </div>
         ) : filteredBlogs.length === 0 ? (
-          <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] text-center py-8 overflow-hidden">
+          <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,1)] text-center py-8 overflow-hidden">
             <CardContent className="relative z-10">
               <h3 className="text-lg font-black uppercase tracking-tighter mb-2 text-white">No Blog Posts Found</h3>
               <p className="text-white/80 font-medium text-sm">
@@ -185,7 +185,7 @@ function BlogCard({ blog, featured, formatDate }: {
 
   return (
     <Card 
-      className={`border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] cursor-pointer hover:shadow-[6px_6px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all overflow-hidden liquid-black-white`}
+      className={`border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,1)] cursor-pointer hover:shadow-[6px_6px_0px_0px_rgba(253,208,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all overflow-hidden liquid-black-white`}
       onClick={() => navigate(`/blog/${blog.slug}`)}
       data-testid={`card-blog-${blog.id}`}
     >

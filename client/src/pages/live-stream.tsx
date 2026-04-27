@@ -93,7 +93,7 @@ function MuxPlayer({ playbackId }: { playbackId: string }) {
     return (
       <div className="w-full aspect-video bg-black flex items-center justify-center rounded-lg">
         <div className="text-center px-6">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FCD000] mx-auto mb-3" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FDD000] mx-auto mb-3" />
           <p className="text-white font-bold mb-1">Waiting for Broadcast…</p>
           <p className="text-gray-400 text-sm">The host is setting up. Retrying automatically.</p>
         </div>
@@ -105,7 +105,7 @@ function MuxPlayer({ playbackId }: { playbackId: string }) {
     <div className="w-full aspect-video rounded-lg bg-black relative overflow-hidden">
       {status === "loading" && (
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FCD000] mb-3" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FDD000] mb-3" />
           <p className="text-gray-400 text-sm">Connecting to stream…</p>
         </div>
       )}
@@ -137,7 +137,7 @@ export default function LiveStreamPage() {
           <h1 className="text-white font-black uppercase tracking-wide">Live Stream</h1>
         </div>
         <div className="flex-1 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#FCD000]" />
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#FDD000]" />
         </div>
       </div>
     );

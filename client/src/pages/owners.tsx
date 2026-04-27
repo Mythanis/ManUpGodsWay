@@ -25,15 +25,15 @@ type View = 'landing' | 'overview' | 'stripe' | 'system';
 
 function SubHeader({ title, onBack }: { title: string; onBack: () => void }) {
   return (
-    <div className="liquid-header text-white px-6 pt-12 pb-6 border-b-4 border-[#FCD000]">
+    <div className="liquid-header text-white px-6 pt-12 pb-6 border-b-4 border-[#FDD000]">
       <button
         onClick={onBack}
         className="rounded-full w-10 h-10 bg-black hover:bg-black/80 mb-4 flex items-center justify-center"
       >
-        <ArrowLeft className="h-5 w-5 text-[#FCD000]" />
+        <ArrowLeft className="h-5 w-5 text-[#FDD000]" />
       </button>
       <h1 className="text-4xl font-black tracking-tighter uppercase">
-        {title.split(' ')[0]} <span className="text-[#FCD000]">{title.split(' ').slice(1).join(' ')}</span>
+        {title.split(' ')[0]} <span className="text-[#FDD000]">{title.split(' ').slice(1).join(' ')}</span>
       </h1>
     </div>
   );
@@ -46,15 +46,15 @@ function StatRow({ label, value, sub }: { label: string; value: any; sub?: strin
         <p className="text-white text-sm font-semibold">{label}</p>
         {sub && <p className="text-white/40 text-xs mt-0.5">{sub}</p>}
       </div>
-      <span className="text-[#FCD000] font-black text-lg">{value ?? 0}</span>
+      <span className="text-[#FDD000] font-black text-lg">{value ?? 0}</span>
     </div>
   );
 }
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(252,208,0,0.4)]" style={{ background: "#111" }}>
-      <div className="px-4 py-2.5 border-b-2 border-black" style={{ background: "#FCD000" }}>
+    <div className="border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(253,208,0,0.4)]" style={{ background: "#111" }}>
+      <div className="px-4 py-2.5 border-b-2 border-black" style={{ background: "#FDD000" }}>
         <p className="text-black font-black text-xs uppercase tracking-widest">{title}</p>
       </div>
       {children}
@@ -136,7 +136,7 @@ function TestSubCheckoutForm({ pendingInfo, onSuccess, onCancel }: {
     <div className="space-y-5">
       <div className="p-3 bg-white/5 border border-white/10 rounded-sm text-center">
         <p className="text-white/50 text-xs uppercase tracking-wide font-bold">Charging</p>
-        <p className="text-[#FCD000] text-2xl font-black mt-1">${(pendingInfo.amount / 100).toFixed(2)}</p>
+        <p className="text-[#FDD000] text-2xl font-black mt-1">${(pendingInfo.amount / 100).toFixed(2)}</p>
         <p className="text-white/50 text-xs mt-0.5">every {intervalLabel(pendingInfo.interval, pendingInfo.intervalCount)}</p>
         <p className="text-green-400 text-xs mt-2 font-semibold">⚡ Test mode — no real money charged</p>
         <p className="text-white/30 text-xs mt-1">Use test card: 4242 4242 4242 4242</p>
@@ -147,7 +147,7 @@ function TestSubCheckoutForm({ pendingInfo, onSuccess, onCancel }: {
           Cancel
         </Button>
         <Button onClick={handleConfirm} disabled={isConfirming || !stripe || !elements}
-          className="flex-1 bg-[#FCD000] text-black font-black text-xs uppercase rounded-sm border-2 border-black">
+          className="flex-1 bg-[#FDD000] text-black font-black text-xs uppercase rounded-sm border-2 border-black">
           {isConfirming ? <><Loader2 className="w-3 h-3 animate-spin mr-1" /> Processing...</> : <><Lock className="w-3 h-3 mr-1" /> Confirm Payment</>}
         </Button>
       </div>
@@ -316,7 +316,7 @@ function StripePage({ onBack }: { onBack: () => void }) {
       <div className="px-6 py-6 space-y-4">
         {isLoading ? (
           <div className="flex items-center justify-center p-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FCD000]" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FDD000]" />
           </div>
         ) : (
           <>
@@ -350,7 +350,7 @@ function StripePage({ onBack }: { onBack: () => void }) {
                       className="bg-black border-2 border-white/20 text-white rounded-sm" />
                   </div>
                   <Button onClick={handleSave} disabled={isSaving || !publishableKey || !secretKey}
-                    className="w-full bg-[#FCD000] text-black font-black text-xs uppercase tracking-widest rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                    className="w-full bg-[#FDD000] text-black font-black text-xs uppercase tracking-widest rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                     {isSaving ? "Saving..." : "Save Configuration"}
                   </Button>
                   <div className="p-3 bg-blue-950/40 border border-blue-700/50 rounded-sm">
@@ -369,7 +369,7 @@ function StripePage({ onBack }: { onBack: () => void }) {
                 <div className="p-4 flex items-center justify-between">
                   <p className="text-white/60 text-sm">Test that payment processing is working.</p>
                   <Button onClick={() => testConnectionMutation.mutate()} disabled={isTestingConnection} size="sm"
-                    className="bg-[#FCD000] text-black font-black text-xs uppercase rounded-sm border-2 border-black">
+                    className="bg-[#FDD000] text-black font-black text-xs uppercase rounded-sm border-2 border-black">
                     {isTestingConnection ? "Testing..." : "Test"}
                   </Button>
                 </div>
@@ -392,7 +392,7 @@ function StripePage({ onBack }: { onBack: () => void }) {
                   <div className="border-2 border-white/10 rounded-sm overflow-hidden">
                     <div className="px-3 py-2 bg-white/5 border-b border-white/10 flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <FlaskConical className="w-4 h-4 text-[#FCD000]" />
+                        <FlaskConical className="w-4 h-4 text-[#FDD000]" />
                         <span className="text-white font-black text-xs uppercase tracking-wide">Current Test Subscription</span>
                       </div>
                       {subStatusBadge(testSub.status)}
@@ -400,7 +400,7 @@ function StripePage({ onBack }: { onBack: () => void }) {
                     <div className="p-3 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-white/50 text-xs uppercase tracking-wide font-bold">Amount</span>
-                        <span className="text-[#FCD000] font-black text-sm">${(testSub.amount / 100).toFixed(2)}</span>
+                        <span className="text-[#FDD000] font-black text-sm">${(testSub.amount / 100).toFixed(2)}</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-white/50 text-xs uppercase tracking-wide font-bold">Billing</span>
@@ -507,14 +507,14 @@ function StripePage({ onBack }: { onBack: () => void }) {
                     </div>
                     <div className="p-2.5 bg-white/5 rounded-sm border border-white/10">
                       <p className="text-white/50 text-xs">
-                        Will charge <span className="text-[#FCD000] font-black">${parseFloat(testAmount || '0').toFixed(2)}</span> every{' '}
-                        <span className="text-[#FCD000] font-black">{intervalLabel(testInterval, parseInt(testIntervalCount) || 1)}</span>
+                        Will charge <span className="text-[#FDD000] font-black">${parseFloat(testAmount || '0').toFixed(2)}</span> every{' '}
+                        <span className="text-[#FDD000] font-black">{intervalLabel(testInterval, parseInt(testIntervalCount) || 1)}</span>
                       </p>
                     </div>
                     <Button
                       onClick={() => createIntentMutation.mutate()}
                       disabled={createIntentMutation.isPending || !testAmount || parseFloat(testAmount) < 0.50}
-                      className="w-full bg-[#FCD000] text-black font-black text-xs uppercase tracking-widest rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                      className="w-full bg-[#FDD000] text-black font-black text-xs uppercase tracking-widest rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
                     >
                       {createIntentMutation.isPending
                         ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Preparing...</>
@@ -530,16 +530,16 @@ function StripePage({ onBack }: { onBack: () => void }) {
 
       {/* Stripe Elements checkout dialog */}
       <Dialog open={showCheckout} onOpenChange={(open) => { if (!open) { setShowCheckout(false); setClientSecret(''); setPendingSubInfo(null); } }}>
-        <DialogContent className="max-w-sm" style={{ background: '#111', border: '2px solid #FCD000' }}>
+        <DialogContent className="max-w-sm" style={{ background: '#111', border: '2px solid #FDD000' }}>
           <DialogHeader>
             <DialogTitle className="text-white font-black text-base uppercase tracking-wide flex items-center gap-2">
-              <FlaskConical className="w-4 h-4 text-[#FCD000]" /> Test Subscription Payment
+              <FlaskConical className="w-4 h-4 text-[#FDD000]" /> Test Subscription Payment
             </DialogTitle>
           </DialogHeader>
           {clientSecret && pendingSubInfo && stripeTestPromise ? (
             <Elements
               stripe={stripeTestPromise}
-              options={{ clientSecret, appearance: { theme: 'night', variables: { colorPrimary: '#FCD000', colorBackground: '#111', borderRadius: '2px' } } }}
+              options={{ clientSecret, appearance: { theme: 'night', variables: { colorPrimary: '#FDD000', colorBackground: '#111', borderRadius: '2px' } } }}
             >
               <TestSubCheckoutForm
                 pendingInfo={pendingSubInfo}
@@ -549,7 +549,7 @@ function StripePage({ onBack }: { onBack: () => void }) {
             </Elements>
           ) : (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-[#FCD000]" />
+              <Loader2 className="w-6 h-6 animate-spin text-[#FDD000]" />
             </div>
           )}
         </DialogContent>
@@ -593,7 +593,7 @@ function OverviewPage({ onBack, users, stats, contentStats }: { onBack: () => vo
                   <row.icon className="w-4 h-4 text-white/40" />
                   <p className="text-white text-sm">{row.label}</p>
                 </div>
-                <span className="text-[#FCD000] font-black text-lg">{row.value ?? 0}</span>
+                <span className="text-[#FDD000] font-black text-lg">{row.value ?? 0}</span>
               </div>
             ))}
             <div className="flex items-center justify-between px-4 py-3.5">
@@ -604,7 +604,7 @@ function OverviewPage({ onBack, users, stats, contentStats }: { onBack: () => vo
                   <p className="text-white/40 text-xs">{periodLabel}</p>
                 </div>
               </div>
-              <span className="text-[#FCD000] font-black text-lg">{contentStats?.bibleApiCallsThisPeriod ?? 0}</span>
+              <span className="text-[#FDD000] font-black text-lg">{contentStats?.bibleApiCallsThisPeriod ?? 0}</span>
             </div>
           </div>
         </SectionCard>
@@ -644,7 +644,7 @@ function SystemPage({ onBack }: { onBack: () => void }) {
       <div className="px-6 py-6 space-y-4">
         {/* External Connections */}
         <div className="border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" style={{ background: "#111" }}>
-          <div className="px-4 py-2.5 border-b-2 border-black flex items-center justify-between" style={{ background: "#FCD000" }}>
+          <div className="px-4 py-2.5 border-b-2 border-black flex items-center justify-between" style={{ background: "#FDD000" }}>
             <p className="text-black font-black text-xs uppercase tracking-widest">External Connections</p>
             <button onClick={runHealthCheck} disabled={healthLoading}
               className="flex items-center gap-1 text-black text-[10px] font-black uppercase">
@@ -659,7 +659,7 @@ function SystemPage({ onBack }: { onBack: () => void }) {
           )}
           {healthLoading && (
             <div className="px-4 py-6 flex items-center justify-center gap-2">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#FCD000]" />
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#FDD000]" />
               <p className="text-white/60 text-sm">Checking connections...</p>
             </div>
           )}
@@ -685,11 +685,11 @@ function SystemPage({ onBack }: { onBack: () => void }) {
         <SectionCard title="System Actions">
           <div className="p-4 space-y-3">
             <Button onClick={() => { queryClient.clear(); toast({ title: "Cache cleared" }); }}
-              className="w-full bg-black text-[#FCD000] font-black text-xs uppercase tracking-widest border-2 border-[#FCD000] rounded-sm shadow-[3px_3px_0px_0px_rgba(252,208,0,0.4)]">
+              className="w-full bg-black text-[#FDD000] font-black text-xs uppercase tracking-widest border-2 border-[#FDD000] rounded-sm shadow-[3px_3px_0px_0px_rgba(253,208,0,0.4)]">
               <Trash2 className="w-4 h-4 mr-2" /> Clear Query Cache
             </Button>
             <Button onClick={() => window.location.reload()}
-              className="w-full bg-[#FCD000] text-black font-black text-xs uppercase tracking-widest border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+              className="w-full bg-[#FDD000] text-black font-black text-xs uppercase tracking-widest border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
               Force Reload Interface
             </Button>
           </div>
@@ -749,7 +749,7 @@ export default function Owners() {
   if (usersLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FCD000]" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FDD000]" />
       </div>
     );
   }
@@ -757,20 +757,20 @@ export default function Owners() {
   return (
     <div className="pb-24 bg-ministry-light-gray min-h-screen">
       {/* Header */}
-      <div className="liquid-header text-white px-6 pt-12 pb-6 border-b-4 border-[#FCD000]">
+      <div className="liquid-header text-white px-6 pt-12 pb-6 border-b-4 border-[#FDD000]">
         <button
           onClick={() => window.history.back()}
           className="rounded-full w-10 h-10 bg-black hover:bg-black/80 mb-4 flex items-center justify-center"
         >
-          <ArrowLeft className="h-5 w-5 text-[#FCD000]" />
+          <ArrowLeft className="h-5 w-5 text-[#FDD000]" />
         </button>
         <div className="flex items-center gap-3">
-          <Crown className="h-7 w-7 text-[#FCD000]" />
+          <Crown className="h-7 w-7 text-[#FDD000]" />
           <div>
             <h1 className="text-4xl font-black tracking-tighter uppercase">
-              Owner <span className="text-[#FCD000]">Panel</span>
+              Owner <span className="text-[#FDD000]">Panel</span>
             </h1>
-            <p className="text-[#FCD000] text-sm font-bold uppercase tracking-wide">System Administration</p>
+            <p className="text-[#FDD000] text-sm font-bold uppercase tracking-wide">System Administration</p>
           </div>
         </div>
       </div>
@@ -778,19 +778,19 @@ export default function Owners() {
       {/* Quick stats row */}
       <div className="px-6 py-6">
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-[#FCD000] border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 text-center">
+          <div className="bg-[#FDD000] border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 text-center">
             <p className="text-3xl font-black text-black">{(stats as any).totalUsers ?? 0}</p>
             <p className="text-xs font-bold uppercase tracking-wide text-black">Total Members</p>
           </div>
-          <div className="bg-black border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] p-4 text-center">
-            <p className="text-3xl font-black text-[#FCD000]">{(stats as any).activeToday ?? 0}</p>
+          <div className="bg-black border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,1)] p-4 text-center">
+            <p className="text-3xl font-black text-[#FDD000]">{(stats as any).activeToday ?? 0}</p>
             <p className="text-xs font-bold uppercase tracking-wide text-white">Active Today</p>
           </div>
-          <div className="bg-black border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] p-4 text-center">
-            <p className="text-3xl font-black text-[#FCD000]">{(stats as any).activeSubscribers ?? 0}</p>
+          <div className="bg-black border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,1)] p-4 text-center">
+            <p className="text-3xl font-black text-[#FDD000]">{(stats as any).activeSubscribers ?? 0}</p>
             <p className="text-xs font-bold uppercase tracking-wide text-white">Subscribers</p>
           </div>
-          <div className="bg-[#FCD000] border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 text-center">
+          <div className="bg-[#FDD000] border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 text-center">
             <p className="text-3xl font-black text-black">{contentStats?.publishedStudies ?? 0}</p>
             <p className="text-xs font-bold uppercase tracking-wide text-black">Studies Live</p>
           </div>
@@ -806,7 +806,7 @@ export default function Owners() {
               <button
                 key={card.id}
                 onClick={() => setView(card.id)}
-                className="h-16 w-full flex items-center justify-between bg-[#FCD000] border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(252,208,0,0.6)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.8)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer glow-gold"
+                className="h-16 w-full flex items-center justify-between bg-[#FDD000] border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(253,208,0,0.6)] hover:shadow-[4px_4px_0px_0px_rgba(253,208,0,0.8)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer glow-gold"
               >
                 <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
                   <Icon className="w-6 h-6 text-white relative z-10" />

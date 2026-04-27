@@ -21,9 +21,9 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
       : 0;
 
   return (
-    <Card className="overflow-hidden rounded-sm border-2 border-[#FCD000] shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]" style={{ background: '#0a0a0a' }} data-testid="progress-card">
+    <Card className="overflow-hidden rounded-sm border-2 border-[#FDD000] shadow-[4px_4px_0px_0px_rgba(253,208,0,1)]" style={{ background: '#0a0a0a' }} data-testid="progress-card">
       {/* Gold status bar */}
-      <div className="bg-[#FCD000] px-4 py-2 flex items-center justify-between border-b-2 border-black">
+      <div className="bg-[#FDD000] px-4 py-2 flex items-center justify-between border-b-2 border-black">
         <div className="flex items-center gap-1.5">
           {isStudyCompleted
             ? <CheckCircle2 className="w-3.5 h-3.5 text-black" />
@@ -43,7 +43,7 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
             {study.title}
           </h3>
           {(study.totalDays || study.estimatedHours) && (
-            <p className="text-[#FCD000] font-bold text-xs uppercase tracking-[0.15em] mt-1" data-testid="text-study-info">
+            <p className="text-[#FDD000] font-bold text-xs uppercase tracking-[0.15em] mt-1" data-testid="text-study-info">
               {study.totalDays ? `${study.totalDays}-Day Study` : `${study.estimatedHours}h Study`}
             </p>
           )}
@@ -59,7 +59,7 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
           </div>
           <div className="h-3 bg-white/10 rounded-sm border border-white/10 overflow-hidden">
             <div
-              className="h-full bg-[#FCD000] rounded-sm transition-all duration-500"
+              className="h-full bg-[#FDD000] rounded-sm transition-all duration-500"
               style={{ width: `${progressPercent}%` }}
               data-testid="progress-bar"
             />
@@ -68,7 +68,7 @@ export default function ProgressCard({ study, progress }: ProgressCardProps) {
 
         {/* CTA button */}
         <Button
-          className="w-full bg-[#FCD000] text-black rounded-sm font-black uppercase tracking-widest hover:bg-yellow-300 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] h-11 text-sm"
+          className="w-full bg-[#FDD000] text-black rounded-sm font-black uppercase tracking-widest hover:bg-yellow-300 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] h-11 text-sm"
           data-testid="button-continue-study"
           onClick={() => navigate(`/studies/${study.id}`)}
         >

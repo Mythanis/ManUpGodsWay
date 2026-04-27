@@ -115,9 +115,9 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-black border border-[#FCD000]/30">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-black border border-[#FDD000]/30">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-black text-center text-[#FCD000] uppercase tracking-wider" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
+          <DialogTitle className="text-2xl font-black text-center text-[#FDD000] uppercase tracking-wider" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
             {isPendingCancellation
               ? "Resume Your Subscription"
               : isExpired
@@ -135,7 +135,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
 
         {isLoading ? (
           <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FCD000]"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FDD000]"></div>
           </div>
         ) : (
           <div className="space-y-5">
@@ -145,7 +145,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                   variant={billingCycle === "monthly" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setBillingCycle("monthly")}
-                  className={billingCycle === "monthly" ? "bg-[#FCD000] text-black shadow-sm hover:bg-[#FCD000]/90 font-bold" : "text-white hover:bg-white/10"}
+                  className={billingCycle === "monthly" ? "bg-[#FDD000] text-black shadow-sm hover:bg-[#FDD000]/90 font-bold" : "text-white hover:bg-white/10"}
                 >
                   Monthly
                 </Button>
@@ -153,7 +153,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                   variant={billingCycle === "yearly" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setBillingCycle("yearly")}
-                  className={billingCycle === "yearly" ? "bg-[#FCD000] text-black shadow-sm hover:bg-[#FCD000]/90 font-bold" : "text-white hover:bg-white/10"}
+                  className={billingCycle === "yearly" ? "bg-[#FDD000] text-black shadow-sm hover:bg-[#FDD000]/90 font-bold" : "text-white hover:bg-white/10"}
                 >
                   Yearly
                   {savingsPercent > 0 && (
@@ -163,10 +163,10 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
               </div>
             </div>
 
-            <Card className="bg-white/5 border border-[#FCD000]/20">
+            <Card className="bg-white/5 border border-[#FDD000]/20">
               <CardContent className="pt-6 text-center">
-                <Shield className="w-10 h-10 text-[#FCD000] mx-auto mb-3" />
-                <div className="text-4xl font-black text-[#FCD000] mb-1" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
+                <Shield className="w-10 h-10 text-[#FDD000] mx-auto mb-3" />
+                <div className="text-4xl font-black text-[#FDD000] mb-1" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
                   ${displayPrice}{priceLabel}
                 </div>
                 {billingCycle === "yearly" && parseFloat(yearlySavings) > 0 && (
@@ -180,7 +180,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
             <div className="space-y-2">
               {features.map((feature, index) => (
                 <div key={index} className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#FCD000] flex-shrink-0 mt-0.5" />
+                  <Check className="w-4 h-4 text-[#FDD000] flex-shrink-0 mt-0.5" />
                   <span className="text-sm text-white/80">{feature}</span>
                 </div>
               ))}
@@ -191,7 +191,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                 <Button
                   onClick={() => reactivateMutation.mutate()}
                   disabled={reactivateMutation.isPending}
-                  className="w-full py-3 text-lg bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-black uppercase tracking-wider"
+                  className="w-full py-3 text-lg bg-[#FDD000] text-black hover:bg-[#FDD000]/90 font-black uppercase tracking-wider"
                   style={{ fontFamily: "'Bebas Neue', sans-serif" }}
                   size="lg"
                   data-testid="button-resume-subscription"
@@ -214,7 +214,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                 <Button
                   onClick={() => handleSubscribe(true)}
                   disabled={createCheckoutMutation.isPending}
-                  className="w-full py-3 text-lg bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-black uppercase tracking-wider"
+                  className="w-full py-3 text-lg bg-[#FDD000] text-black hover:bg-[#FDD000]/90 font-black uppercase tracking-wider"
                   style={{ fontFamily: "'Bebas Neue', sans-serif" }}
                   size="lg"
                 >
@@ -237,8 +237,8 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                 onClick={() => handleSubscribe(false)}
                 disabled={createCheckoutMutation.isPending}
                 className={isTrialEligible
-                  ? "w-full py-3 text-lg bg-white/10 text-white hover:bg-white/20 font-black uppercase tracking-wider border border-[#FCD000]/30"
-                  : "w-full py-3 text-lg bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-black uppercase tracking-wider"
+                  ? "w-full py-3 text-lg bg-white/10 text-white hover:bg-white/20 font-black uppercase tracking-wider border border-[#FDD000]/30"
+                  : "w-full py-3 text-lg bg-[#FDD000] text-black hover:bg-[#FDD000]/90 font-black uppercase tracking-wider"
                 }
                 style={{ fontFamily: "'Bebas Neue', sans-serif" }}
                 size="lg"

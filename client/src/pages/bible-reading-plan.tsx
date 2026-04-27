@@ -122,13 +122,13 @@ function PassageSheet({ open, onOpenChange, passagesStr, dayLabel, versionId }: 
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="h-[90svh] p-0 border-t-2 border-[#FCD000]/40 rounded-t-lg flex flex-col"
+        className="h-[90svh] p-0 border-t-2 border-[#FDD000]/40 rounded-t-lg flex flex-col"
         style={{ background: "#0a0a0a" }}
       >
         {/* Sheet header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-white/10 flex-shrink-0">
           <div className="flex-1 min-w-0 mr-3">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#FCD000]">{dayLabel}</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#FDD000]">{dayLabel}</p>
             <p className="text-white font-bold text-sm mt-0.5 leading-tight">{passagesStr}</p>
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
@@ -163,7 +163,7 @@ function PassageSheet({ open, onOpenChange, passagesStr, dayLabel, versionId }: 
         <div className="flex-1 overflow-y-auto px-5 py-5 space-y-8">
           {isSpecial && (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <BookOpen className="w-10 h-10 text-[#FCD000]/50 mb-4" />
+              <BookOpen className="w-10 h-10 text-[#FDD000]/50 mb-4" />
               <p className="text-white/60 text-sm font-semibold">Review & Reflection</p>
               <p className="text-white/30 text-xs mt-2">
                 Use this day to catch up, re-read favourite passages, or journal what you've learned.
@@ -173,7 +173,7 @@ function PassageSheet({ open, onOpenChange, passagesStr, dayLabel, versionId }: 
 
           {!isSpecial && isLoading && (
             <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 text-[#FCD000] animate-spin mb-3" />
+              <Loader2 className="w-8 h-8 text-[#FDD000] animate-spin mb-3" />
               <p className="text-white/50 text-sm">Loading scripture…</p>
             </div>
           )}
@@ -189,13 +189,13 @@ function PassageSheet({ open, onOpenChange, passagesStr, dayLabel, versionId }: 
             const verses = parseVerses(chapter.content);
             return (
               <div key={chapter.id}>
-                <h3 className="text-[#FCD000] font-black text-xs uppercase tracking-[0.2em] mb-4 pb-2 border-b border-[#FCD000]/20">
+                <h3 className="text-[#FDD000] font-black text-xs uppercase tracking-[0.2em] mb-4 pb-2 border-b border-[#FDD000]/20">
                   {chapter.reference}
                 </h3>
                 <div className="space-y-2">
                   {verses.map(({ verse, text }) => (
                     <p key={verse} className="text-white/90 leading-relaxed" style={{ fontSize: `${fontSize}px` }}>
-                      <sup className="text-[#FCD000] font-bold text-[11px] mr-1 align-super">{verse}</sup>
+                      <sup className="text-[#FDD000] font-bold text-[11px] mr-1 align-super">{verse}</sup>
                       {text}
                     </p>
                   ))}
@@ -379,9 +379,9 @@ export default function BibleReadingPlanPage() {
       <div className="px-6 mb-5">
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: "Completed", value: completedCount, icon: <CheckCircle2 className="w-4 h-4 text-[#FCD000]" /> },
+            { label: "Completed", value: completedCount, icon: <CheckCircle2 className="w-4 h-4 text-[#FDD000]" /> },
             { label: "Streak", value: streak, icon: <Flame className="w-4 h-4 text-orange-400" /> },
-            { label: "Progress", value: `${pct}%`, icon: <Trophy className="w-4 h-4 text-[#FCD000]" /> },
+            { label: "Progress", value: `${pct}%`, icon: <Trophy className="w-4 h-4 text-[#FDD000]" /> },
           ].map(stat => (
             <div key={stat.label} className="rounded-sm border border-white/10 p-3 flex flex-col items-center gap-1" style={{ background: "#0f0f0f" }}>
               {stat.icon}
@@ -392,7 +392,7 @@ export default function BibleReadingPlanPage() {
         </div>
         <div className="mt-3 h-2 rounded-full bg-white/10 overflow-hidden">
           <div
-            className="h-full rounded-full bg-[#FCD000] transition-all duration-500"
+            className="h-full rounded-full bg-[#FDD000] transition-all duration-500"
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -402,13 +402,13 @@ export default function BibleReadingPlanPage() {
       {nextDayObj && isAuthenticated && (
         <div className="px-6 mb-5">
           <div
-            className="rounded-sm border-2 border-[#FCD000]/40 p-4"
+            className="rounded-sm border-2 border-[#FDD000]/40 p-4"
             style={{ background: "#0f0f0f" }}
           >
             <div className="flex items-start gap-3 mb-3">
-              <Calendar className="w-7 h-7 text-[#FCD000] flex-shrink-0 mt-0.5" />
+              <Calendar className="w-7 h-7 text-[#FDD000] flex-shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#FCD000] mb-0.5">
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#FDD000] mb-0.5">
                   Up Next — Day {nextDay}
                 </p>
                 <p className="text-white text-xs font-bold leading-tight">
@@ -420,7 +420,7 @@ export default function BibleReadingPlanPage() {
               <Button
                 size="sm"
                 variant="outline"
-                className="flex-1 border-[#FCD000]/40 text-[#FCD000] hover:bg-[#FCD000]/10 font-black text-xs uppercase tracking-wide rounded-sm"
+                className="flex-1 border-[#FDD000]/40 text-[#FDD000] hover:bg-[#FDD000]/10 font-black text-xs uppercase tracking-wide rounded-sm"
                 onClick={() => setReaderDay(nextDayObj)}
               >
                 <BookOpen className="w-3 h-3 mr-1.5" />
@@ -428,7 +428,7 @@ export default function BibleReadingPlanPage() {
               </Button>
               <Button
                 size="sm"
-                className="flex-1 bg-[#FCD000] hover:bg-[#e6bc00] text-black font-black text-xs uppercase tracking-wide rounded-sm"
+                className="flex-1 bg-[#FDD000] hover:bg-[#e6bc00] text-black font-black text-xs uppercase tracking-wide rounded-sm"
                 onClick={() => completeMutation.mutate(nextDay!)}
                 disabled={completeMutation.isPending}
               >
@@ -447,7 +447,7 @@ export default function BibleReadingPlanPage() {
             onClick={() => setFilter(f)}
             className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-sm border transition-all ${
               filter === f
-                ? "bg-[#FCD000] text-black border-[#FCD000]"
+                ? "bg-[#FDD000] text-black border-[#FDD000]"
                 : "bg-transparent text-white/50 border-white/20 hover:border-white/40"
             }`}
           >
@@ -460,7 +460,7 @@ export default function BibleReadingPlanPage() {
       <div className="px-6 space-y-2">
         {daysLoading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FCD000] mx-auto mb-3" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FDD000] mx-auto mb-3" />
             <p className="text-gray-400 text-sm">Loading plan…</p>
           </div>
         ) : (
@@ -473,9 +473,9 @@ export default function BibleReadingPlanPage() {
                 key={day.dayNumber}
                 className={`flex items-center gap-3 rounded-sm border p-3 transition-all ${
                   done
-                    ? "border-[#FCD000]/30 bg-[#FCD000]/5"
+                    ? "border-[#FDD000]/30 bg-[#FDD000]/5"
                     : isNext
-                    ? "border-[#FCD000]/50 bg-[#0f0f0f]"
+                    ? "border-[#FDD000]/50 bg-[#0f0f0f]"
                     : "border-white/8 bg-[#0a0a0a]"
                 }`}
               >
@@ -495,15 +495,15 @@ export default function BibleReadingPlanPage() {
                   title={done ? "Tap to uncheck" : "Mark complete"}
                 >
                   {done ? (
-                    <CheckCircle2 className="w-6 h-6 text-[#FCD000]" />
+                    <CheckCircle2 className="w-6 h-6 text-[#FDD000]" />
                   ) : (
-                    <Circle className={`w-6 h-6 ${isNext ? "text-[#FCD000]/70" : "text-white/20"}`} />
+                    <Circle className={`w-6 h-6 ${isNext ? "text-[#FDD000]/70" : "text-white/20"}`} />
                   )}
                 </button>
 
                 {/* Day label + passages */}
                 <div className="flex-1 min-w-0">
-                  <span className={`text-[10px] font-black uppercase tracking-wide ${done ? "text-[#FCD000]" : isNext ? "text-[#FCD000]/60" : "text-white/30"}`}>
+                  <span className={`text-[10px] font-black uppercase tracking-wide ${done ? "text-[#FDD000]" : isNext ? "text-[#FDD000]/60" : "text-white/30"}`}>
                     Day {day.dayNumber}
                   </span>
                   <p className={`text-sm font-bold leading-tight truncate ${done ? "text-white/50 line-through" : "text-white"}`}>
@@ -515,7 +515,7 @@ export default function BibleReadingPlanPage() {
                 {canRead && (
                   <button
                     onClick={() => setReaderDay(day)}
-                    className="flex-shrink-0 text-white/30 hover:text-[#FCD000] transition-colors p-1"
+                    className="flex-shrink-0 text-white/30 hover:text-[#FDD000] transition-colors p-1"
                     aria-label="Read passage"
                   >
                     <BookOpen className="w-4 h-4" />

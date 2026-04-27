@@ -528,7 +528,7 @@ export default function HurdleWall() {
         </div>
 
         {/* New Post Form */}
-        <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]">
+        <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,1)]">
           <CardHeader className="relative z-10">
             <CardTitle className="text-white flex items-center gap-2 text-2xl font-black tracking-tighter uppercase">
               <Plus className="h-6 w-6 text-ministry-gold-exact" />
@@ -585,7 +585,7 @@ export default function HurdleWall() {
                 <Card
                   key={post.id}
                   data-post-id={post.id}
-                  className={`liquid-black-white border-2 rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] ${highlightedPost === post.id ? 'border-[#FCD000] ring-2 ring-[#FCD000] ring-opacity-70' : 'border-ministry-gold-exact'}`}
+                  className={`liquid-black-white border-2 rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,1)] ${highlightedPost === post.id ? 'border-[#FDD000] ring-2 ring-[#FDD000] ring-opacity-70' : 'border-ministry-gold-exact'}`}
                 >
                   <CardHeader className="relative z-10">
                     <div className="flex items-start justify-between">

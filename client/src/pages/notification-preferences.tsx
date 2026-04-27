@@ -283,7 +283,7 @@ export default function NotificationPreferences() {
                 Device Notifications
               </h2>
               <div className="space-y-2">
-                <div className="h-16 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                <div className="h-16 w-full flex items-center bg-[#FDD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                   <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
                     <Smartphone className="w-6 h-6 text-white relative z-10" />
                   </div>
@@ -341,7 +341,7 @@ export default function NotificationPreferences() {
                 name="newStudies"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="h-16 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="h-16 w-full flex items-center bg-[#FDD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                       <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
                         <BookOpen className="w-6 h-6 text-white relative z-10" />
                       </div>
@@ -363,7 +363,7 @@ export default function NotificationPreferences() {
                 name="newVideos"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="h-16 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="h-16 w-full flex items-center bg-[#FDD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                       <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
                         <Video className="w-6 h-6 text-white relative z-10" />
                       </div>
@@ -385,7 +385,7 @@ export default function NotificationPreferences() {
                 name="newDevotionals"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="h-16 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="h-16 w-full flex items-center bg-[#FDD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                       <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
                         <Heart className="w-6 h-6 text-white relative z-10" />
                       </div>
@@ -407,7 +407,7 @@ export default function NotificationPreferences() {
                 name="liveStreamNotifications"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="h-16 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="h-16 w-full flex items-center bg-[#FDD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                       <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
                         <Radio className="w-6 h-6 text-white relative z-10" />
                       </div>
@@ -437,7 +437,7 @@ export default function NotificationPreferences() {
                 name="discussionNotifications"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="h-16 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="h-16 w-full flex items-center bg-[#FDD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                       <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
                         <Users className="w-6 h-6 text-white relative z-10" />
                       </div>
@@ -460,7 +460,7 @@ export default function NotificationPreferences() {
                 name="discussionReplyNotifications"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="h-16 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="h-16 w-full flex items-center bg-[#FDD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                       <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
                         <MessageCircle className="w-6 h-6 text-white relative z-10" />
                       </div>
@@ -483,7 +483,7 @@ export default function NotificationPreferences() {
                 name="discussionReplies"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="h-16 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="h-16 w-full flex items-center bg-[#FDD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                       <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
                         <MessageCircle className="w-6 h-6 text-white relative z-10" />
                       </div>
@@ -505,7 +505,7 @@ export default function NotificationPreferences() {
                 name="directMessages"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="h-16 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="h-16 w-full flex items-center bg-[#FDD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                       <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
                         <Mail className="w-6 h-6 text-white relative z-10" />
                       </div>
@@ -527,7 +527,7 @@ export default function NotificationPreferences() {
                 name="groupMessages"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="h-16 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="h-16 w-full flex items-center bg-[#FDD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                       <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
                         <Users className="w-6 h-6 text-white relative z-10" />
                       </div>
@@ -549,7 +549,7 @@ export default function NotificationPreferences() {
                 name="warRoomNotifications"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="h-16 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="h-16 w-full flex items-center bg-[#FDD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                       <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
                         <Shield className="w-6 h-6 text-white relative z-10" />
                       </div>
@@ -572,7 +572,7 @@ export default function NotificationPreferences() {
                 name="underFireNotifications"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="h-16 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="h-16 w-full flex items-center bg-[#FDD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                       <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
                         <Flame className="w-6 h-6 text-white relative z-10" />
                       </div>
@@ -603,7 +603,7 @@ export default function NotificationPreferences() {
                 name="fitnessPlanReminderNotifications"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="h-16 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="h-16 w-full flex items-center bg-[#FDD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                       <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
                         <Dumbbell className="w-6 h-6 text-white relative z-10" />
                       </div>
@@ -626,7 +626,7 @@ export default function NotificationPreferences() {
                 name="fitnessCommunityNotifications"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="h-16 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="h-16 w-full flex items-center bg-[#FDD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                       <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
                         <PersonStanding className="w-6 h-6 text-white relative z-10" />
                       </div>
@@ -649,7 +649,7 @@ export default function NotificationPreferences() {
                 name="mealReminderNotifications"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="h-16 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="h-16 w-full flex items-center bg-[#FDD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                       <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
                         <Salad className="w-6 h-6 text-white relative z-10" />
                       </div>
@@ -675,7 +675,7 @@ export default function NotificationPreferences() {
               Daily App Reminder
             </h2>
             <div className="space-y-2">
-              <div className="w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" style={{ minHeight: '4rem' }}>
+              <div className="w-full flex items-center bg-[#FDD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" style={{ minHeight: '4rem' }}>
                 <div className="h-16 w-16 liquid-black flex items-center justify-center flex-shrink-0 self-stretch">
                   <CalendarClock className="w-6 h-6 text-white relative z-10" />
                 </div>
@@ -743,7 +743,7 @@ export default function NotificationPreferences() {
                 name="weeklyDigest"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="h-16 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="h-16 w-full flex items-center bg-[#FDD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                       <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
                         <Bell className="w-6 h-6 text-white relative z-10" />
                       </div>
@@ -763,7 +763,7 @@ export default function NotificationPreferences() {
           </div>
 
           {/* Admin Notice */}
-          <Card className="bg-[#FCD000] text-black border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+          <Card className="bg-[#FDD000] text-black border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
             <CardContent className="p-4 relative z-10">
               <div className="flex items-start space-x-3">
                 <Shield className="w-5 h-5 text-black mt-0.5 flex-shrink-0" />
@@ -784,7 +784,7 @@ export default function NotificationPreferences() {
           <Button
             type="submit"
             disabled={updatePreferences.isPending}
-            className="w-full h-14 liquid-black text-ministry-gold-exact hover:opacity-90 rounded-sm font-black uppercase tracking-wide border-2 border-ministry-gold-exact shadow-[3px_3px_0px_0px_rgba(252,208,0,1)]"
+            className="w-full h-14 liquid-black text-ministry-gold-exact hover:opacity-90 rounded-sm font-black uppercase tracking-wide border-2 border-ministry-gold-exact shadow-[3px_3px_0px_0px_rgba(253,208,0,1)]"
             data-testid="button-save-preferences"
           >
             <span className="relative z-10">

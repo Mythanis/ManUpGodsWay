@@ -625,7 +625,7 @@ export default function Messages() {
                 {conversations.map((conversation) => (
                   <Card
                     key={conversation.id}
-                    className="cursor-pointer bg-black border-2 border-ministry-gold-exact/50 hover:border-ministry-gold-exact hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all rounded-sm"
+                    className="cursor-pointer bg-black border-2 border-ministry-gold-exact/50 hover:border-ministry-gold-exact hover:shadow-[4px_4px_0px_0px_rgba(253,208,0,0.3)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all rounded-sm"
                     onClick={() => setSelectedConversation(conversation)}
                     data-testid={`conversation-item-${conversation.id}`}
                   >

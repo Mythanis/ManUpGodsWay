@@ -298,7 +298,7 @@ export default function UnderFire() {
           </div>
         </div>
 
-        <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]">
+        <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,1)]">
           <CardHeader className="relative z-10">
             <CardTitle className="text-white flex items-center gap-2 text-2xl font-black tracking-tighter uppercase">
               <Shield className="h-6 w-6 text-ministry-gold-exact" />
@@ -347,7 +347,7 @@ export default function UnderFire() {
               <Card
                 key={request.id}
                 data-request-id={request.id}
-                className={`liquid-black-white border-2 rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] ${highlightedRequest === request.id ? 'border-[#FCD000] ring-2 ring-[#FCD000] ring-opacity-70' : 'border-ministry-gold-exact'}`}
+                className={`liquid-black-white border-2 rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,1)] ${highlightedRequest === request.id ? 'border-[#FDD000] ring-2 ring-[#FDD000] ring-opacity-70' : 'border-ministry-gold-exact'}`}
               >
                 <CardHeader className="relative z-10">
                   <div className="flex items-start justify-between">

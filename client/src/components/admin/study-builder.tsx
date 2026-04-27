@@ -1092,7 +1092,7 @@ export default function StudyBuilder() {
                           <Button
                             variant="default"
                             size="sm"
-                            className="bg-[#FCD000] text-black border-2 border-black font-bold rounded-sm hover:bg-yellow-400"
+                            className="bg-[#FDD000] text-black border-2 border-black font-bold rounded-sm hover:bg-yellow-400"
                             onClick={() => {
                               const nextOrder = seriesStudies.length + 1;
                               setContentType("study");

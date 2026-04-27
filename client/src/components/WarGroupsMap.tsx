@@ -13,7 +13,7 @@ L.Icon.Default.mergeOptions({
 const goldIcon = new L.Icon({
   iconUrl: 'data:image/svg+xml;base64,' + btoa(`
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="24" height="36">
-      <path fill="#FCD000" stroke="#000" stroke-width="1" d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z"/>
+      <path fill="#FDD000" stroke="#000" stroke-width="1" d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z"/>
       <circle fill="#000" cx="12" cy="12" r="5"/>
     </svg>
   `),
@@ -94,15 +94,15 @@ export default function WarGroupsMap({ groups }: WarGroupsMapProps) {
               sticky
             >
               <div style={{ minWidth: '180px', padding: '10px', color: 'white', fontFamily: 'Inter, sans-serif' }}>
-                <div style={{ fontWeight: '800', fontSize: '13px', marginBottom: '8px', color: '#FCD000', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <div style={{ fontWeight: '800', fontSize: '13px', marginBottom: '8px', color: '#FDD000', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   {getGroupDisplayName(group)}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#e4e4e7', marginBottom: '5px' }}>
-                  <span style={{ color: '#FCD000' }}>📍</span>
+                  <span style={{ color: '#FDD000' }}>📍</span>
                   <span>{group.city}, {group.state}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#e4e4e7' }}>
-                  <span style={{ color: '#FCD000' }}>👤</span>
+                  <span style={{ color: '#FDD000' }}>👤</span>
                   <span>Led by {group.leader.firstName} {group.leader.lastName}</span>
                 </div>
               </div>

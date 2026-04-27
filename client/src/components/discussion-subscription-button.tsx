@@ -35,7 +35,7 @@ export function DiscussionSubscriptionButton({
       disabled={isToggling}
       className={`inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 ${className}`}
       style={{
-        backgroundColor: isSubscribed ? 'hsl(49 100% 49%)' : 'hsl(220 13% 18%)',
+        backgroundColor: isSubscribed ? 'hsl(49 100% 50%)' : 'hsl(220 13% 18%)',
         color: isSubscribed ? 'black' : 'white',
         border: '1px solid hsl(220 13% 28%)',
         opacity: isToggling ? 0.6 : 1,

@@ -136,7 +136,7 @@ export default function Library() {
 
       {/* Search Bar */}
       <div className="px-6 -mt-3 relative z-10 mb-6">
-        <Card className="shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-[#FCD000] text-black border-2 border-black rounded-sm" data-testid="card-search">
+        <Card className="shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-[#FDD000] text-black border-2 border-black rounded-sm" data-testid="card-search">
           <CardContent className="p-4 relative z-10">
             <div className="relative">
               <Input
@@ -158,7 +158,7 @@ export default function Library() {
         <label className="text-xs font-black text-white mb-2 block uppercase tracking-wide">
           Category
         </label>
-        <div className="bg-[#FCD000] text-black border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] w-full md:w-64">
+        <div className="bg-[#FDD000] text-black border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] w-full md:w-64">
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
             <SelectTrigger className="w-full bg-transparent border-0 text-black font-bold rounded-sm relative z-10" data-testid="select-category">
               <SelectValue placeholder="Select a category" />
@@ -196,7 +196,7 @@ export default function Library() {
             {bibleReadingPlans.length > 0 && !searchQuery && selectedCategory === 'all' && (
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
+                  <div className="w-1 h-6 bg-[#FDD000] rounded-full flex-shrink-0" />
                   <h2 className="text-xl font-coalition text-white uppercase tracking-widest">Bible Reading Plans</h2>
                   <div className="flex-1 h-px bg-white/10" />
                 </div>
@@ -204,14 +204,14 @@ export default function Library() {
                   {bibleReadingPlans.map(plan => (
                     <Link key={plan.id} href={`/bible-plans/${plan.id}`}>
                       <div
-                        className="flex items-stretch rounded-sm border-2 border-white/10 overflow-hidden glow-gold hover:border-[#FCD000]/40 hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer"
+                        className="flex items-stretch rounded-sm border-2 border-white/10 overflow-hidden glow-gold hover:border-[#FDD000]/40 hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer"
                         style={{ background: '#0f0f0f' }}
                       >
                         <div className="w-20 flex-shrink-0 bg-black flex items-center justify-center self-stretch">
-                          <CalendarDays className="w-7 h-7 text-[#FCD000]" />
+                          <CalendarDays className="w-7 h-7 text-[#FDD000]" />
                         </div>
                         <div className="flex-1 px-4 py-3 min-w-0">
-                          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[#FCD000]">
+                          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[#FDD000]">
                             {plan.planType === 'chronological' ? 'Chronological' : '365-Day Plan'}
                           </span>
                           <p className="font-black text-white text-sm leading-tight mt-0.5 uppercase tracking-tight line-clamp-2">{plan.name}</p>
@@ -222,7 +222,7 @@ export default function Library() {
                           </div>
                         </div>
                         <div className="flex items-center pr-4">
-                          <ChevronRight className="w-5 h-5 text-[#FCD000]" />
+                          <ChevronRight className="w-5 h-5 text-[#FDD000]" />
                         </div>
                       </div>
                     </Link>
@@ -235,7 +235,7 @@ export default function Library() {
             {filteredSeries.length > 0 && (
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
+                  <div className="w-1 h-6 bg-[#FDD000] rounded-full flex-shrink-0" />
                   <h2 className="text-xl font-coalition text-white uppercase tracking-widest">Study Series</h2>
                   <div className="flex-1 h-px bg-white/10" />
                 </div>
@@ -251,7 +251,7 @@ export default function Library() {
                         className={`flex items-stretch rounded-sm border-2 overflow-hidden transition-all ${
                           isSeriesLocked
                             ? 'border-white/10 opacity-60 cursor-not-allowed'
-                            : 'border-white/10 glow-gold hover:border-[#FCD000]/40 hover:translate-x-[-1px] hover:translate-y-[-1px] cursor-pointer'
+                            : 'border-white/10 glow-gold hover:border-[#FDD000]/40 hover:translate-x-[-1px] hover:translate-y-[-1px] cursor-pointer'
                         }`}
                         style={{ background: '#0f0f0f' }}
                         data-testid={`series-card-${s.id}`}
@@ -261,20 +261,20 @@ export default function Library() {
                           {s.thumbnailUrl ? (
                             <img src={s.thumbnailUrl} alt={s.title} className="h-full w-full object-cover" />
                           ) : (
-                            <Layers className="w-7 h-7 text-[#FCD000]" />
+                            <Layers className="w-7 h-7 text-[#FDD000]" />
                           )}
                           {isSeriesLocked && (
                             <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                              <Lock className="w-5 h-5 text-[#FCD000]" />
+                              <Lock className="w-5 h-5 text-[#FDD000]" />
                             </div>
                           )}
                         </div>
                         {/* Content */}
                         <div className="flex-1 px-4 py-3 min-w-0">
                           {isSeriesLocked ? (
-                            <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[#FCD000]">Finish Current Series First</span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[#FDD000]">Finish Current Series First</span>
                           ) : (
-                            <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[#FCD000]">Series</span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[#FDD000]">Series</span>
                           )}
                           <p className="font-black text-white text-sm leading-tight mt-0.5 uppercase tracking-tight line-clamp-2" data-testid={`text-series-title-${s.id}`}>{s.title}</p>
                           <div className="flex items-center gap-2 mt-1.5">
@@ -287,7 +287,7 @@ export default function Library() {
                         <div className="flex items-center pr-4">
                           {isSeriesLocked
                             ? <Lock className="w-5 h-5 text-white/30" />
-                            : <ChevronRight className="w-5 h-5 text-[#FCD000]" />
+                            : <ChevronRight className="w-5 h-5 text-[#FDD000]" />
                           }
                         </div>
                       </div>
@@ -307,7 +307,7 @@ export default function Library() {
             {filteredStudies.length > 0 && (
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
+                  <div className="w-1 h-6 bg-[#FDD000] rounded-full flex-shrink-0" />
                   <h2 className="text-xl font-coalition text-white uppercase tracking-widest">Topical</h2>
                   <div className="flex-1 h-px bg-white/10" />
                 </div>
@@ -334,7 +334,7 @@ export default function Library() {
                         style={{
                           background: '#0f0f0f',
                           borderColor: isCompleted
-                            ? 'rgba(252,208,0,0.5)'
+                            ? 'rgba(253,208,0,0.5)'
                             : isTopicalLocked
                             ? 'rgba(255,255,255,0.1)'
                             : 'rgba(255,255,255,0.1)',
@@ -346,11 +346,11 @@ export default function Library() {
                           {study.thumbnailUrl ? (
                             <img src={study.thumbnailUrl} alt={study.title} className="h-full w-full object-cover" />
                           ) : (
-                            <BookOpen className="w-7 h-7 text-[#FCD000]" />
+                            <BookOpen className="w-7 h-7 text-[#FDD000]" />
                           )}
                           {isTopicalLocked && (
                             <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                              <Lock className="w-5 h-5 text-[#FCD000]" />
+                              <Lock className="w-5 h-5 text-[#FDD000]" />
                             </div>
                           )}
                         </div>
@@ -358,13 +358,13 @@ export default function Library() {
                         <div className="flex-1 px-4 py-3 min-w-0">
                           <div className="flex items-center gap-2 mb-0.5">
                             {isTopicalLocked ? (
-                              <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[#FCD000]">Finish Current Study First</span>
+                              <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[#FDD000]">Finish Current Study First</span>
                             ) : isCompleted ? (
-                              <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[#FCD000]">✓ Complete</span>
+                              <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[#FDD000]">✓ Complete</span>
                             ) : hasStarted ? (
                               <span className="text-[10px] font-black uppercase tracking-[0.15em] text-white/50">In Progress</span>
                             ) : (
-                              <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[#FCD000]">{isFree ? 'Free' : 'Members'}</span>
+                              <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[#FDD000]">{isFree ? 'Free' : 'Members'}</span>
                             )}
                           </div>
                           <p className="font-black text-white text-sm leading-tight uppercase tracking-tight line-clamp-2" data-testid={`text-study-title-${study.id}`}>{study.title}</p>
@@ -378,7 +378,7 @@ export default function Library() {
                         <div className="flex items-center pr-4">
                           {isTopicalLocked
                             ? <Lock className="w-5 h-5 text-white/30" />
-                            : <ChevronRight className="w-5 h-5 text-[#FCD000]" />
+                            : <ChevronRight className="w-5 h-5 text-[#FDD000]" />
                           }
                         </div>
                       </div>

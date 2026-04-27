@@ -71,7 +71,7 @@ export function StudyJournal({ studyId, studyTitle }: StudyJournalProps) {
 
   return (
     <div
-      className="border-2 border-[#FCD000] rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.4)]"
+      className="border-2 border-[#FDD000] rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,0.4)]"
       style={{ background: "#111" }}
     >
       {/* Header */}
@@ -80,7 +80,7 @@ export function StudyJournal({ studyId, studyTitle }: StudyJournalProps) {
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex items-center gap-3">
-          <div className="bg-[#FCD000] rounded-sm border-2 border-black p-2">
+          <div className="bg-[#FDD000] rounded-sm border-2 border-black p-2">
             <PenLine className="w-4 h-4 text-black" />
           </div>
           <div className="text-left">
@@ -92,14 +92,14 @@ export function StudyJournal({ studyId, studyTitle }: StudyJournalProps) {
           </div>
         </div>
         {expanded ? (
-          <ChevronUp className="w-4 h-4 text-[#FCD000]" />
+          <ChevronUp className="w-4 h-4 text-[#FDD000]" />
         ) : (
-          <ChevronDown className="w-4 h-4 text-[#FCD000]" />
+          <ChevronDown className="w-4 h-4 text-[#FDD000]" />
         )}
       </button>
 
       {expanded && (
-        <div className="border-t-2 border-[#FCD000]/40">
+        <div className="border-t-2 border-[#FDD000]/40">
           {/* Add Entry */}
           <div className="p-4 border-b border-white/10">
             {showAddForm ? (
@@ -117,7 +117,7 @@ export function StudyJournal({ studyId, studyTitle }: StudyJournalProps) {
                     size="sm"
                     onClick={() => addEntryMutation.mutate()}
                     disabled={addEntryMutation.isPending || !newEntry.trim()}
-                    className="bg-[#FCD000] hover:bg-yellow-400 text-black font-black uppercase tracking-wide border-2 border-black rounded-sm"
+                    className="bg-[#FDD000] hover:bg-yellow-400 text-black font-black uppercase tracking-wide border-2 border-black rounded-sm"
                   >
                     {addEntryMutation.isPending ? (
                       <>
@@ -146,7 +146,7 @@ export function StudyJournal({ studyId, studyTitle }: StudyJournalProps) {
               <Button
                 size="sm"
                 onClick={() => setShowAddForm(true)}
-                className="bg-black hover:bg-gray-900 text-[#FCD000] font-black uppercase tracking-wide border-2 border-[#FCD000] rounded-sm w-full"
+                className="bg-black hover:bg-gray-900 text-[#FDD000] font-black uppercase tracking-wide border-2 border-[#FDD000] rounded-sm w-full"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Journal Entry
@@ -158,7 +158,7 @@ export function StudyJournal({ studyId, studyTitle }: StudyJournalProps) {
           <div className="p-4 space-y-4">
             {isLoading && (
               <div className="flex justify-center py-4">
-                <Loader2 className="w-6 h-6 animate-spin text-[#FCD000]" />
+                <Loader2 className="w-6 h-6 animate-spin text-[#FDD000]" />
               </div>
             )}
 
@@ -184,7 +184,7 @@ export function StudyJournal({ studyId, studyTitle }: StudyJournalProps) {
                   <div
                     className={`px-3 py-2 flex items-start justify-between gap-2 ${
                       entry.type === "lesson_note"
-                        ? "bg-[#FCD000]/10 border-b border-[#FCD000]/20"
+                        ? "bg-[#FDD000]/10 border-b border-[#FDD000]/20"
                         : "bg-white/5 border-b border-white/10"
                     }`}
                   >
@@ -194,19 +194,19 @@ export function StudyJournal({ studyId, studyTitle }: StudyJournalProps) {
                     >
                       <div className="flex items-center gap-2 flex-wrap">
                         {entry.type === "lesson_note" ? (
-                          <BookOpen className="w-3 h-3 text-[#FCD000] shrink-0" />
+                          <BookOpen className="w-3 h-3 text-[#FDD000] shrink-0" />
                         ) : (
                           <PenLine className="w-3 h-3 text-gray-400 shrink-0" />
                         )}
                         <span
                           className={`font-black text-xs uppercase tracking-wide truncate ${
-                            entry.type === "lesson_note" ? "text-[#FCD000]" : "text-gray-300"
+                            entry.type === "lesson_note" ? "text-[#FDD000]" : "text-gray-300"
                           }`}
                         >
                           {entry.studyTitle || studyTitle}
                         </span>
                         {entry.type === "lesson_note" && entry.dayNumber != null && (
-                          <Badge className="bg-[#FCD000]/20 text-[#FCD000] border border-[#FCD000]/40 text-xs font-bold px-1.5 py-0 rounded-sm shrink-0">
+                          <Badge className="bg-[#FDD000]/20 text-[#FDD000] border border-[#FDD000]/40 text-xs font-bold px-1.5 py-0 rounded-sm shrink-0">
                             Day {entry.dayNumber}
                           </Badge>
                         )}

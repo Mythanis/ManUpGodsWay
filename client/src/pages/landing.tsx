@@ -27,15 +27,15 @@ export default function Landing() {
         </div>
         
         {/* Golden accent glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-[#FCD000]/10 blur-[120px] rounded-full" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-[#FDD000]/10 blur-[120px] rounded-full" />
         
         <div className="relative px-6 pt-20 pb-16 max-w-4xl mx-auto">
           <div className="text-center">
             {/* Eyebrow text */}
-            <p className="text-[#FCD000]/80 text-sm font-semibold tracking-[0.2em] uppercase mb-2" data-testid="hero-eyebrow">
+            <p className="text-[#FDD000]/80 text-sm font-semibold tracking-[0.2em] uppercase mb-2" data-testid="hero-eyebrow">
               Biblical Masculinity
             </p>
-            <p className="text-[#FCD000]/80 text-sm font-semibold tracking-[0.2em] uppercase mb-6">
+            <p className="text-[#FDD000]/80 text-sm font-semibold tracking-[0.2em] uppercase mb-6">
               Faith • Leadership
             </p>
             
@@ -52,15 +52,15 @@ export default function Landing() {
               className="text-xl md:text-2xl text-zinc-300 mb-10 max-w-2xl mx-auto leading-relaxed font-light"
               data-testid="hero-subtitle"
             >
-              Strengthen your <span className="text-[#FCD000] font-medium">Faith</span>, build your{" "}
-              <span className="text-[#FCD000] font-medium">character</span>, and rise as the{" "}
-              <span className="text-[#FCD000] font-medium">leader</span> God designed you to be.
+              Strengthen your <span className="text-[#FDD000] font-medium">Faith</span>, build your{" "}
+              <span className="text-[#FDD000] font-medium">character</span>, and rise as the{" "}
+              <span className="text-[#FDD000] font-medium">leader</span> God designed you to be.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
               <Button 
                 onClick={() => window.location.href = '/api/login'}
-                className="bg-[#FCD000] text-zinc-950 hover:bg-[#FCD000]/90 text-lg px-10 py-6 rounded-xl font-bold shadow-lg shadow-[#FCD000]/20 transition-all hover:shadow-xl hover:shadow-[#FCD000]/30 hover:scale-[1.02]"
+                className="bg-[#FDD000] text-zinc-950 hover:bg-[#FDD000]/90 text-lg px-10 py-6 rounded-xl font-bold shadow-lg shadow-[#FDD000]/20 transition-all hover:shadow-xl hover:shadow-[#FDD000]/30 hover:scale-[1.02]"
                 data-testid="button-login"
               >
                 Start Your Journey
@@ -84,7 +84,7 @@ export default function Landing() {
       {/* Features Section */}
       <div className="px-6 py-10 max-w-6xl mx-auto">
         <div className="text-center mb-10">
-          <p className="text-[#FCD000] text-sm font-semibold tracking-[0.15em] uppercase mb-4">
+          <p className="text-[#FDD000] text-sm font-semibold tracking-[0.15em] uppercase mb-4">
             Your Growth Toolkit
           </p>
           <h2 
@@ -101,12 +101,12 @@ export default function Landing() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           <Card 
-            className="group border-0 bg-zinc-900/50 backdrop-blur-sm hover:bg-zinc-800/60 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-[#FCD000]/5 rounded-2xl overflow-hidden" 
+            className="group border-0 bg-zinc-900/50 backdrop-blur-sm hover:bg-zinc-800/60 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-[#FDD000]/5 rounded-2xl overflow-hidden" 
             data-testid="card-bible-studies"
           >
             <CardContent className="p-8">
-              <div className="w-14 h-14 rounded-xl bg-[#FCD000]/10 flex items-center justify-center mb-5 group-hover:bg-[#FCD000]/20 transition-colors">
-                <BookOpen className="w-7 h-7 text-[#FCD000]" />
+              <div className="w-14 h-14 rounded-xl bg-[#FDD000]/10 flex items-center justify-center mb-5 group-hover:bg-[#FDD000]/20 transition-colors">
+                <BookOpen className="w-7 h-7 text-[#FDD000]" />
               </div>
               <h3 className="text-xl font-bold text-white mb-3 tracking-tight">Bible Studies</h3>
               <p className="text-zinc-400 leading-relaxed">
@@ -116,12 +116,12 @@ export default function Landing() {
           </Card>
 
           <Card 
-            className="group border-0 bg-zinc-900/50 backdrop-blur-sm hover:bg-zinc-800/60 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-[#FCD000]/5 rounded-2xl overflow-hidden" 
+            className="group border-0 bg-zinc-900/50 backdrop-blur-sm hover:bg-zinc-800/60 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-[#FDD000]/5 rounded-2xl overflow-hidden" 
             data-testid="card-video-content"
           >
             <CardContent className="p-8">
-              <div className="w-14 h-14 rounded-xl bg-[#FCD000]/10 flex items-center justify-center mb-5 group-hover:bg-[#FCD000]/20 transition-colors">
-                <Video className="w-7 h-7 text-[#FCD000]" />
+              <div className="w-14 h-14 rounded-xl bg-[#FDD000]/10 flex items-center justify-center mb-5 group-hover:bg-[#FDD000]/20 transition-colors">
+                <Video className="w-7 h-7 text-[#FDD000]" />
               </div>
               <h3 className="text-xl font-bold text-white mb-3 tracking-tight">Video Content</h3>
               <p className="text-zinc-400 leading-relaxed">
@@ -131,12 +131,12 @@ export default function Landing() {
           </Card>
 
           <Card 
-            className="group border-0 bg-zinc-900/50 backdrop-blur-sm hover:bg-zinc-800/60 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-[#FCD000]/5 rounded-2xl overflow-hidden" 
+            className="group border-0 bg-zinc-900/50 backdrop-blur-sm hover:bg-zinc-800/60 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-[#FDD000]/5 rounded-2xl overflow-hidden" 
             data-testid="card-community"
           >
             <CardContent className="p-8">
-              <div className="w-14 h-14 rounded-xl bg-[#FCD000]/10 flex items-center justify-center mb-5 group-hover:bg-[#FCD000]/20 transition-colors">
-                <MessageCircle className="w-7 h-7 text-[#FCD000]" />
+              <div className="w-14 h-14 rounded-xl bg-[#FDD000]/10 flex items-center justify-center mb-5 group-hover:bg-[#FDD000]/20 transition-colors">
+                <MessageCircle className="w-7 h-7 text-[#FDD000]" />
               </div>
               <h3 className="text-xl font-bold text-white mb-3 tracking-tight">Brotherhood</h3>
               <p className="text-zinc-400 leading-relaxed">
@@ -146,12 +146,12 @@ export default function Landing() {
           </Card>
 
           <Card 
-            className="group border-0 bg-zinc-900/50 backdrop-blur-sm hover:bg-zinc-800/60 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-[#FCD000]/5 rounded-2xl overflow-hidden" 
+            className="group border-0 bg-zinc-900/50 backdrop-blur-sm hover:bg-zinc-800/60 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-[#FDD000]/5 rounded-2xl overflow-hidden" 
             data-testid="card-progress"
           >
             <CardContent className="p-8">
-              <div className="w-14 h-14 rounded-xl bg-[#FCD000]/10 flex items-center justify-center mb-5 group-hover:bg-[#FCD000]/20 transition-colors">
-                <Target className="w-7 h-7 text-[#FCD000]" />
+              <div className="w-14 h-14 rounded-xl bg-[#FDD000]/10 flex items-center justify-center mb-5 group-hover:bg-[#FDD000]/20 transition-colors">
+                <Target className="w-7 h-7 text-[#FDD000]" />
               </div>
               <h3 className="text-xl font-bold text-white mb-3 tracking-tight">Progress Tracking</h3>
               <p className="text-zinc-400 leading-relaxed">
@@ -165,21 +165,21 @@ export default function Landing() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <div className="text-center p-6">
             <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center mx-auto mb-4">
-              <Shield className="w-6 h-6 text-[#FCD000]" />
+              <Shield className="w-6 h-6 text-[#FDD000]" />
             </div>
             <h4 className="text-white font-semibold mb-2">War Room</h4>
             <p className="text-zinc-500 text-sm">Private prayer and support space</p>
           </div>
           <div className="text-center p-6">
             <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center mx-auto mb-4">
-              <Users className="w-6 h-6 text-[#FCD000]" />
+              <Users className="w-6 h-6 text-[#FDD000]" />
             </div>
             <h4 className="text-white font-semibold mb-2">War Groups</h4>
             <p className="text-zinc-500 text-sm">Local discipleship communities</p>
           </div>
           <div className="text-center p-6">
             <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center mx-auto mb-4">
-              <Flame className="w-6 h-6 text-[#FCD000]" />
+              <Flame className="w-6 h-6 text-[#FDD000]" />
             </div>
             <h4 className="text-white font-semibold mb-2">Weekly Challenges</h4>
             <p className="text-zinc-500 text-sm">Grow through action and accountability</p>
@@ -189,14 +189,14 @@ export default function Landing() {
         {/* CTA Section */}
         <div className="relative">
           {/* Subtle glow behind CTA */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#FCD000]/5 via-[#FCD000]/10 to-[#FCD000]/5 blur-3xl rounded-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#FDD000]/5 via-[#FDD000]/10 to-[#FDD000]/5 blur-3xl rounded-3xl" />
           
           <Card 
             className="relative border border-zinc-800 bg-zinc-900/80 backdrop-blur-sm rounded-2xl overflow-hidden"
             data-testid="card-cta"
           >
             <CardContent className="p-12 text-center">
-              <p className="text-[#FCD000] text-sm font-semibold tracking-[0.15em] uppercase mb-4">
+              <p className="text-[#FDD000] text-sm font-semibold tracking-[0.15em] uppercase mb-4">
                 Your Journey Awaits
               </p>
               <h3 
@@ -210,7 +210,7 @@ export default function Landing() {
               </p>
               <Button 
                 onClick={() => window.location.href = '/api/login'}
-                className="bg-[#FCD000] text-zinc-950 hover:bg-[#FCD000]/90 text-lg px-10 py-6 rounded-xl font-bold shadow-lg shadow-[#FCD000]/20 transition-all hover:shadow-xl hover:shadow-[#FCD000]/30 hover:scale-[1.02]"
+                className="bg-[#FDD000] text-zinc-950 hover:bg-[#FDD000]/90 text-lg px-10 py-6 rounded-xl font-bold shadow-lg shadow-[#FDD000]/20 transition-all hover:shadow-xl hover:shadow-[#FDD000]/30 hover:scale-[1.02]"
                 data-testid="button-join"
               >
                 Join the Community
@@ -220,15 +220,15 @@ export default function Landing() {
               {/* Trust badges */}
               <div className="flex flex-wrap justify-center gap-6 mt-8 text-zinc-500 text-sm">
                 <span className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#FCD000]" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#FDD000]" />
                   100% Free to Start
                 </span>
                 <span className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#FCD000]" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#FDD000]" />
                   Private & Secure
                 </span>
                 <span className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#FCD000]" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#FDD000]" />
                   Faith-Based Community
                 </span>
               </div>
@@ -238,7 +238,7 @@ export default function Landing() {
       </div>
       
       {/* Footer accent */}
-      <div className="h-1 bg-gradient-to-r from-transparent via-[#FCD000]/30 to-transparent" />
+      <div className="h-1 bg-gradient-to-r from-transparent via-[#FDD000]/30 to-transparent" />
     </div>
   );
 }

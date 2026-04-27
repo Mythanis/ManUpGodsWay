@@ -40,15 +40,15 @@ export function FitnessTour() {
         className="pointer-events-auto overflow-hidden"
         style={{
           background: "#0d0d0d",
-          border: "2px solid #FCD000",
+          border: "2px solid #FDD000",
           borderRadius: "2px",
-          boxShadow: "4px 4px 0px 0px rgba(252,208,0,0.4)",
+          boxShadow: "4px 4px 0px 0px rgba(253,208,0,0.4)",
         }}
       >
         {/* Gold header */}
         <div
           className="flex items-center justify-between px-4 py-2.5"
-          style={{ background: "#FCD000" }}
+          style={{ background: "#FDD000" }}
         >
           <div className="flex items-center gap-2">
             <Dumbbell className="w-4 h-4 text-black flex-shrink-0" />
@@ -75,7 +75,7 @@ export function FitnessTour() {
         <div className="h-1 bg-white/10 w-full">
           <div
             className="h-full transition-all duration-300"
-            style={{ width: `${progress}%`, background: "#FCD000" }}
+            style={{ width: `${progress}%`, background: "#FDD000" }}
           />
         </div>
 
@@ -119,7 +119,7 @@ export function FitnessTour() {
               onClick={nextFitnessStep}
               className="flex items-center gap-1.5 px-5 h-8 text-black font-black uppercase tracking-wide text-xs rounded-sm transition-all hover:opacity-90 active:scale-95"
               style={{
-                background: "#FCD000",
+                background: "#FDD000",
                 border: "2px solid #000",
                 boxShadow: "2px 2px 0px 0px rgba(0,0,0,1)",
               }}
@@ -140,7 +140,7 @@ export function FitnessTour() {
               style={{
                 width: i === fitnessTourStep ? "14px" : "5px",
                 height: "5px",
-                background: i === fitnessTourStep ? "#FCD000" : "rgba(255,255,255,0.2)",
+                background: i === fitnessTourStep ? "#FDD000" : "rgba(255,255,255,0.2)",
               }}
             />
           ))}

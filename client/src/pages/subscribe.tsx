@@ -82,7 +82,7 @@ export default function Subscribe() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#FCD000]"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#FDD000]"></div>
       </div>
     );
   }
@@ -99,8 +99,8 @@ export default function Subscribe() {
         </button>
 
         <div className="text-center mb-8">
-          <Crown className="w-12 h-12 text-[#FCD000] mx-auto mb-3" />
-          <h1 className="text-3xl font-black text-[#FCD000] uppercase tracking-wider mb-2" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
+          <Crown className="w-12 h-12 text-[#FDD000] mx-auto mb-3" />
+          <h1 className="text-3xl font-black text-[#FDD000] uppercase tracking-wider mb-2" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
             Man Up God's Way
           </h1>
           <p className="text-white/60 text-sm">
@@ -116,7 +116,7 @@ export default function Subscribe() {
               <p className="text-white/60 text-sm mb-4">You have full access to all content and features.</p>
               <Button
                 onClick={() => setLocation('/profile')}
-                className="bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-bold"
+                className="bg-[#FDD000] text-black hover:bg-[#FDD000]/90 font-bold"
               >
                 Manage Subscription
               </Button>
@@ -130,7 +130,7 @@ export default function Subscribe() {
                   variant={billingCycle === "monthly" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setBillingCycle("monthly")}
-                  className={billingCycle === "monthly" ? "bg-[#FCD000] text-black shadow-sm hover:bg-[#FCD000]/90 font-bold" : "text-white hover:bg-white/10"}
+                  className={billingCycle === "monthly" ? "bg-[#FDD000] text-black shadow-sm hover:bg-[#FDD000]/90 font-bold" : "text-white hover:bg-white/10"}
                 >
                   Monthly
                 </Button>
@@ -138,7 +138,7 @@ export default function Subscribe() {
                   variant={billingCycle === "yearly" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setBillingCycle("yearly")}
-                  className={billingCycle === "yearly" ? "bg-[#FCD000] text-black shadow-sm hover:bg-[#FCD000]/90 font-bold" : "text-white hover:bg-white/10"}
+                  className={billingCycle === "yearly" ? "bg-[#FDD000] text-black shadow-sm hover:bg-[#FDD000]/90 font-bold" : "text-white hover:bg-white/10"}
                 >
                   Yearly
                   {savingsPercent > 0 && (
@@ -150,14 +150,14 @@ export default function Subscribe() {
 
             <div className="grid gap-4 mb-6">
               {isTrialEligible && (
-                <Card className="bg-gradient-to-br from-[#FCD000]/10 to-[#FCD000]/5 border-2 border-[#FCD000]/40 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 bg-[#FCD000] text-black text-xs font-bold px-3 py-1 rounded-bl-lg">
+                <Card className="bg-gradient-to-br from-[#FDD000]/10 to-[#FDD000]/5 border-2 border-[#FDD000]/40 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 bg-[#FDD000] text-black text-xs font-bold px-3 py-1 rounded-bl-lg">
                     RECOMMENDED
                   </div>
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-full bg-[#FCD000]/20 flex items-center justify-center">
-                        <Clock className="w-5 h-5 text-[#FCD000]" />
+                      <div className="w-10 h-10 rounded-full bg-[#FDD000]/20 flex items-center justify-center">
+                        <Clock className="w-5 h-5 text-[#FDD000]" />
                       </div>
                       <div>
                         <h3 className="text-lg font-black text-white">{trialDays}-Day Free Trial</h3>
@@ -167,7 +167,7 @@ export default function Subscribe() {
                     <div className="bg-black/30 rounded-lg p-3 mb-4">
                       <p className="text-white/70 text-sm">
                         Get full access for {trialDays} days — your card won't be charged until the trial ends. 
-                        Then it's <span className="text-[#FCD000] font-bold">
+                        Then it's <span className="text-[#FDD000] font-bold">
                           ${billingCycle === "yearly" ? yearlyPrice.toFixed(2) : monthlyPrice.toFixed(2)}/{billingCycle === "yearly" ? "year" : "month"}
                         </span>.
                       </p>
@@ -175,7 +175,7 @@ export default function Subscribe() {
                     <Button
                       onClick={() => handleSubscribe(true)}
                       disabled={createCheckoutMutation.isPending}
-                      className="w-full py-3 text-lg bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-black uppercase tracking-wider"
+                      className="w-full py-3 text-lg bg-[#FDD000] text-black hover:bg-[#FDD000]/90 font-black uppercase tracking-wider"
                       style={{ fontFamily: "'Bebas Neue', sans-serif" }}
                       size="lg"
                     >
@@ -207,7 +207,7 @@ export default function Subscribe() {
                     </div>
                   </div>
                   <div className="text-center mb-4">
-                    <div className="text-3xl font-black text-[#FCD000]" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
+                    <div className="text-3xl font-black text-[#FDD000]" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
                       ${billingCycle === "yearly" ? yearlyPrice.toFixed(2) : monthlyPrice.toFixed(2)}
                       <span className="text-lg text-white/40">/{billingCycle === "yearly" ? "year" : "month"}</span>
                     </div>
@@ -221,8 +221,8 @@ export default function Subscribe() {
                     onClick={() => handleSubscribe(false)}
                     disabled={createCheckoutMutation.isPending}
                     className={isTrialEligible
-                      ? "w-full py-3 text-lg bg-white/10 text-white hover:bg-white/20 font-black uppercase tracking-wider border border-[#FCD000]/30"
-                      : "w-full py-3 text-lg bg-[#FCD000] text-black hover:bg-[#FCD000]/90 font-black uppercase tracking-wider"
+                      ? "w-full py-3 text-lg bg-white/10 text-white hover:bg-white/20 font-black uppercase tracking-wider border border-[#FDD000]/30"
+                      : "w-full py-3 text-lg bg-[#FDD000] text-black hover:bg-[#FDD000]/90 font-black uppercase tracking-wider"
                     }
                     style={{ fontFamily: "'Bebas Neue', sans-serif" }}
                     size="lg"
@@ -248,7 +248,7 @@ export default function Subscribe() {
               <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider">What's included:</h3>
               {features.map((feature, index) => (
                 <div key={index} className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#FCD000] flex-shrink-0 mt-0.5" />
+                  <Check className="w-4 h-4 text-[#FDD000] flex-shrink-0 mt-0.5" />
                   <span className="text-sm text-white/70">{feature}</span>
                 </div>
               ))}

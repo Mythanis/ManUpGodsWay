@@ -272,9 +272,9 @@ export default function Challenges() {
           isLocked 
             ? 'border-gray-600/50 shadow-[3px_3px_0px_0px_rgba(100,100,100,0.3)] opacity-60' 
             : isCurrentWeek 
-              ? 'border-ministry-gold-exact shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]' 
-              : 'border-ministry-gold-exact/50 shadow-[3px_3px_0px_0px_rgba(252,208,0,0.5)]'
-        } ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer hover:shadow-[5px_5px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px]'} transition-all rounded-sm overflow-hidden`}
+              ? 'border-ministry-gold-exact shadow-[4px_4px_0px_0px_rgba(253,208,0,1)]' 
+              : 'border-ministry-gold-exact/50 shadow-[3px_3px_0px_0px_rgba(253,208,0,0.5)]'
+        } ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer hover:shadow-[5px_5px_0px_0px_rgba(253,208,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px]'} transition-all rounded-sm overflow-hidden`}
         onClick={() => openChallengeDialog(challenge)}
       >
         <CardContent className="p-4 sm:p-5 relative z-10">
@@ -640,7 +640,7 @@ export default function Challenges() {
                   </div>
                 );
               })() : (
-                <div className="bg-[#FCD000] text-black border-2 border-black rounded-sm p-4">
+                <div className="bg-[#FDD000] text-black border-2 border-black rounded-sm p-4">
                   <div className="flex items-center space-x-2">
                     <Users className="w-5 h-5 text-black" />
                     <span className="text-sm font-black text-black uppercase tracking-wide">

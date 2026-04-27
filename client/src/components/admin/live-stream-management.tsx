@@ -32,7 +32,7 @@ function CopyButton({ value, label }: { value: string; label: string }) {
     setTimeout(() => setCopied(false), 2000);
   };
   return (
-    <button onClick={copy} className="flex items-center gap-1 text-xs text-[#FCD000] hover:text-yellow-300 transition-colors flex-shrink-0">
+    <button onClick={copy} className="flex items-center gap-1 text-xs text-[#FDD000] hover:text-yellow-300 transition-colors flex-shrink-0">
       {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
       {copied ? "Copied!" : label}
     </button>
@@ -79,7 +79,7 @@ function SetupGuide({ stream, onGoLive, onEndStream, goLivePending, endPending }
             onClick={() => setTab(t.id)}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors ${
               tab === t.id
-                ? "text-[#FCD000] border-b-2 border-[#FCD000] bg-black/30"
+                ? "text-[#FDD000] border-b-2 border-[#FDD000] bg-black/30"
                 : "text-gray-500 hover:text-gray-300"
             }`}
           >
@@ -121,8 +121,8 @@ function SetupGuide({ stream, onGoLive, onEndStream, goLivePending, endPending }
         {/* RIVERSIDE TAB */}
         {tab === "riverside" && (
           <div className="space-y-3">
-            <div className="bg-[#FCD000]/10 border border-[#FCD000]/30 rounded p-2">
-              <p className="text-[#FCD000] text-xs font-bold mb-1">Using Riverside.fm</p>
+            <div className="bg-[#FDD000]/10 border border-[#FDD000]/30 rounded p-2">
+              <p className="text-[#FDD000] text-xs font-bold mb-1">Using Riverside.fm</p>
               <p className="text-gray-300 text-xs">Riverside streams to your app via its custom RTMP output. High quality, browser-based — works from your phone or laptop.</p>
             </div>
 
@@ -147,8 +147,8 @@ function SetupGuide({ stream, onGoLive, onEndStream, goLivePending, endPending }
         {/* OBS TAB */}
         {tab === "obs" && (
           <div className="space-y-3">
-            <div className="bg-[#FCD000]/10 border border-[#FCD000]/30 rounded p-2">
-              <p className="text-[#FCD000] text-xs font-bold mb-1">Using OBS Studio (Free, Desktop)</p>
+            <div className="bg-[#FDD000]/10 border border-[#FDD000]/30 rounded p-2">
+              <p className="text-[#FDD000] text-xs font-bold mb-1">Using OBS Studio (Free, Desktop)</p>
               <p className="text-gray-300 text-xs">OBS gives you the most control — scene switching, overlays, multiple cameras. Download free at obsproject.com.</p>
             </div>
 
@@ -178,7 +178,7 @@ function SetupGuide({ stream, onGoLive, onEndStream, goLivePending, endPending }
 
             {stream.simulcastYoutubeKey || stream.simulcastFacebookKey ? (
               <div className="border-t border-gray-800 pt-2">
-                <p className="text-[#FCD000] text-xs font-bold uppercase tracking-wide mb-1">Simulcasting Active:</p>
+                <p className="text-[#FDD000] text-xs font-bold uppercase tracking-wide mb-1">Simulcasting Active:</p>
                 {stream.simulcastYoutubeKey && <p className="text-gray-400 text-xs">✓ YouTube — broadcast appears there too</p>}
                 {stream.simulcastFacebookKey && <p className="text-gray-400 text-xs">✓ Facebook — broadcast appears there too</p>}
               </div>
@@ -289,7 +289,7 @@ export default function LiveStreamManagement() {
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[#FCD000] text-black hover:bg-yellow-400 font-bold" data-testid="button-create-stream">
+            <Button className="bg-[#FDD000] text-black hover:bg-yellow-400 font-bold" data-testid="button-create-stream">
               <Plus className="w-4 h-4 mr-2" />
               New Stream
             </Button>
@@ -318,7 +318,7 @@ export default function LiveStreamManagement() {
                   </FormItem>
                 )} />
                 <div className="border border-gray-700 rounded-lg p-3 space-y-3">
-                  <p className="text-xs font-bold text-[#FCD000] uppercase tracking-wide">Simulcast (Optional)</p>
+                  <p className="text-xs font-bold text-[#FDD000] uppercase tracking-wide">Simulcast (Optional)</p>
                   <p className="text-xs text-gray-400">Stream to YouTube and/or Facebook at the same time as the app.</p>
                   <FormField control={form.control} name="simulcastYoutubeKey" render={({ field }) => (
                     <FormItem>
@@ -341,7 +341,7 @@ export default function LiveStreamManagement() {
                 </div>
                 <div className="flex gap-2">
                   <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} className="flex-1 border-gray-600 text-gray-300">Cancel</Button>
-                  <Button type="submit" disabled={createStream.isPending} className="flex-1 bg-[#FCD000] text-black font-bold" data-testid="button-submit-stream">
+                  <Button type="submit" disabled={createStream.isPending} className="flex-1 bg-[#FDD000] text-black font-bold" data-testid="button-submit-stream">
                     {createStream.isPending ? "Creating…" : "Create Stream"}
                   </Button>
                 </div>
@@ -353,7 +353,7 @@ export default function LiveStreamManagement() {
 
       {isLoading ? (
         <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FCD000] mx-auto mb-4" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FDD000] mx-auto mb-4" />
           <p className="text-gray-400">Loading streams…</p>
         </div>
       ) : liveStreams.length === 0 ? (
@@ -397,7 +397,7 @@ export default function LiveStreamManagement() {
                     {stream.status === "scheduled" && (
                       <button
                         onClick={() => setExpandedId(expandedId === stream.id ? null : stream.id)}
-                        className="text-[#FCD000] text-xs font-bold flex items-center gap-1"
+                        className="text-[#FDD000] text-xs font-bold flex items-center gap-1"
                       >
                         How to Go Live
                         {expandedId === stream.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}

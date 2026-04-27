@@ -412,7 +412,7 @@ export default function Profile() {
       {rations && (
         <div className="px-6 -mt-4 relative z-10 mb-6">
           <Link href="/rations">
-            <Card className="bg-[#FCD000] text-black border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden cursor-pointer hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all" data-testid="card-rations">
+            <Card className="bg-[#FDD000] text-black border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden cursor-pointer hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all" data-testid="card-rations">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -459,13 +459,13 @@ export default function Profile() {
 
       {/* Account Management */}
       <div className="px-6 -mt-6 relative z-10 mb-6">
-        <Card className="shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] liquid-black border-2 border-ministry-gold-exact rounded-sm overflow-hidden" data-testid="card-account">
+        <Card className="shadow-[4px_4px_0px_0px_rgba(253,208,0,1)] liquid-black border-2 border-ministry-gold-exact rounded-sm overflow-hidden" data-testid="card-account">
           <CardContent className="p-6 relative z-10">
             <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>Account & Subscription</h2>
             
             <div className="space-y-4">
               {/* Main Subscription Row */}
-              <div className="h-16 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+              <div className="h-16 w-full flex items-center bg-[#FDD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                 <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
                   {verifyingSubscription
                     ? <Loader2 className="w-6 h-6 text-white relative z-10 animate-spin" />
@@ -513,7 +513,7 @@ export default function Profile() {
               </div>
 
               {/* Fitness Add-on Row */}
-              <div className="h-16 w-full flex items-center bg-[#FCD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+              <div className="h-16 w-full flex items-center bg-[#FDD000] text-black border-2 border-black overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                 <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
                   <Dumbbell className="w-6 h-6 text-white relative z-10" />
                 </div>
@@ -560,7 +560,7 @@ export default function Profile() {
               <EditProfileDialog>
                 <Button 
                   variant="outline"
-                  className="h-16 w-full flex items-center justify-between bg-[#FCD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
+                  className="h-16 w-full flex items-center justify-between bg-[#FDD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
                   data-testid="button-edit-profile"
                 >
                   <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
@@ -578,7 +578,7 @@ export default function Profile() {
               <Link href="/rations-store">
                 <Button 
                   variant="outline"
-                  className="h-16 w-full flex items-center justify-between bg-[#FCD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
+                  className="h-16 w-full flex items-center justify-between bg-[#FDD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
                   data-testid="button-rations-store"
                 >
                   <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
@@ -595,7 +595,7 @@ export default function Profile() {
 
               <Button
                 variant="outline"
-                className="h-16 w-full flex items-center justify-between bg-[#FCD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all disabled:opacity-60"
+                className="h-16 w-full flex items-center justify-between bg-[#FDD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all disabled:opacity-60"
                 data-testid="button-refresh-app-data"
                 disabled={isRefreshing}
                 onClick={handleRefresh}
@@ -623,16 +623,16 @@ export default function Profile() {
       {/* My Journal */}
       <div className="px-6 mb-6">
         <Link href="/journal">
-          <Card className="liquid-black border-2 border-[#FCD000] rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] cursor-pointer hover:shadow-[5px_5px_0px_0px_rgba(252,208,0,1)] transition-shadow">
+          <Card className="liquid-black border-2 border-[#FDD000] rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,1)] cursor-pointer hover:shadow-[5px_5px_0px_0px_rgba(253,208,0,1)] transition-shadow">
             <CardContent className="p-4 flex items-center gap-4">
-              <div className="bg-[#FCD000] rounded-sm border-2 border-black p-3 shrink-0">
+              <div className="bg-[#FDD000] rounded-sm border-2 border-black p-3 shrink-0">
                 <PenLine className="w-5 h-5 text-black" />
               </div>
               <div className="flex-1">
                 <p className="font-black text-white uppercase tracking-tight">My Journal</p>
                 <p className="text-xs text-gray-400 font-bold mt-0.5">Review all your study notes in one place</p>
               </div>
-              <ChevronRight className="w-5 h-5 text-[#FCD000] shrink-0" />
+              <ChevronRight className="w-5 h-5 text-[#FDD000] shrink-0" />
             </CardContent>
           </Card>
         </Link>
@@ -643,7 +643,7 @@ export default function Profile() {
         <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>
           Saved Devotionals
         </h2>
-        <Card className="liquid-black border-2 border-ministry-gold-exact overflow-hidden rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]">
+        <Card className="liquid-black border-2 border-ministry-gold-exact overflow-hidden rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,1)]">
           <CardContent className="p-0">
             {savedDevotionals.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
@@ -705,7 +705,7 @@ export default function Profile() {
           <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>
             My Reflections
           </h2>
-          <Card className="liquid-black border-2 border-ministry-gold-exact overflow-hidden rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]">
+          <Card className="liquid-black border-2 border-ministry-gold-exact overflow-hidden rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,1)]">
             <CardContent className="p-0">
               <div className="divide-y divide-ministry-gold-exact/20">
                 {devotionalReflections.map((item: any) => {
@@ -737,7 +737,7 @@ export default function Profile() {
       <div className="px-6 mb-6">
         <h2 className="text-lg font-black text-white mb-4 tracking-tight uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>Settings</h2>
         
-        <Card className="liquid-black border-2 border-ministry-gold-exact overflow-hidden rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]" data-testid="card-settings">
+        <Card className="liquid-black border-2 border-ministry-gold-exact overflow-hidden rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,1)]" data-testid="card-settings">
           <CardContent className="p-0 relative z-10">
             <NotificationPanel variant="button" />
             
@@ -821,7 +821,7 @@ export default function Profile() {
                     </div>
                     <Button
                       onClick={() => install()}
-                      className="w-full bg-[#FCD000] hover:bg-yellow-400 text-black font-black uppercase tracking-wide border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
+                      className="w-full bg-[#FDD000] hover:bg-yellow-400 text-black font-black uppercase tracking-wide border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
                       data-testid="button-install-app"
                     >
                       <Download className="w-4 h-4 mr-2" />
@@ -856,23 +856,23 @@ export default function Profile() {
                           <div className="flex items-center gap-2">
                             <Share className="w-4 h-4 text-[#007AFF] shrink-0" />
                             <p className="text-sm text-white font-medium">
-                              Tap the <span className="font-black text-[#FCD000]">Share</span> button at the bottom of Safari
+                              Tap the <span className="font-black text-[#FDD000]">Share</span> button at the bottom of Safari
                             </p>
                           </div>
                         </div>
                         <div className="flex items-start gap-3 p-3 bg-white/5 rounded-sm border border-ministry-gold-exact/20">
                           <div className="w-6 h-6 rounded-full bg-ministry-gold-exact text-black font-black text-xs flex items-center justify-center shrink-0 mt-0.5">2</div>
                           <div className="flex items-center gap-2">
-                            <Plus className="w-4 h-4 text-[#FCD000] shrink-0" />
+                            <Plus className="w-4 h-4 text-[#FDD000] shrink-0" />
                             <p className="text-sm text-white font-medium">
-                              Scroll down and tap <span className="font-black text-[#FCD000]">Add to Home Screen</span>
+                              Scroll down and tap <span className="font-black text-[#FDD000]">Add to Home Screen</span>
                             </p>
                           </div>
                         </div>
                         <div className="flex items-start gap-3 p-3 bg-white/5 rounded-sm border border-ministry-gold-exact/20">
                           <div className="w-6 h-6 rounded-full bg-ministry-gold-exact text-black font-black text-xs flex items-center justify-center shrink-0 mt-0.5">3</div>
                           <p className="text-sm text-white font-medium">
-                            Tap <span className="font-black text-[#FCD000]">Add</span> in the top-right corner
+                            Tap <span className="font-black text-[#FDD000]">Add</span> in the top-right corner
                           </p>
                         </div>
                       </div>
@@ -956,7 +956,7 @@ export default function Profile() {
       <div className="px-6">
         {/* Section heading */}
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-1 h-6 bg-[#FCD000] rounded-full flex-shrink-0" />
+          <div className="w-1 h-6 bg-[#FDD000] rounded-full flex-shrink-0" />
           <h2 className="text-xl font-coalition text-white uppercase tracking-widest">Your Journey</h2>
           <div className="flex-1 h-px bg-white/10" />
         </div>
@@ -966,7 +966,7 @@ export default function Profile() {
             <CardContent className="p-6 text-center">
               <p className="text-white/60 mb-5 font-medium text-sm">You haven't started any studies yet</p>
               <Button
-                className="bg-[#FCD000] text-black hover:bg-yellow-300 rounded-sm font-black uppercase tracking-widest border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] h-11 px-6 text-sm"
+                className="bg-[#FDD000] text-black hover:bg-yellow-300 rounded-sm font-black uppercase tracking-widest border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] h-11 px-6 text-sm"
                 data-testid="button-start-journey"
               >
                 Start Your Journey
@@ -983,7 +983,7 @@ export default function Profile() {
                   <div key={item.id} className={`p-4 space-y-2.5 ${i > 0 ? 'border-t border-white/10' : ''}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[#FCD000]">In Progress</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[#FDD000]">In Progress</span>
                         <p className="font-black text-white text-sm leading-tight mt-0.5 uppercase tracking-tight">
                           {item.study?.title || 'Study'}
                         </p>
@@ -992,7 +992,7 @@ export default function Profile() {
                     </div>
                     <div className="space-y-1">
                       <div className="h-2.5 bg-white/10 rounded-sm overflow-hidden border border-white/10">
-                        <div className="h-full bg-[#FCD000] rounded-sm transition-all" style={{ width: `${pct}%` }} />
+                        <div className="h-full bg-[#FDD000] rounded-sm transition-all" style={{ width: `${pct}%` }} />
                       </div>
                       <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider text-right">{pct}% complete</p>
                     </div>
@@ -1003,7 +1003,7 @@ export default function Profile() {
               {/* Completed studies */}
               {completedStudies.map((item: any, i: number) => (
                 <div key={item.id} className={`p-4 flex items-center gap-3 ${(i > 0 || currentStudies.length > 0) ? 'border-t border-white/10' : ''}`}>
-                  <div className="w-7 h-7 rounded-sm bg-[#FCD000] flex items-center justify-center flex-shrink-0 border border-black">
+                  <div className="w-7 h-7 rounded-sm bg-[#FDD000] flex items-center justify-center flex-shrink-0 border border-black">
                     <svg className="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
@@ -1018,7 +1018,7 @@ export default function Profile() {
                       </p>
                     )}
                   </div>
-                  <span className="text-xs font-black text-[#FCD000] uppercase tracking-wide flex-shrink-0">Done</span>
+                  <span className="text-xs font-black text-[#FDD000] uppercase tracking-wide flex-shrink-0">Done</span>
                 </div>
               ))}
             </CardContent>

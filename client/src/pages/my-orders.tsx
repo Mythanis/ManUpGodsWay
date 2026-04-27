@@ -87,7 +87,7 @@ export default function MyOrdersPage() {
             return (
               <Card 
                 key={order.id} 
-                className="bg-black border-2 border-zinc-700 rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,0.3)]"
+                className="bg-black border-2 border-zinc-700 rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,0.3)]"
               >
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">

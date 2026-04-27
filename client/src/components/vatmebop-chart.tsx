@@ -112,7 +112,7 @@ export function VatmebopChart() {
     <div className="mt-5">
       {/* Sub-section label + info button + year picker */}
       <div className="flex items-center gap-2 mb-3">
-        <span className="font-coalition text-sm uppercase tracking-widest text-[#FCD000]">
+        <span className="font-coalition text-sm uppercase tracking-widest text-[#FDD000]">
           My Accountability
         </span>
         <button
@@ -149,9 +149,9 @@ export function VatmebopChart() {
 
       {/* Expandable How to Use panel */}
       {showHelp && (
-        <div className="mb-3 bg-zinc-900 border-2 border-ministry-gold-exact rounded-sm overflow-hidden shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]">
+        <div className="mb-3 bg-zinc-900 border-2 border-ministry-gold-exact rounded-sm overflow-hidden shadow-[4px_4px_0px_0px_rgba(253,208,0,1)]">
           <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-zinc-800">
-            <p className="font-coalition text-sm uppercase tracking-widest text-[#FCD000]">
+            <p className="font-coalition text-sm uppercase tracking-widest text-[#FDD000]">
               How to Use VATMEBOP
             </p>
             <button onClick={() => setShowHelp(false)} className="text-white/40 hover:text-white transition-colors">
@@ -227,7 +227,7 @@ export function VatmebopChart() {
       )}
 
       {/* Grid card */}
-      <div className="border-2 border-ministry-gold-exact rounded-sm overflow-hidden shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] bg-zinc-900">
+      <div className="border-2 border-ministry-gold-exact rounded-sm overflow-hidden shadow-[4px_4px_0px_0px_rgba(253,208,0,1)] bg-zinc-900">
         <div
           ref={scrollRef}
           className="overflow-y-auto"

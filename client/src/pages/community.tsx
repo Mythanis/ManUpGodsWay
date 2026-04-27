@@ -537,14 +537,14 @@ export default function Community() {
       <div className="liquid-header text-white px-6 pt-12 pb-6">
         <BackButton />
         <h1 className="text-4xl font-black mb-2 tracking-tighter uppercase" data-testid="text-community-title">Community</h1>
-        <p className="text-[#FCD000] text-xs font-bold tracking-widest uppercase" data-testid="text-community-subtitle">
+        <p className="text-[#FDD000] text-xs font-bold tracking-widest uppercase" data-testid="text-community-subtitle">
           Iron Sharpens Iron Among Brothers
         </p>
       </div>
 
       {/* Community Stats */}
       <div className="px-6 -mt-3 relative z-10 mb-4">
-        <Card className="shadow-[3px_3px_0px_0px_rgba(252,208,0,1)] liquid-black-white border-2 border-ministry-gold-exact rounded-sm" data-testid="card-stats">
+        <Card className="shadow-[3px_3px_0px_0px_rgba(253,208,0,1)] liquid-black-white border-2 border-ministry-gold-exact rounded-sm" data-testid="card-stats">
           <CardContent className="p-3 relative z-10">
             <div className="grid grid-cols-3 gap-3 text-center">
               <div className="border-r border-ministry-gold-exact/30">
@@ -572,7 +572,7 @@ export default function Community() {
       
       {/* Facebook-style Quick Post Card */}
       <div className="px-6 mb-4">
-        <Card className="shadow-[4px_4px_0px_0px_rgba(252,208,0,0.5)] liquid-black border-2 border-ministry-gold-exact rounded-sm" data-testid="card-quick-post">
+        <Card className="shadow-[4px_4px_0px_0px_rgba(253,208,0,0.5)] liquid-black border-2 border-ministry-gold-exact rounded-sm" data-testid="card-quick-post">
           <CardContent className="p-3">
             <div className="flex items-center gap-0">
               <button
@@ -618,7 +618,7 @@ export default function Community() {
       {/* Post Dialog */}
       <div className="px-6">
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-md mx-auto bg-[#FCD000] border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden flex flex-col max-h-[90vh]" data-testid="dialog-new-discussion">
+          <DialogContent className="max-w-md mx-auto bg-[#FDD000] border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden flex flex-col max-h-[90vh]" data-testid="dialog-new-discussion">
             <DialogHeader className="flex-shrink-0">
               <DialogTitle className="text-black text-xl font-black uppercase tracking-tight">Create Post</DialogTitle>
             </DialogHeader>
@@ -804,7 +804,7 @@ export default function Community() {
             placeholder="Search discussions..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 pr-8 h-9 bg-white/10 border border-white/15 text-white placeholder:text-white/35 text-sm rounded-full focus:border-[#FCD000]/50 [&]:bg-white/10"
+            className="pl-9 pr-8 h-9 bg-white/10 border border-white/15 text-white placeholder:text-white/35 text-sm rounded-full focus:border-[#FDD000]/50 [&]:bg-white/10"
             style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
           />
           {searchQuery && (
@@ -831,7 +831,7 @@ export default function Community() {
 
       {/* Feed heading */}
       <div className="px-4 mb-3 flex items-center gap-3">
-        <div className="w-1 h-5 bg-[#FCD000] rounded-full flex-shrink-0" />
+        <div className="w-1 h-5 bg-[#FDD000] rounded-full flex-shrink-0" />
         <span className="text-sm font-black text-white uppercase tracking-[0.15em]">
           {searchQuery ? `"${searchQuery}"` : 'All Posts'}
         </span>

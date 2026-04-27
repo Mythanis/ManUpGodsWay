@@ -338,7 +338,7 @@ function CommentsSection({
             <button
               onClick={() => editCommentMutation.mutate({ id: c.id, content: editText })}
               disabled={!editText.trim() || editCommentMutation.isPending}
-              className="text-[#FCD000] text-xs font-black disabled:opacity-50"
+              className="text-[#FDD000] text-xs font-black disabled:opacity-50"
             >Save</button>
             <button onClick={() => setEditingId(null)} className="text-zinc-500 text-xs">Cancel</button>
           </div>
@@ -407,7 +407,7 @@ function CommentsSection({
                   <button
                     onClick={() => replyMutation.mutate({ content: replyText.trim(), parentCommentId: c.id })}
                     disabled={!replyText.trim() || replyMutation.isPending}
-                    className="bg-[#FCD000] text-black font-black text-xs px-2 py-1 rounded-sm disabled:opacity-50"
+                    className="bg-[#FDD000] text-black font-black text-xs px-2 py-1 rounded-sm disabled:opacity-50"
                   >
                     <Send className="w-3 h-3" />
                   </button>
@@ -439,7 +439,7 @@ function CommentsSection({
             }
           }}
           disabled={!commentText.trim() || addCommentMutation.isPending}
-          className="bg-[#FCD000] text-black font-black text-xs px-3 py-1.5 rounded-sm disabled:opacity-50"
+          className="bg-[#FDD000] text-black font-black text-xs px-3 py-1.5 rounded-sm disabled:opacity-50"
         >
           <Send className="w-3 h-3" />
         </button>
@@ -1712,15 +1712,15 @@ export default function Fitness() {
   };
 
   const FitnessChallengeCard = ({ challenge, isToday = false }: { challenge: FitnessChallenge; isToday?: boolean }) => (
-    <div className={`${isToday ? 'bg-[#FCD000] text-black' : 'liquid-black'} rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all`}>
+    <div className={`${isToday ? 'bg-[#FDD000] text-black' : 'liquid-black'} rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all`}>
       <div className="p-6">
         <div className="flex items-start space-x-4 relative z-10">
           <div className="flex-shrink-0">
             <div className={`w-16 h-16 rounded-sm flex items-center justify-center border-2 border-black ${
-              isToday ? 'liquid-black' : 'bg-[#FCD000] text-black'
+              isToday ? 'liquid-black' : 'bg-[#FDD000] text-black'
             }`}>
               {isToday ? (
-                <Star className="w-8 h-8 fill-current text-[#FCD000] relative z-10" />
+                <Star className="w-8 h-8 fill-current text-[#FDD000] relative z-10" />
               ) : (
                 <Dumbbell className="w-8 h-8 text-black relative z-10" />
               )}
@@ -1733,16 +1733,16 @@ export default function Fitness() {
                 <h3 className={`font-black text-lg mb-1 uppercase ${isToday ? 'text-black' : 'text-white'}`}>
                   {challenge.title}
                   {isToday && (
-                    <Badge className="ml-2 bg-black text-[#FCD000] font-bold rounded-sm border-none">
+                    <Badge className="ml-2 bg-black text-[#FDD000] font-bold rounded-sm border-none">
                       Today's Challenge
                     </Badge>
                   )}
                 </h3>
                 <div className={`flex items-center flex-wrap gap-2 text-sm mb-2 ${isToday ? 'text-black' : 'text-white'}`}>
-                  <Badge className="text-xs capitalize bg-black text-[#FCD000] border-none rounded-sm font-bold">
+                  <Badge className="text-xs capitalize bg-black text-[#FDD000] border-none rounded-sm font-bold">
                     {challenge.category}
                   </Badge>
-                  <Badge className="text-xs capitalize bg-[#FCD000] text-black border-none rounded-sm font-bold">
+                  <Badge className="text-xs capitalize bg-[#FDD000] text-black border-none rounded-sm font-bold">
                     {challenge.difficulty}
                   </Badge>
                   <div className="flex items-center">
@@ -1771,7 +1771,7 @@ export default function Fitness() {
 
             {(challenge.videoId || challenge.videoUrl) && (
               <button 
-                className="liquid-black px-4 py-2 rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(252,208,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(252,208,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all text-white font-bold uppercase text-sm flex items-center"
+                className="liquid-black px-4 py-2 rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(253,208,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(253,208,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all text-white font-bold uppercase text-sm flex items-center"
                 data-testid={`button-watch-video-${challenge.id}`}
               >
                 <Play className="w-4 h-4 mr-2" />
@@ -1785,7 +1785,7 @@ export default function Fitness() {
   );
 
   const ExerciseCard = ({ exercise, showRemove = false }: { exercise: Exercise; showRemove?: boolean }) => (
-    <div className="bg-[#FCD000] text-black rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all p-4">
+    <div className="bg-[#FDD000] text-black rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all p-4">
       <div className="relative z-10">
         <div className="flex items-start">
           <div className="flex-1">
@@ -1794,7 +1794,7 @@ export default function Fitness() {
             </h3>
             
             <div className="flex flex-wrap gap-2 mb-3">
-              <Badge className="text-xs capitalize bg-black text-[#FCD000] border-none rounded-sm font-bold">
+              <Badge className="text-xs capitalize bg-black text-[#FDD000] border-none rounded-sm font-bold">
                 {exercise.bodyPart}
               </Badge>
               <Badge className="text-xs capitalize bg-black/80 text-white border-none rounded-sm font-bold">
@@ -1809,7 +1809,7 @@ export default function Fitness() {
               <button
                 type="button"
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPreviewExercise(exercise); }}
-                className="bg-transparent text-black px-3 py-1.5 rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-[#FCD000] font-bold uppercase text-sm flex items-center transition-all"
+                className="bg-transparent text-black px-3 py-1.5 rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-[#FDD000] font-bold uppercase text-sm flex items-center transition-all"
                 data-testid={`button-preview-${exercise.exerciseId || exercise.id || ''}`}
               >
                 <Play className="w-4 h-4 mr-1" />
@@ -1821,8 +1821,8 @@ export default function Fitness() {
                 className={showRemove 
                   ? 'bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-bold uppercase text-sm flex items-center' 
                   : `${isFavorite(exercise.exerciseId || exercise.id || '') 
-                    ? 'liquid-black text-[#FCD000] px-3 py-1.5 rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(252,208,0,1)] font-bold uppercase text-sm flex items-center' 
-                    : 'bg-transparent text-black px-3 py-1.5 rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-[#FCD000] font-bold uppercase text-sm flex items-center transition-all'
+                    ? 'liquid-black text-[#FDD000] px-3 py-1.5 rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(253,208,0,1)] font-bold uppercase text-sm flex items-center' 
+                    : 'bg-transparent text-black px-3 py-1.5 rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-[#FDD000] font-bold uppercase text-sm flex items-center transition-all'
                   }`}
                 data-testid={`button-favorite-${exercise.exerciseId || exercise.id || ''}`}
               >
@@ -3340,7 +3340,7 @@ export default function Fitness() {
       <div className="min-h-screen bg-black">
         <div className="px-4 pt-6">
           <div className="flex items-center justify-center py-20">
-            <div className="bg-[#FCD000] text-black p-8 rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+            <div className="bg-[#FDD000] text-black p-8 rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
               <div className="animate-spin rounded-sm h-12 w-12 border-4 border-black border-t-transparent relative z-10"></div>
             </div>
           </div>
@@ -3354,7 +3354,7 @@ export default function Fitness() {
   if (fitnessMaintenanceMode && (authUser as any)?.role !== 'admin') {
     return (
       <div className="min-h-screen bg-black pb-20">
-        <div className="liquid-header px-4 pt-6 pb-6 border-b-4 border-[#FCD000]">
+        <div className="liquid-header px-4 pt-6 pb-6 border-b-4 border-[#FDD000]">
           <BackButton />
           <div className="text-center">
             <h1 className="text-3xl font-black text-white mb-2 uppercase tracking-wide relative z-10">
@@ -3363,9 +3363,9 @@ export default function Fitness() {
           </div>
         </div>
         <div className="px-4 pt-12 flex items-center justify-center" data-testid="fitness-maintenance-screen">
-          <div className="w-full max-w-md bg-[#FCD000] border-4 border-black rounded-sm shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-8 text-center">
+          <div className="w-full max-w-md bg-[#FDD000] border-4 border-black rounded-sm shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-8 text-center">
             <div className="mx-auto mb-4 w-14 h-14 rounded-full bg-black flex items-center justify-center">
-              <Settings className="w-7 h-7 text-[#FCD000]" />
+              <Settings className="w-7 h-7 text-[#FDD000]" />
             </div>
             <h2 className="text-2xl font-black uppercase tracking-tight text-black mb-2">
               Fitness Page Currently Under Maintenance
@@ -3382,7 +3382,7 @@ export default function Fitness() {
   return (
     <div className="min-h-screen bg-black pb-20">
       {/* Header with liquid effect */}
-      <div className="liquid-header px-4 pt-6 pb-6 border-b-4 border-[#FCD000]">
+      <div className="liquid-header px-4 pt-6 pb-6 border-b-4 border-[#FDD000]">
         <BackButton />
         <div className="text-center">
           <h1 className="text-3xl font-black text-white mb-2 uppercase tracking-wide relative z-10">
@@ -3394,7 +3394,7 @@ export default function Fitness() {
           <div className="flex flex-wrap justify-center gap-3 relative z-10">
             <button
               onClick={() => setShowFitnessPillarDialog(true)}
-              className="liquid-black px-6 py-3 rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all text-[#FCD000] font-black uppercase text-sm flex items-center"
+              className="liquid-black px-6 py-3 rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all text-[#FDD000] font-black uppercase text-sm flex items-center"
               data-testid="button-fitness-pillar"
             >
               <Info className="w-5 h-5 mr-2" />
@@ -3403,7 +3403,7 @@ export default function Fitness() {
             {!fitnessCoachHidden && (
               <button
                 onClick={() => setShowFitnessCoachDialog(true)}
-                className="liquid-black px-6 py-3 rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all text-[#FCD000] font-black uppercase text-sm flex items-center"
+                className="liquid-black px-6 py-3 rounded-sm border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all text-[#FDD000] font-black uppercase text-sm flex items-center"
                 data-testid="button-fitness-coach"
               >
                 <User className="w-5 h-5 mr-2" />
@@ -3421,7 +3421,7 @@ export default function Fitness() {
       {!membershipLoading && !hasMembership && !isTourActive && (
         <div className="min-h-[60vh] flex items-center justify-center">
           <div className="w-full max-w-md">
-            <div className="bg-[#FCD000] border-4 border-black rounded-sm shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-6 text-center mb-4">
+            <div className="bg-[#FDD000] border-4 border-black rounded-sm shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-6 text-center mb-4">
               <Lock className="w-12 h-12 mx-auto mb-4 text-black" />
               <h2 className="text-2xl font-black uppercase tracking-tight text-black mb-2">Fitness Community</h2>
               <p className="text-black font-semibold text-sm mb-1">This section is a paid add-on</p>
@@ -3429,23 +3429,23 @@ export default function Fitness() {
 
               <div className="bg-black rounded-sm p-4 mb-6 text-left space-y-2">
                 <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-[#FCD000] flex-shrink-0" />
+                  <ShieldCheck className="w-4 h-4 text-[#FDD000] flex-shrink-0" />
                   <span className="text-white text-sm">Full exercise library (330+ exercises)</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-[#FCD000] flex-shrink-0" />
+                  <ShieldCheck className="w-4 h-4 text-[#FDD000] flex-shrink-0" />
                   <span className="text-white text-sm">Custom workout plan builder</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-[#FCD000] flex-shrink-0" />
+                  <ShieldCheck className="w-4 h-4 text-[#FDD000] flex-shrink-0" />
                   <span className="text-white text-sm">Progress tracking & completion</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-[#FCD000] flex-shrink-0" />
+                  <ShieldCheck className="w-4 h-4 text-[#FDD000] flex-shrink-0" />
                   <span className="text-white text-sm">Pre-built plans by our fitness coach</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-[#FCD000] flex-shrink-0" />
+                  <ShieldCheck className="w-4 h-4 text-[#FDD000] flex-shrink-0" />
                   <span className="text-white text-sm">Workout reminders & scheduling</span>
                 </div>
               </div>
@@ -3458,7 +3458,7 @@ export default function Fitness() {
               <Button
                 onClick={() => subscribeMutation.mutate()}
                 disabled={subscribeMutation.isPending}
-                className="w-full h-14 bg-black text-[#FCD000] font-black text-lg uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(252,208,0,0.6)] hover:bg-zinc-900 hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
+                className="w-full h-14 bg-black text-[#FDD000] font-black text-lg uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(253,208,0,0.6)] hover:bg-zinc-900 hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
               >
                 <CreditCard className="w-5 h-5 mr-2" />
                 {subscribeMutation.isPending ? 'Loading...' : 'Join Fitness Community'}
@@ -3472,20 +3472,20 @@ export default function Fitness() {
       {/* Membership loading state */}
       {membershipLoading && (
         <div className="flex items-center justify-center h-40">
-          <Dumbbell className="w-8 h-8 text-[#FCD000] animate-pulse" />
+          <Dumbbell className="w-8 h-8 text-[#FDD000] animate-pulse" />
         </div>
       )}
 
       {/* Fitness Pillar Dialog — available to all users */}
       <Dialog open={showFitnessPillarDialog} onOpenChange={setShowFitnessPillarDialog}>
         <DialogContent className="w-[95vw] max-w-2xl h-auto max-h-[85svh] flex flex-col p-0 rounded-sm border-2 border-black bg-black">
-          <DialogHeader className="bg-[#FCD000] text-black px-6 py-4 border-b border-[#FCD000] flex-shrink-0">
+          <DialogHeader className="bg-[#FDD000] text-black px-6 py-4 border-b border-[#FDD000] flex-shrink-0">
             <DialogTitle className="text-xl font-black uppercase tracking-wide text-black relative z-10">
               Man Up God's Way Fitness Pillar
             </DialogTitle>
           </DialogHeader>
             <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 bg-black">
-              <h2 className="text-2xl font-black text-[#FCD000] uppercase tracking-wide text-center">
+              <h2 className="text-2xl font-black text-[#FDD000] uppercase tracking-wide text-center">
                 Strength for the Glory of God
               </h2>
               
@@ -3497,7 +3497,7 @@ export default function Fitness() {
                 Scripture is clear that the Christian life requires training, self-control, and perseverance. While godliness is of greatest value, Scripture also affirms the discipline of the body when it serves obedience and purpose.
               </p>
               
-              <blockquote className="bg-[#FCD000] text-black p-4 rounded-sm border-l-4 border-black overflow-hidden">
+              <blockquote className="bg-[#FDD000] text-black p-4 rounded-sm border-l-4 border-black overflow-hidden">
                 <p className="text-black font-medium italic relative z-10">
                   "For bodily training is only of little profit, but godliness is profitable for all things."
                 </p>
@@ -3510,7 +3510,7 @@ export default function Fitness() {
                 We do not train for vanity, comparison, or self-glory. We train to honor God, keep our word, and lead our families with strength, energy, and consistency.
               </p>
               
-              <blockquote className="bg-[#FCD000] text-black p-4 rounded-sm border-l-4 border-black overflow-hidden">
+              <blockquote className="bg-[#FDD000] text-black p-4 rounded-sm border-l-4 border-black overflow-hidden">
                 <p className="text-black font-medium italic relative z-10">
                   "Do you not know that your body is a temple of the Holy Spirit who is in you, whom you have from God, and that you are not your own?"
                 </p>
@@ -3523,7 +3523,7 @@ export default function Fitness() {
                 Physical discipline reinforces spiritual discipline. A man who cannot govern his body will struggle to govern his habits, his home, and his calling. Strength training, proper nutrition, and daily movement are expressions of self-control, not obsession.
               </p>
               
-              <blockquote className="bg-[#FCD000] text-black p-4 rounded-sm border-l-4 border-black overflow-hidden">
+              <blockquote className="bg-[#FDD000] text-black p-4 rounded-sm border-l-4 border-black overflow-hidden">
                 <p className="text-black font-medium italic relative z-10">
                   "Everyone who competes in the games exercises self-control in all things."
                 </p>
@@ -3536,7 +3536,7 @@ export default function Fitness() {
                 This pillar is about becoming dependable men. Men who show up. Men who endure. Men who are not ruled by comfort, excuses, or excess. Men who understand that faithfulness is proven in daily obedience.
               </p>
               
-              <blockquote className="bg-[#FCD000] text-black p-4 rounded-sm border-l-4 border-black overflow-hidden">
+              <blockquote className="bg-[#FDD000] text-black p-4 rounded-sm border-l-4 border-black overflow-hidden">
                 <p className="text-black font-medium italic relative z-10">
                   "But I discipline my body and make it my slave."
                 </p>
@@ -3555,7 +3555,7 @@ export default function Fitness() {
         {/* Fitness Coach Dialog */}
         <Dialog open={showFitnessCoachDialog} onOpenChange={setShowFitnessCoachDialog}>
           <DialogContent className="w-[95vw] max-w-2xl h-auto max-h-[85svh] flex flex-col p-0 rounded-sm border-2 border-black bg-black">
-            <DialogHeader className="bg-[#FCD000] text-black px-6 py-4 border-b border-[#FCD000] flex-shrink-0">
+            <DialogHeader className="bg-[#FDD000] text-black px-6 py-4 border-b border-[#FDD000] flex-shrink-0">
               <DialogTitle className="text-xl font-black uppercase tracking-wide text-black relative z-10">
                 Meet Your Fitness Coach
               </DialogTitle>
@@ -3563,14 +3563,14 @@ export default function Fitness() {
             <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 bg-black">
               {/* Coach Photo and Name */}
               <div className="text-center">
-                <div className="w-40 h-40 mx-auto mb-4 rounded-sm border-4 border-[#FCD000] overflow-hidden shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]">
+                <div className="w-40 h-40 mx-auto mb-4 rounded-sm border-4 border-[#FDD000] overflow-hidden shadow-[4px_4px_0px_0px_rgba(253,208,0,1)]">
                   <img 
                     src={seanMcManusPhoto} 
                     alt="Sean McManus" 
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <h2 className="text-2xl font-black text-[#FCD000] uppercase tracking-wide">
+                <h2 className="text-2xl font-black text-[#FDD000] uppercase tracking-wide">
                   Sean McManus
                 </h2>
                 <p className="text-white font-medium mt-1">
@@ -3586,20 +3586,20 @@ export default function Fitness() {
                 He helps men lose fat, build strength, and reclaim confidence without extremes, gimmicks, or confusion. His coaching is built on proven fundamentals and steady accountability through strength training, protein-focused nutrition, and disciplined daily habits that actually fit real life.
               </p>
               
-              <div className="bg-[#FCD000] text-black p-4 rounded-sm border-l-4 border-black overflow-hidden">
+              <div className="bg-[#FDD000] text-black p-4 rounded-sm border-l-4 border-black overflow-hidden">
                 <p className="text-black font-bold relative z-10">
                   Sean believes the body is not separate from faith. It is one of the primary tools God uses to shape discipline, consistency, and leadership in a man's life.
                 </p>
               </div>
               
               <div className="space-y-2">
-                <p className="text-[#FCD000] font-black uppercase">This is not about vanity.</p>
+                <p className="text-[#FDD000] font-black uppercase">This is not about vanity.</p>
                 <p className="text-white leading-relaxed">
                   It is about honoring God, keeping your word, and leading your family with strength, energy, and conviction.
                 </p>
               </div>
               
-              <div className="bg-[#FCD000] text-black p-4 rounded-sm border-l-4 border-black overflow-hidden">
+              <div className="bg-[#FDD000] text-black p-4 rounded-sm border-l-4 border-black overflow-hidden">
                 <p className="text-black font-bold relative z-10">
                   If you are done starting over and ready to become a man others can rely on, Sean would be honored to coach you.
                 </p>
@@ -3613,9 +3613,9 @@ export default function Fitness() {
 
         {/* Membership Status Banner */}
         {membershipData?.membership && (
-          <div className="bg-zinc-900 border border-[#FCD000]/30 rounded-sm px-4 py-3 flex items-center justify-between">
+          <div className="bg-zinc-900 border border-[#FDD000]/30 rounded-sm px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-[#FCD000]" />
+              <ShieldCheck className="w-4 h-4 text-[#FDD000]" />
               <span className="text-white text-sm font-bold">Fitness Community Member</span>
               {membershipData.membership.cancelAtPeriodEnd && (
                 <Badge className="bg-red-900 text-red-200 text-xs">Cancels {membershipData.membership.currentPeriodEnd ? new Date(membershipData.membership.currentPeriodEnd).toLocaleDateString() : ''}</Badge>
@@ -3639,40 +3639,40 @@ export default function Fitness() {
           onValueChange={setActiveFitnessTab}
           className="w-full"
         >
-          <TabsList className="grid grid-cols-3 w-full h-auto p-2 bg-transparent gap-2 border-2 border-[#FCD000] rounded-sm">
-            <TabsTrigger value="workout" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+          <TabsList className="grid grid-cols-3 w-full h-auto p-2 bg-transparent gap-2 border-2 border-[#FDD000] rounded-sm">
+            <TabsTrigger value="workout" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FDD000] data-[state=active]:border-[#FDD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
               <Dumbbell className="w-5 h-5" />
               Workout
             </TabsTrigger>
-            <TabsTrigger value="community" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+            <TabsTrigger value="community" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FDD000] data-[state=active]:border-[#FDD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
               <Users className="w-5 h-5" />
               Community
             </TabsTrigger>
-            <TabsTrigger value="exercises" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+            <TabsTrigger value="exercises" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FDD000] data-[state=active]:border-[#FDD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
               <Search className="w-5 h-5" />
               Exercises
             </TabsTrigger>
-            <TabsTrigger value="favorites" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+            <TabsTrigger value="favorites" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FDD000] data-[state=active]:border-[#FDD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
               <Heart className="w-5 h-5" />
               Favorites
             </TabsTrigger>
-            <TabsTrigger value="pre-built-plans" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+            <TabsTrigger value="pre-built-plans" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FDD000] data-[state=active]:border-[#FDD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
               <BookOpen className="w-5 h-5" />
               Plans
             </TabsTrigger>
-            <TabsTrigger value="my-plans" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+            <TabsTrigger value="my-plans" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FDD000] data-[state=active]:border-[#FDD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
               <List className="w-5 h-5" />
               My Plans
             </TabsTrigger>
-            <TabsTrigger value="nutrition" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+            <TabsTrigger value="nutrition" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FDD000] data-[state=active]:border-[#FDD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
               <Apple className="w-5 h-5" />
               Nutrition
             </TabsTrigger>
-            <TabsTrigger value="intake" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+            <TabsTrigger value="intake" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FDD000] data-[state=active]:border-[#FDD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
               <Utensils className="w-5 h-5" />
               Intake
             </TabsTrigger>
-            <TabsTrigger value="health" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FCD000] data-[state=active]:border-[#FCD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
+            <TabsTrigger value="health" className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-sm border-2 border-black bg-zinc-900 data-[state=active]:bg-[#FDD000] data-[state=active]:border-[#FDD000] data-[state=active]:text-black text-white font-black uppercase text-[10px] tracking-wide h-auto">
               <Activity className="w-5 h-5" />
               Health
             </TabsTrigger>
@@ -3682,9 +3682,9 @@ export default function Fitness() {
           <TabsContent value="workout" className="space-y-6">
             {/* Today's Workout Header */}
             <div className="flex items-center mb-6 liquid-black p-4 rounded-sm border-2 border-black overflow-hidden">
-              <Dumbbell className="w-6 h-6 text-[#FCD000] mr-2 relative z-10" />
+              <Dumbbell className="w-6 h-6 text-[#FDD000] mr-2 relative z-10" />
               <h2 className="text-xl font-black text-white uppercase tracking-wide relative z-10">Today's Workout</h2>
-              <div className="ml-auto text-sm text-[#FCD000] font-bold relative z-10">
+              <div className="ml-auto text-sm text-[#FDD000] font-bold relative z-10">
                 {getCurrentDayOfWeek().charAt(0).toUpperCase() + getCurrentDayOfWeek().slice(1)}
               </div>
             </div>
@@ -3694,7 +3694,7 @@ export default function Fitness() {
               
               if (todaysWorkouts.length === 0) {
                 return (
-                  <div className="text-center py-12 bg-[#FCD000] text-black rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+                  <div className="text-center py-12 bg-[#FDD000] text-black rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
                     <Calendar className="w-12 h-12 mx-auto text-black mb-4 relative z-10" />
                     <h3 className="text-lg font-black text-black mb-2 uppercase relative z-10">No Workout Today</h3>
                     <p className="text-black relative z-10">
@@ -3721,7 +3721,7 @@ export default function Fitness() {
                     return (
                       <div
                         key={plan.id}
-                        className="liquid-black rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(252,208,0,0.6)] p-5"
+                        className="liquid-black rounded-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(253,208,0,0.6)] p-5"
                         data-testid={`card-todays-plan-${plan.id}`}
                       >
                         <div className="flex items-start justify-between mb-3">
@@ -3735,13 +3735,13 @@ export default function Fitness() {
                             <h3 className="text-lg font-black text-white uppercase tracking-tight" data-testid={`text-plan-name-${plan.id}`}>
                               {plan.name}
                             </h3>
-                            <p className="text-xs font-bold text-[#FCD000] uppercase tracking-wider mt-1">
+                            <p className="text-xs font-bold text-[#FDD000] uppercase tracking-wider mt-1">
                               Week {currentWeek} of 4 • {exercises.length} exercise{exercises.length === 1 ? '' : 's'}
                             </p>
                           </div>
                           <div className="flex items-center gap-1 bg-black/40 rounded-sm px-2 py-1 border border-zinc-700">
-                            <Clock className="w-3 h-3 text-[#FCD000]" />
-                            <span className="text-xs font-black text-[#FCD000]">~{estimatedMinutes}m</span>
+                            <Clock className="w-3 h-3 text-[#FDD000]" />
+                            <span className="text-xs font-black text-[#FDD000]">~{estimatedMinutes}m</span>
                           </div>
                         </div>
 
@@ -3750,10 +3750,10 @@ export default function Fitness() {
                             const weekday = (ex.daysOfWeek && ex.daysOfWeek[0]) || getCurrentDayOfWeek();
                             return (
                               <div key={ex.id} className="flex items-center gap-2 text-sm text-white/90">
-                                <span className="text-[#FCD000] font-black w-5">{i + 1}.</span>
+                                <span className="text-[#FDD000] font-black w-5">{i + 1}.</span>
                                 <span className="flex-1 truncate">{ex.exerciseName}</span>
                                 <span
-                                  className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm bg-[#FCD000]/15 text-[#FCD000] border border-[#FCD000]/40"
+                                  className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm bg-[#FDD000]/15 text-[#FDD000] border border-[#FDD000]/40"
                                   data-testid={`badge-weekday-${ex.id}`}
                                 >
                                   {weekday.slice(0, 3)}
@@ -3773,7 +3773,7 @@ export default function Fitness() {
                               setDetailExercises(exercises);
                             }}
                             variant="outline"
-                            className="flex-1 border-2 border-[#FCD000]/60 text-[#FCD000] hover:bg-[#FCD000]/10 font-black uppercase tracking-wide"
+                            className="flex-1 border-2 border-[#FDD000]/60 text-[#FDD000] hover:bg-[#FDD000]/10 font-black uppercase tracking-wide"
                             data-testid={`button-view-plan-${plan.id}`}
                           >
                             View Details
@@ -3784,7 +3784,7 @@ export default function Fitness() {
                               setPlayerExercises(exercises);
                               setPlayerOpen(true);
                             }}
-                            className="flex-1 bg-[#FCD000] hover:bg-[#FCD000]/90 text-black font-black uppercase tracking-wide border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                            className="flex-1 bg-[#FDD000] hover:bg-[#FDD000]/90 text-black font-black uppercase tracking-wide border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                             data-testid={`button-start-workout-${plan.id}`}
                           >
                             <Play className="w-5 h-5 mr-2 fill-black" />
@@ -4007,7 +4007,7 @@ export default function Fitness() {
             {/* Admin-created plans for purchase */}
             {adminPlans.length > 0 && (
               <div className="space-y-4">
-                <h3 className="text-lg font-black text-[#FCD000] uppercase tracking-wide border-b border-[#FCD000]/30 pb-2">
+                <h3 className="text-lg font-black text-[#FDD000] uppercase tracking-wide border-b border-[#FDD000]/30 pb-2">
                   Fitness Plans by Coach
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -4015,7 +4015,7 @@ export default function Fitness() {
                     const alreadyPurchased = purchasedPlanIds.includes(plan.id);
                     const isFree = !plan.isPurchasable;
                     return (
-                      <div key={plan.id} className="bg-zinc-900 border-2 border-[#FCD000]/30 rounded-sm overflow-hidden">
+                      <div key={plan.id} className="bg-zinc-900 border-2 border-[#FDD000]/30 rounded-sm overflow-hidden">
                         {plan.thumbnailUrl && (
                           <img src={plan.thumbnailUrl} alt={plan.title} className="w-full h-32 object-cover" />
                         )}
@@ -4025,9 +4025,9 @@ export default function Fitness() {
                             {isFree ? (
                               <Badge className="bg-green-600 text-white text-xs flex-shrink-0">Included</Badge>
                             ) : alreadyPurchased ? (
-                              <Badge className="bg-[#FCD000] text-black text-xs flex-shrink-0">Purchased</Badge>
+                              <Badge className="bg-[#FDD000] text-black text-xs flex-shrink-0">Purchased</Badge>
                             ) : (
-                              <Badge className="bg-black border border-[#FCD000] text-[#FCD000] text-xs flex-shrink-0">
+                              <Badge className="bg-black border border-[#FDD000] text-[#FDD000] text-xs flex-shrink-0">
                                 ${((plan.price || 0) / 100).toFixed(2)}
                               </Badge>
                             )}
@@ -4036,13 +4036,13 @@ export default function Fitness() {
                             <p className="text-white/60 text-xs mb-3 line-clamp-2">{plan.description}</p>
                           )}
                           <div className="flex flex-wrap gap-1 mb-3">
-                            <Badge variant="outline" className="text-[#FCD000] border-[#FCD000]/40 text-xs capitalize">{plan.difficulty}</Badge>
+                            <Badge variant="outline" className="text-[#FDD000] border-[#FDD000]/40 text-xs capitalize">{plan.difficulty}</Badge>
                             <Badge variant="outline" className="text-white/50 border-white/20 text-xs capitalize">{plan.category}</Badge>
                             {plan.duration && <Badge variant="outline" className="text-white/50 border-white/20 text-xs">{plan.duration} min</Badge>}
                           </div>
                           {(isFree || alreadyPurchased) && plan.downloadUrl ? (
                             <a href={plan.downloadUrl} download={plan.downloadFileName || plan.title} target="_blank" rel="noreferrer">
-                              <Button size="sm" className="w-full bg-[#FCD000] text-black font-black border-2 border-black">
+                              <Button size="sm" className="w-full bg-[#FDD000] text-black font-black border-2 border-black">
                                 <Download className="w-4 h-4 mr-2" />
                                 Download Plan
                               </Button>
@@ -4050,7 +4050,7 @@ export default function Fitness() {
                           ) : !isFree && !alreadyPurchased ? (
                             <Button
                               size="sm"
-                              className="w-full bg-[#FCD000] text-black font-black border-2 border-black"
+                              className="w-full bg-[#FDD000] text-black font-black border-2 border-black"
                               disabled={purchasingPlanId === plan.id}
                               onClick={async () => {
                                 setPurchasingPlanId(plan.id);
@@ -4074,15 +4074,15 @@ export default function Fitness() {
                     );
                   })}
                 </div>
-                <div className="border-t border-[#FCD000]/30 pt-4">
-                  <h3 className="text-lg font-black text-[#FCD000] uppercase tracking-wide pb-2">Build Your Own Plan</h3>
+                <div className="border-t border-[#FDD000]/30 pt-4">
+                  <h3 className="text-lg font-black text-[#FDD000] uppercase tracking-wide pb-2">Build Your Own Plan</h3>
                 </div>
               </div>
             )}
             {/* Plan Builder — all options in one box */}
             <div className="rounded-sm border-2 border-zinc-700 overflow-hidden">
               {/* Box header */}
-              <div className="bg-[#FCD000] px-4 py-3 border-b-2 border-black">
+              <div className="bg-[#FDD000] px-4 py-3 border-b-2 border-black">
                 <div className="flex items-center gap-2">
                   <Dumbbell className="w-4 h-4 text-black" />
                   <h2 className="font-black text-black uppercase tracking-tight text-base">Build Your Workout Plan</h2>
@@ -4163,7 +4163,7 @@ export default function Fitness() {
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Available Equipment</p>
                     {selectedPlanEquipment.length > 0 && (
-                      <span className="text-[10px] font-black text-[#FCD000] uppercase">
+                      <span className="text-[10px] font-black text-[#FDD000] uppercase">
                         {selectedPlanEquipment.length} selected
                       </span>
                     )}
@@ -4185,7 +4185,7 @@ export default function Fitness() {
                                 setSelectedPlanEquipment(selectedPlanEquipment.filter(e => e !== equipment));
                               }
                             }}
-                            className="border-zinc-500 data-[state=checked]:bg-[#FCD000] data-[state=checked]:border-[#FCD000]"
+                            className="border-zinc-500 data-[state=checked]:bg-[#FDD000] data-[state=checked]:border-[#FDD000]"
                             data-testid={`checkbox-equipment-${equipment}`}
                           />
                           <label
@@ -4258,7 +4258,7 @@ export default function Fitness() {
                       <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
                         Workout Days
                       </p>
-                      <span className="text-[10px] font-black text-[#FCD000] uppercase">
+                      <span className="text-[10px] font-black text-[#FDD000] uppercase">
                         {selectedDays.length} / {selectedFrequency} selected
                       </span>
                     </div>
@@ -4292,7 +4292,7 @@ export default function Fitness() {
                                 setSelectedDays(prev => prev.filter(d => d !== day.value));
                               }
                             }}
-                            className="border-zinc-500 data-[state=checked]:bg-[#FCD000] data-[state=checked]:border-[#FCD000]"
+                            className="border-zinc-500 data-[state=checked]:bg-[#FDD000] data-[state=checked]:border-[#FDD000]"
                             data-testid={`checkbox-workout-day-${day.value}`}
                           />
                           <label htmlFor={`day-${day.value}`} className="text-sm text-white cursor-pointer">
@@ -4366,7 +4366,7 @@ export default function Fitness() {
                         <Button
                           onClick={() => handleCreatePlanFromPrebuilt(plan)}
                           disabled={createPrebuiltPlanMutation.isPending}
-                          className="bg-black hover:bg-black/80 text-[#FCD000] font-bold"
+                          className="bg-black hover:bg-black/80 text-[#FDD000] font-bold"
                           data-testid={`button-create-prebuilt-plan-${index}`}
                         >
                           {createPrebuiltPlanMutation.isPending ? "Creating..." : "Create This Plan"}
@@ -4437,7 +4437,7 @@ export default function Fitness() {
               </div>
               <Link href="/create-plan">
                 <Button
-                  className="bg-[#FCD000] hover:bg-yellow-300 text-black font-black uppercase text-xs tracking-wide rounded-sm border-2 border-black"
+                  className="bg-[#FDD000] hover:bg-yellow-300 text-black font-black uppercase text-xs tracking-wide rounded-sm border-2 border-black"
                   data-testid="button-create-plan"
                 >
                   <Plus className="w-4 h-4 mr-1" />
@@ -4448,9 +4448,9 @@ export default function Fitness() {
 
             {/* Create Plan Modal */}
             {showCreatePlan && (
-              <div className="bg-zinc-900 rounded-sm border-2 border-[#FCD000]/60 p-4 space-y-3">
+              <div className="bg-zinc-900 rounded-sm border-2 border-[#FDD000]/60 p-4 space-y-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="w-1 h-5 bg-[#FCD000] rounded-full" />
+                  <div className="w-1 h-5 bg-[#FDD000] rounded-full" />
                   <h3 className="font-black text-white uppercase tracking-tight">New Fitness Plan</h3>
                 </div>
                 <div>
@@ -4459,7 +4459,7 @@ export default function Fitness() {
                     value={newPlanName}
                     onChange={(e) => setNewPlanName(e.target.value)}
                     placeholder="Enter plan name..."
-                    className="bg-zinc-800 border-2 border-zinc-700 text-white placeholder:text-white/30 rounded-sm focus:border-[#FCD000]"
+                    className="bg-zinc-800 border-2 border-zinc-700 text-white placeholder:text-white/30 rounded-sm focus:border-[#FDD000]"
                     data-testid="input-plan-name"
                   />
                 </div>
@@ -4469,7 +4469,7 @@ export default function Fitness() {
                     value={newPlanDescription}
                     onChange={(e) => setNewPlanDescription(e.target.value)}
                     placeholder="Enter plan description..."
-                    className="bg-zinc-800 border-2 border-zinc-700 text-white placeholder:text-white/30 rounded-sm focus:border-[#FCD000]"
+                    className="bg-zinc-800 border-2 border-zinc-700 text-white placeholder:text-white/30 rounded-sm focus:border-[#FDD000]"
                     data-testid="input-plan-description"
                   />
                 </div>
@@ -4477,7 +4477,7 @@ export default function Fitness() {
                   <Button
                     onClick={handleCreatePlan}
                     disabled={createPlanMutation.isPending}
-                    className="bg-[#FCD000] text-black font-black uppercase text-xs tracking-wide rounded-sm border-2 border-black hover:bg-yellow-300"
+                    className="bg-[#FDD000] text-black font-black uppercase text-xs tracking-wide rounded-sm border-2 border-black hover:bg-yellow-300"
                     data-testid="button-save-plan"
                   >
                     {createPlanMutation.isPending ? 'Creating...' : 'Create Plan'}
@@ -4508,12 +4508,12 @@ export default function Fitness() {
                 {fitnessPlans.map((plan: FitnessPlan) => (
                   <div key={plan.id} className="bg-zinc-900 rounded-sm border-2 border-zinc-700 overflow-hidden">
                     {/* Gold accent bar */}
-                    <div className="h-1 bg-[#FCD000]" />
+                    <div className="h-1 bg-[#FDD000]" />
                     <div className="p-4">
                       <div className="flex items-start justify-between mb-1.5">
                         <h3 className="font-black text-white text-base leading-tight flex-1 mr-2">{plan.name}</h3>
                         {plan.isPublic && (
-                          <Badge className="text-[10px] bg-[#FCD000]/20 text-[#FCD000] font-bold rounded-sm border border-[#FCD000]/40 flex-shrink-0">Public</Badge>
+                          <Badge className="text-[10px] bg-[#FDD000]/20 text-[#FDD000] font-bold rounded-sm border border-[#FDD000]/40 flex-shrink-0">Public</Badge>
                         )}
                       </div>
                       {plan.description && (
@@ -4521,11 +4521,11 @@ export default function Fitness() {
                       )}
                       <div className="flex items-center gap-4 text-xs font-semibold text-white/40">
                         <span className="flex items-center gap-1.5">
-                          <List className="w-3.5 h-3.5 text-[#FCD000]/60" />
+                          <List className="w-3.5 h-3.5 text-[#FDD000]/60" />
                           {plan.exercises?.length || 0} exercises
                         </span>
                         <span className="flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5 text-[#FCD000]/60" />
+                          <Calendar className="w-3.5 h-3.5 text-[#FDD000]/60" />
                           {format(new Date(plan.createdAt), 'MMM d, yyyy')}
                         </span>
                       </div>
@@ -4534,14 +4534,14 @@ export default function Fitness() {
                     <div className="flex border-t-2 border-zinc-700">
                       <button
                         onClick={() => handleViewPlan(plan)}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-black uppercase tracking-wide text-white/70 hover:text-[#FCD000] hover:bg-zinc-800 transition-colors border-r border-zinc-700"
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-black uppercase tracking-wide text-white/70 hover:text-[#FDD000] hover:bg-zinc-800 transition-colors border-r border-zinc-700"
                         data-testid={`button-view-plan-${plan.id}`}
                       >
                         <BookOpen className="w-3.5 h-3.5" /> View
                       </button>
                       <Link href={`/edit-plan/${plan.id}`} className="flex-1">
                         <button
-                          className="w-full flex items-center justify-center gap-1.5 py-2.5 text-xs font-black uppercase tracking-wide text-white/70 hover:text-[#FCD000] hover:bg-zinc-800 transition-colors border-r border-zinc-700"
+                          className="w-full flex items-center justify-center gap-1.5 py-2.5 text-xs font-black uppercase tracking-wide text-white/70 hover:text-[#FDD000] hover:bg-zinc-800 transition-colors border-r border-zinc-700"
                           data-testid={`button-edit-plan-${plan.id}`}
                         >
                           <Edit className="w-3.5 h-3.5" /> Edit
@@ -4567,7 +4567,7 @@ export default function Fitness() {
 
             {/* Post Composer */}
             <div className="rounded-sm border-2 border-zinc-700 overflow-hidden">
-              <div className="bg-[#FCD000] px-4 py-3 border-b-2 border-black">
+              <div className="bg-[#FDD000] px-4 py-3 border-b-2 border-black">
                 <div className="flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-black" />
                   <h2 className="font-black text-black uppercase tracking-tight text-base">Post to the Community</h2>
@@ -4587,7 +4587,7 @@ export default function Fitness() {
                       onClick={() => setCommunityCategory(cat.key)}
                       className={`text-xs font-black uppercase px-3 py-1 rounded-sm border-2 transition-colors ${
                         communityCategory === cat.key
-                          ? 'bg-[#FCD000] border-[#FCD000] text-black'
+                          ? 'bg-[#FDD000] border-[#FDD000] text-black'
                           : 'bg-transparent border-zinc-600 text-zinc-400 hover:border-zinc-400'
                       }`}
                     >
@@ -4627,7 +4627,7 @@ export default function Fitness() {
 
                 {/* Action row */}
                 <div className="flex items-center justify-between">
-                  <label className="cursor-pointer flex items-center gap-2 text-zinc-400 hover:text-[#FCD000] transition-colors">
+                  <label className="cursor-pointer flex items-center gap-2 text-zinc-400 hover:text-[#FDD000] transition-colors">
                     <ImagePlus className="w-5 h-5" />
                     <span className="text-xs font-black uppercase">
                       {communityUploading ? 'Uploading...' : 'Add Photo / Video'}
@@ -4644,7 +4644,7 @@ export default function Fitness() {
                   <Button
                     onClick={handleSubmitCommunityPost}
                     disabled={!communityPostText.trim() || createPostMutation.isPending}
-                    className="bg-[#FCD000] text-black font-black border-2 border-black hover:bg-yellow-400 uppercase text-xs gap-1"
+                    className="bg-[#FDD000] text-black font-black border-2 border-black hover:bg-yellow-400 uppercase text-xs gap-1"
                     size="sm"
                   >
                     <Send className="w-3 h-3" />
@@ -4743,10 +4743,10 @@ export default function Fitness() {
                         <button
                           onClick={() => likePostMutation.mutate(post.id)}
                           className={`flex items-center gap-1 text-xs font-black uppercase transition-colors ${
-                            post.likedByMe ? 'text-[#FCD000]' : 'text-zinc-500 hover:text-[#FCD000]'
+                            post.likedByMe ? 'text-[#FDD000]' : 'text-zinc-500 hover:text-[#FDD000]'
                           }`}
                         >
-                          <Heart className={`w-4 h-4 ${post.likedByMe ? 'fill-[#FCD000]' : ''}`} />
+                          <Heart className={`w-4 h-4 ${post.likedByMe ? 'fill-[#FDD000]' : ''}`} />
                           <span>Amen{post.likes > 0 ? ` ${post.likes}` : ''}</span>
                         </button>
 
@@ -4846,9 +4846,9 @@ export default function Fitness() {
           <TabsContent value="nutrition" className="space-y-4">
             {/* Header */}
             <div className="flex items-center mb-4 liquid-black p-4 rounded-sm border-2 border-black overflow-hidden">
-              <Apple className="w-6 h-6 text-[#FCD000] mr-2 relative z-10" />
+              <Apple className="w-6 h-6 text-[#FDD000] mr-2 relative z-10" />
               <h2 className="text-xl font-black text-white uppercase tracking-wide relative z-10">Nutrition Lookup</h2>
-              <span className="ml-auto text-xs text-[#FCD000]/70 relative z-10">Powered by USDA FDC</span>
+              <span className="ml-auto text-xs text-[#FDD000]/70 relative z-10">Powered by USDA FDC</span>
             </div>
 
             {/* Search form */}
@@ -4866,12 +4866,12 @@ export default function Fitness() {
                 value={nutritionInputQuery}
                 onChange={(e) => setNutritionInputQuery(e.target.value)}
                 placeholder="Search for a food (e.g. chicken breast, oats…)"
-                className="flex-1 bg-zinc-900 border-2 border-white/20 text-white placeholder:text-white/40 focus:border-[#FCD000] rounded-sm"
+                className="flex-1 bg-zinc-900 border-2 border-white/20 text-white placeholder:text-white/40 focus:border-[#FDD000] rounded-sm"
               />
               <Button
                 type="submit"
                 disabled={nutritionSearchLoading}
-                className="bg-[#FCD000] text-black font-black uppercase hover:bg-[#FCD000]/90 rounded-sm border-2 border-black shrink-0"
+                className="bg-[#FDD000] text-black font-black uppercase hover:bg-[#FDD000]/90 rounded-sm border-2 border-black shrink-0"
               >
                 {nutritionSearchLoading ? (
                   <span className="flex items-center gap-1"><span className="animate-spin">⏳</span>Searching…</span>
@@ -4883,7 +4883,7 @@ export default function Fitness() {
 
             {/* Spell-correction notice */}
             {nutritionSearchData?.wasChanged && !selectedFdcId && (
-              <div className="flex items-center gap-2 bg-[#FCD000]/10 border border-[#FCD000]/40 rounded-sm px-3 py-2 text-sm text-[#FCD000]">
+              <div className="flex items-center gap-2 bg-[#FDD000]/10 border border-[#FDD000]/40 rounded-sm px-3 py-2 text-sm text-[#FDD000]">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>Showing results for <strong>"{nutritionSearchData.correctedQuery}"</strong> (corrected from "{nutritionSearchData.originalQuery}")</span>
               </div>
@@ -4904,7 +4904,7 @@ export default function Fitness() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setSelectedFdcId(null)}
-                  className="text-[#FCD000] hover:text-[#FCD000]/80 hover:bg-white/10 flex items-center gap-1 px-2"
+                  className="text-[#FDD000] hover:text-[#FDD000]/80 hover:bg-white/10 flex items-center gap-1 px-2"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Back to results
@@ -4921,7 +4921,7 @@ export default function Fitness() {
                 {nutritionFoodDetail && !nutritionDetailLoading && (
                   <div className="bg-zinc-900 border-2 border-white/10 rounded-sm overflow-hidden">
                     {/* Food header */}
-                    <div className="bg-[#FCD000] px-4 py-3 border-b-2 border-black">
+                    <div className="bg-[#FDD000] px-4 py-3 border-b-2 border-black">
                       <h3 className="font-black text-black uppercase text-sm leading-tight">
                         {nutritionFoodDetail.description}
                       </h3>
@@ -4959,7 +4959,7 @@ export default function Fitness() {
                                   <td className={`py-1.5 text-white/80 ${isIndented ? 'pl-5' : ''} ${isBold ? 'font-bold text-white' : ''}`}>
                                     {n.name}
                                   </td>
-                                  <td className={`py-1.5 text-right tabular-nums ${isBold ? 'font-bold text-[#FCD000]' : 'text-white/70'}`}>
+                                  <td className={`py-1.5 text-right tabular-nums ${isBold ? 'font-bold text-[#FDD000]' : 'text-white/70'}`}>
                                     {n.amount !== null ? `${Math.round(n.amount * 10) / 10} ${n.unitName}` : '—'}
                                   </td>
                                 </tr>
@@ -4984,7 +4984,7 @@ export default function Fitness() {
                           const calories = nutritionFoodDetail.nutrients.find((n: any) => n.id === 1008)?.amount ?? 0;
                           handleOpenAddIntake({ foodName: nutritionFoodDetail.description, caloriesPerServing: Math.round(calories) });
                         }}
-                        className="w-full bg-[#FCD000] text-black font-black uppercase hover:bg-[#FCD000]/90 rounded-sm border-2 border-black flex items-center justify-center gap-2"
+                        className="w-full bg-[#FDD000] text-black font-black uppercase hover:bg-[#FDD000]/90 rounded-sm border-2 border-black flex items-center justify-center gap-2"
                       >
                         <PlusCircle className="w-4 h-4" />
                         Add to Intake
@@ -5023,9 +5023,9 @@ export default function Fitness() {
                       <button
                         key={food.fdcId}
                         onClick={() => setSelectedFdcId(food.fdcId)}
-                        className="w-full text-left flex items-center gap-3 bg-zinc-900 border border-white/10 rounded-sm px-3 py-3 hover:border-[#FCD000]/50 hover:bg-zinc-800 transition-colors"
+                        className="w-full text-left flex items-center gap-3 bg-zinc-900 border border-white/10 rounded-sm px-3 py-3 hover:border-[#FDD000]/50 hover:bg-zinc-800 transition-colors"
                       >
-                        <div className="w-9 h-9 bg-[#FCD000] rounded-sm flex items-center justify-center shrink-0">
+                        <div className="w-9 h-9 bg-[#FDD000] rounded-sm flex items-center justify-center shrink-0">
                           <Apple className="w-5 h-5 text-black" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -5042,7 +5042,7 @@ export default function Fitness() {
                               {food.dataType}
                             </Badge>
                             {food.calories !== null && (
-                              <span className="text-[10px] text-[#FCD000]/80 font-bold">
+                              <span className="text-[10px] text-[#FDD000]/80 font-bold">
                                 {Math.round(food.calories)} kcal
                               </span>
                             )}
@@ -5075,12 +5075,12 @@ export default function Fitness() {
           <TabsContent value="intake" className="space-y-4">
             {/* Header */}
             <div className="flex items-center liquid-black p-4 rounded-sm border-2 border-black overflow-hidden">
-              <Utensils className="w-6 h-6 text-[#FCD000] mr-2 relative z-10" />
+              <Utensils className="w-6 h-6 text-[#FDD000] mr-2 relative z-10" />
               <h2 className="text-xl font-black text-white uppercase tracking-wide relative z-10">Food Intake Log</h2>
               <Button
                 onClick={() => handleOpenAddIntake()}
                 size="sm"
-                className="ml-auto bg-[#FCD000] text-black font-black uppercase hover:bg-[#FCD000]/90 rounded-sm border-2 border-black flex items-center gap-1 relative z-10"
+                className="ml-auto bg-[#FDD000] text-black font-black uppercase hover:bg-[#FDD000]/90 rounded-sm border-2 border-black flex items-center gap-1 relative z-10"
               >
                 <PlusCircle className="w-4 h-4" />
                 Add Food
@@ -5095,7 +5095,7 @@ export default function Fitness() {
                   onClick={() => setIntakePeriod(p)}
                   className={`flex-1 py-2 text-xs font-black uppercase tracking-wide rounded-sm border-2 border-black transition-colors ${
                     intakePeriod === p
-                      ? 'bg-[#FCD000] text-black'
+                      ? 'bg-[#FDD000] text-black'
                       : 'liquid-black text-white/70 hover:text-white'
                   }`}
                 >
@@ -5107,14 +5107,14 @@ export default function Fitness() {
             {/* Meal Reminders card */}
             <div className="liquid-black border-2 border-zinc-700 rounded-sm overflow-hidden">
               <div className="flex items-center px-4 py-3 border-b border-zinc-700">
-                <Bell className="w-5 h-5 text-[#FCD000] mr-2" />
+                <Bell className="w-5 h-5 text-[#FDD000] mr-2" />
                 <h3 className="text-white font-black uppercase tracking-wide text-sm flex-1">Meal Reminders</h3>
                 <button
                   onClick={() => {
                     if (showMealReminderForm) setNewMealLabel('');
                     setShowMealReminderForm(!showMealReminderForm);
                   }}
-                  className="text-[#FCD000] hover:text-[#FCD000]/80 transition-colors"
+                  className="text-[#FDD000] hover:text-[#FDD000]/80 transition-colors"
                 >
                   <Plus className="w-5 h-5" />
                 </button>
@@ -5132,7 +5132,7 @@ export default function Fitness() {
                           onClick={() => setNewMealType(type)}
                           className={`px-3 py-1 rounded-sm text-[11px] font-black uppercase tracking-wide transition-colors ${
                             newMealType === type
-                              ? 'bg-[#FCD000] text-black'
+                              ? 'bg-[#FDD000] text-black'
                               : 'bg-zinc-800 text-zinc-400 border border-zinc-600 hover:border-zinc-400'
                           }`}
                         >
@@ -5174,7 +5174,7 @@ export default function Fitness() {
                         }
                       }}
                       disabled={!newMealTime || addMealReminderMutation.isPending}
-                      className="flex-1 bg-[#FCD000] text-black font-black text-xs uppercase py-1.5 rounded-sm disabled:opacity-50"
+                      className="flex-1 bg-[#FDD000] text-black font-black text-xs uppercase py-1.5 rounded-sm disabled:opacity-50"
                     >
                       {addMealReminderMutation.isPending ? 'Saving…' : 'Save Reminder'}
                     </button>
@@ -5213,7 +5213,7 @@ export default function Fitness() {
                                   onClick={() => setEditMealType(type)}
                                   className={`px-2.5 py-0.5 rounded-sm text-[11px] font-black uppercase tracking-wide transition-colors ${
                                     editMealType === type
-                                      ? 'bg-[#FCD000] text-black'
+                                      ? 'bg-[#FDD000] text-black'
                                       : 'bg-zinc-800 text-zinc-400 border border-zinc-600 hover:border-zinc-400'
                                   }`}
                                 >
@@ -5247,14 +5247,14 @@ export default function Fitness() {
                             <button
                               onClick={() => updateMealReminderMutation.mutate({ id: r.id, time: editMealTime, label: editMealLabel, mealType: editMealType })}
                               disabled={!editMealTime || updateMealReminderMutation.isPending}
-                              className="bg-[#FCD000] text-black font-black text-xs px-3 py-1 rounded-sm disabled:opacity-50"
+                              className="bg-[#FDD000] text-black font-black text-xs px-3 py-1 rounded-sm disabled:opacity-50"
                             >{updateMealReminderMutation.isPending ? 'Saving…' : 'Save'}</button>
                             <button onClick={() => setEditingMealId(null)} className="bg-zinc-700 text-white text-xs px-3 py-1 rounded-sm">Cancel</button>
                           </div>
                         </div>
                       ) : (
                         <div className="flex items-center px-4 py-2.5 gap-3">
-                          <Bell className="w-4 h-4 text-[#FCD000]/70 flex-shrink-0" />
+                          <Bell className="w-4 h-4 text-[#FDD000]/70 flex-shrink-0" />
                           <div className="flex-1 min-w-0">
                             <p className="text-white text-sm font-black">
                               {(() => {
@@ -5294,11 +5294,11 @@ export default function Fitness() {
               if (!nutritionProfile) {
                 return (
                   <div
-                    className="liquid-black border-2 border-[#FCD000]/40 rounded-sm px-4 py-4"
+                    className="liquid-black border-2 border-[#FDD000]/40 rounded-sm px-4 py-4"
                     data-testid="card-calorie-recommendation-empty"
                   >
                     <div className="flex items-start gap-3">
-                      <Flame className="w-6 h-6 text-[#FCD000] shrink-0 mt-0.5" />
+                      <Flame className="w-6 h-6 text-[#FDD000] shrink-0 mt-0.5" />
                       <div className="flex-1">
                         <h3 className="text-white font-black uppercase tracking-wide text-sm">Recommended Daily Calorie Intake</h3>
                         <p className="text-white/60 text-xs mt-1">
@@ -5307,7 +5307,7 @@ export default function Fitness() {
                         <Button
                           onClick={() => setLocation('/calorie-calculator')}
                           size="sm"
-                          className="mt-3 bg-[#FCD000] text-black font-black uppercase hover:bg-[#FCD000]/90 rounded-sm border-2 border-black"
+                          className="mt-3 bg-[#FDD000] text-black font-black uppercase hover:bg-[#FDD000]/90 rounded-sm border-2 border-black"
                           data-testid="button-open-calorie-calculator"
                         >
                           Calculate My Target
@@ -5326,19 +5326,19 @@ export default function Fitness() {
                 nutritionProfile.goalType === 'gain' ? 'Muscle Gain' : 'Maintenance';
               return (
                 <div
-                  className="liquid-black border-2 border-[#FCD000]/40 rounded-sm px-4 py-3"
+                  className="liquid-black border-2 border-[#FDD000]/40 rounded-sm px-4 py-3"
                   data-testid="card-calorie-recommendation"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Flame className="w-5 h-5 text-[#FCD000]" />
+                      <Flame className="w-5 h-5 text-[#FDD000]" />
                       <div>
                         <div className="text-white font-black uppercase tracking-wide text-sm">Daily Target</div>
                         <div className="text-white/40 text-[10px] font-bold uppercase tracking-wider">{goalLabel}</div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="text-[#FCD000] font-black text-2xl tabular-nums" data-testid="text-calorie-target">
+                      <span className="text-[#FDD000] font-black text-2xl tabular-nums" data-testid="text-calorie-target">
                         {target.toLocaleString()}
                       </span>
                       <span className="text-white/40 text-xs font-bold ml-1">kcal</span>
@@ -5348,7 +5348,7 @@ export default function Fitness() {
                     <>
                       <div className="mt-3 h-2 w-full rounded-sm bg-white/10 overflow-hidden">
                         <div
-                          className="h-full bg-[#FCD000] transition-all"
+                          className="h-full bg-[#FDD000] transition-all"
                           style={{ width: `${pct}%` }}
                           data-testid="bar-calorie-progress"
                         />
@@ -5364,7 +5364,7 @@ export default function Fitness() {
                   <div className="flex justify-end mt-2">
                     <button
                       onClick={() => setLocation('/calorie-calculator')}
-                      className="text-[10px] font-black uppercase tracking-wide text-[#FCD000] hover:underline"
+                      className="text-[10px] font-black uppercase tracking-wide text-[#FDD000] hover:underline"
                       data-testid="button-update-calorie-target"
                     >
                       Update
@@ -5375,14 +5375,14 @@ export default function Fitness() {
             })()}
 
             {/* Calorie total banner */}
-            <div className="flex items-center justify-between liquid-black border-2 border-[#FCD000]/40 rounded-sm px-4 py-3">
+            <div className="flex items-center justify-between liquid-black border-2 border-[#FDD000]/40 rounded-sm px-4 py-3">
               <div className="flex items-center gap-2">
-                <Flame className="w-5 h-5 text-[#FCD000]" />
+                <Flame className="w-5 h-5 text-[#FDD000]" />
                 <span className="text-white font-black uppercase tracking-wide text-sm">
                   {intakePeriod === 'day' ? "Today's" : intakePeriod === 'week' ? "This Week's" : "This Month's"} Calories
                 </span>
               </div>
-              <span className="text-[#FCD000] font-black text-2xl tabular-nums">
+              <span className="text-[#FDD000] font-black text-2xl tabular-nums">
                 {intakeLoading ? '—' : totalIntakeCalories.toLocaleString()}
               </span>
               <span className="text-white/40 text-xs font-bold ml-1">kcal</span>
@@ -5408,14 +5408,14 @@ export default function Fitness() {
                   <div className="space-y-4">
                     {mealOrder.filter(meal => intakeByMeal[meal]?.length > 0).map(meal => (
                       <div key={meal}>
-                        <p className="text-[10px] font-black text-[#FCD000]/80 uppercase tracking-widest mb-2">
+                        <p className="text-[10px] font-black text-[#FDD000]/80 uppercase tracking-widest mb-2">
                           {meal.charAt(0).toUpperCase() + meal.slice(1)}
                         </p>
                         <div className="space-y-2">
                           {intakeByMeal[meal].map((entry: any) => (
                             <div key={entry.id} className="flex items-center gap-3 liquid-black border border-white/10 rounded-sm px-3 py-3">
-                              <div className="w-8 h-8 bg-[#FCD000]/20 rounded-sm flex items-center justify-center shrink-0">
-                                <Utensils className="w-4 h-4 text-[#FCD000]" />
+                              <div className="w-8 h-8 bg-[#FDD000]/20 rounded-sm flex items-center justify-center shrink-0">
+                                <Utensils className="w-4 h-4 text-[#FDD000]" />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-white text-sm font-semibold leading-tight truncate">{entry.foodName}</p>
@@ -5424,7 +5424,7 @@ export default function Fitness() {
                                 </p>
                               </div>
                               <div className="text-right shrink-0">
-                                <p className="text-[#FCD000] font-black text-sm tabular-nums">{entry.totalCalories}</p>
+                                <p className="text-[#FDD000] font-black text-sm tabular-nums">{entry.totalCalories}</p>
                                 <p className="text-white/40 text-[10px]">kcal</p>
                               </div>
                               <button
@@ -5454,21 +5454,21 @@ export default function Fitness() {
                   const kcal = intakeByDate[dayStr] || 0;
                   const isToday = dayStr === fmtDate(new Date());
                   return (
-                    <div key={dayStr} className={`flex items-center justify-between px-4 py-3 rounded-sm border ${isToday ? 'border-[#FCD000]/60 bg-[#FCD000]/5' : 'border-white/10 liquid-black'}`}>
+                    <div key={dayStr} className={`flex items-center justify-between px-4 py-3 rounded-sm border ${isToday ? 'border-[#FDD000]/60 bg-[#FDD000]/5' : 'border-white/10 liquid-black'}`}>
                       <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-sm flex flex-col items-center justify-center shrink-0 ${isToday ? 'bg-[#FCD000] text-black' : 'bg-zinc-800 text-white/60'}`}>
+                        <div className={`w-10 h-10 rounded-sm flex flex-col items-center justify-center shrink-0 ${isToday ? 'bg-[#FDD000] text-black' : 'bg-zinc-800 text-white/60'}`}>
                           <span className="text-[10px] font-black uppercase leading-none">{dayNames[day.getDay()]}</span>
                           <span className="text-sm font-black leading-none mt-0.5">{day.getDate()}</span>
                         </div>
                         <span className={`text-sm font-bold ${isToday ? 'text-white' : 'text-white/60'}`}>
                           {day.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                          {isToday && <span className="ml-1.5 text-[10px] font-black text-[#FCD000] uppercase tracking-widest">Today</span>}
+                          {isToday && <span className="ml-1.5 text-[10px] font-black text-[#FDD000] uppercase tracking-widest">Today</span>}
                         </span>
                       </div>
                       <div className="text-right">
                         {kcal > 0 ? (
                           <>
-                            <span className="text-[#FCD000] font-black text-base tabular-nums">{kcal.toLocaleString()}</span>
+                            <span className="text-[#FDD000] font-black text-base tabular-nums">{kcal.toLocaleString()}</span>
                             <span className="text-white/40 text-[10px] ml-1">kcal</span>
                           </>
                         ) : (
@@ -5491,17 +5491,17 @@ export default function Fitness() {
                   const y = mon.getFullYear();
                   const label = `The week of ${d}/${m}/${y}`;
                   return (
-                    <div key={fmtDate(mon)} className={`flex items-center justify-between px-4 py-4 rounded-sm border ${isCurrentWeek ? 'border-[#FCD000]/60 bg-[#FCD000]/5' : 'border-white/10 liquid-black'}`}>
+                    <div key={fmtDate(mon)} className={`flex items-center justify-between px-4 py-4 rounded-sm border ${isCurrentWeek ? 'border-[#FDD000]/60 bg-[#FDD000]/5' : 'border-white/10 liquid-black'}`}>
                       <div>
                         <p className={`text-sm font-bold ${isCurrentWeek ? 'text-white' : 'text-white/70'}`}>{label}</p>
                         {isCurrentWeek && (
-                          <p className="text-[10px] font-black text-[#FCD000] uppercase tracking-widest mt-0.5">Current week</p>
+                          <p className="text-[10px] font-black text-[#FDD000] uppercase tracking-widest mt-0.5">Current week</p>
                         )}
                       </div>
                       <div className="text-right">
                         {total > 0 ? (
                           <>
-                            <span className="text-[#FCD000] font-black text-base tabular-nums">{total.toLocaleString()}</span>
+                            <span className="text-[#FDD000] font-black text-base tabular-nums">{total.toLocaleString()}</span>
                             <span className="text-white/40 text-[10px] ml-1">kcal</span>
                           </>
                         ) : (
@@ -5519,7 +5519,7 @@ export default function Fitness() {
           <TabsContent value="health" className="space-y-4">
             {/* Header */}
             <div className="flex items-center mb-2 liquid-black p-4 rounded-sm border-2 border-black overflow-hidden">
-              <Activity className="w-6 h-6 text-[#FCD000] mr-2 relative z-10" />
+              <Activity className="w-6 h-6 text-[#FDD000] mr-2 relative z-10" />
               <h2 className="text-xl font-black text-white uppercase tracking-wide relative z-10">Health Tracker</h2>
               <span className="ml-auto text-xs text-white/40 font-bold relative z-10">7-Day History</span>
             </div>
@@ -5528,7 +5528,7 @@ export default function Fitness() {
             <Card className="bg-zinc-900 border-2 border-black rounded-sm">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-white font-black uppercase tracking-wide text-sm">
-                  <Footprints className="w-5 h-5 text-[#FCD000]" />
+                  <Footprints className="w-5 h-5 text-[#FDD000]" />
                   Steps &amp; Calories
                   {stepsMetrics[0] && (
                     <span className="ml-1 text-white/40 font-normal normal-case tracking-normal text-[10px]">
@@ -5548,7 +5548,7 @@ export default function Fitness() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="border-[#FCD000] text-[#FCD000] hover:bg-[#FCD000] hover:text-black font-black uppercase text-[10px] h-7 px-2 rounded-sm"
+                      className="border-[#FDD000] text-[#FDD000] hover:bg-[#FDD000] hover:text-black font-black uppercase text-[10px] h-7 px-2 rounded-sm"
                       onClick={() => { setHealthOpenForm(healthOpenForm === 'steps' ? null : 'steps'); setHealthGoalFormOpen(null); }}
                     >
                       <Plus className="w-3 h-3 mr-1" />
@@ -5560,7 +5560,7 @@ export default function Fitness() {
               <CardContent className="space-y-3">
                 <div className="flex gap-1">
                   {([7, 30, 90] as const).map(r => (
-                    <button key={r} onClick={() => setStepsRange(r)} className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-sm border transition-colors ${stepsRange === r ? 'bg-[#FCD000] text-black border-[#FCD000]' : 'border-zinc-700 text-white/40 hover:text-white hover:border-zinc-500'}`}>{r}d</button>
+                    <button key={r} onClick={() => setStepsRange(r)} className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-sm border transition-colors ${stepsRange === r ? 'bg-[#FDD000] text-black border-[#FDD000]' : 'border-zinc-700 text-white/40 hover:text-white hover:border-zinc-500'}`}>{r}d</button>
                   ))}
                 </div>
                 {healthGoalFormOpen === 'steps' && (
@@ -5580,7 +5580,7 @@ export default function Fitness() {
                       <Button size="sm" variant="ghost" className="text-white/40 h-7 text-xs" onClick={() => setHealthGoalFormOpen(null)}>Cancel</Button>
                       <Button
                         size="sm"
-                        className="bg-[#FCD000] text-black hover:bg-[#FCD000]/80 font-black uppercase text-[10px] h-7 px-3 rounded-sm"
+                        className="bg-[#FDD000] text-black hover:bg-[#FDD000]/80 font-black uppercase text-[10px] h-7 px-3 rounded-sm"
                         disabled={!healthGoalInputs.steps || upsertHealthGoalMutation.isPending}
                         onClick={() => upsertHealthGoalMutation.mutate({ type: 'steps', targetValue: parseFloat(healthGoalInputs.steps) })}
                       >Save Goal</Button>
@@ -5596,16 +5596,16 @@ export default function Fitness() {
                     <div className="bg-black/40 border border-zinc-800 rounded-sm px-3 py-2 space-y-1.5">
                       <div className="flex justify-between items-center">
                         <span className="text-white/50 text-[10px] uppercase font-bold">Goal: {goal.targetValue.toLocaleString()} steps/day</span>
-                        <span className="text-[10px] font-black text-[#FCD000]">{hits}/7 days this week</span>
+                        <span className="text-[10px] font-black text-[#FDD000]">{hits}/7 days this week</span>
                       </div>
                       <div className="w-full bg-zinc-800 rounded-full h-1.5">
-                        <div className="bg-[#FCD000] h-1.5 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                        <div className="bg-[#FDD000] h-1.5 rounded-full transition-all" style={{ width: `${pct}%` }} />
                       </div>
                     </div>
                   );
                 })()}
                 {healthOpenForm === 'steps' && (
-                  <div className="bg-black border border-[#FCD000]/30 rounded-sm p-3 space-y-2">
+                  <div className="bg-black border border-[#FDD000]/30 rounded-sm p-3 space-y-2">
                     <div className="grid grid-cols-3 gap-2">
                       <div>
                         <label className="text-white/60 text-[10px] uppercase font-bold block mb-1">Date</label>
@@ -5641,7 +5641,7 @@ export default function Fitness() {
                       <Button size="sm" variant="ghost" className="text-white/40 h-7 text-xs" onClick={() => setHealthOpenForm(null)}>Cancel</Button>
                       <Button
                         size="sm"
-                        className="bg-[#FCD000] text-black hover:bg-[#FCD000]/80 font-black uppercase text-[10px] h-7 px-3 rounded-sm"
+                        className="bg-[#FDD000] text-black hover:bg-[#FDD000]/80 font-black uppercase text-[10px] h-7 px-3 rounded-sm"
                         disabled={!healthStepsForm.steps || createHealthMetricMutation.isPending}
                         onClick={() => {
                           createHealthMetricMutation.mutate({
@@ -5665,9 +5665,9 @@ export default function Fitness() {
                         <BarChart data={[...stepsMetrics].reverse().slice(-stepsRange).map(m => ({ date: m.date.slice(5), value: m.primaryValue }))} margin={{ top: 4, right: 4, left: -30, bottom: 0 }}>
                           <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9 }} axisLine={false} tickLine={false} />
                           <YAxis tick={false} axisLine={false} tickLine={false} />
-                          <Tooltip contentStyle={{ background: '#111', border: '1px solid rgba(252,208,0,0.3)', borderRadius: 2, fontSize: 11, color: '#fff' }} labelStyle={{ color: 'rgba(255,255,255,0.5)' }} formatter={(v: number) => [v?.toLocaleString(), 'Steps']} />
-                          <ReferenceLine y={10000} stroke="rgba(252,208,0,0.45)" strokeDasharray="4 3" strokeWidth={1.5} ifOverflow="extendDomain" />
-                          <Bar dataKey="value" fill="#FCD000" radius={[2, 2, 0, 0]} maxBarSize={24} />
+                          <Tooltip contentStyle={{ background: '#111', border: '1px solid rgba(253,208,0,0.3)', borderRadius: 2, fontSize: 11, color: '#fff' }} labelStyle={{ color: 'rgba(255,255,255,0.5)' }} formatter={(v: number) => [v?.toLocaleString(), 'Steps']} />
+                          <ReferenceLine y={10000} stroke="rgba(253,208,0,0.45)" strokeDasharray="4 3" strokeWidth={1.5} ifOverflow="extendDomain" />
+                          <Bar dataKey="value" fill="#FDD000" radius={[2, 2, 0, 0]} maxBarSize={24} />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
@@ -5699,7 +5699,7 @@ export default function Fitness() {
             <Card className="bg-zinc-900 border-2 border-black rounded-sm">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-white font-black uppercase tracking-wide text-sm">
-                  <Heart className="w-5 h-5 text-[#FCD000]" />
+                  <Heart className="w-5 h-5 text-[#FDD000]" />
                   Heart Rate
                   {hrMetrics[0] && (
                     <span className="ml-1 text-white/40 font-normal normal-case tracking-normal text-[10px]">
@@ -5719,7 +5719,7 @@ export default function Fitness() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="border-[#FCD000] text-[#FCD000] hover:bg-[#FCD000] hover:text-black font-black uppercase text-[10px] h-7 px-2 rounded-sm"
+                      className="border-[#FDD000] text-[#FDD000] hover:bg-[#FDD000] hover:text-black font-black uppercase text-[10px] h-7 px-2 rounded-sm"
                       onClick={() => { setHealthOpenForm(healthOpenForm === 'heart_rate' ? null : 'heart_rate'); setHealthGoalFormOpen(null); }}
                     >
                       <Plus className="w-3 h-3 mr-1" />
@@ -5731,7 +5731,7 @@ export default function Fitness() {
               <CardContent className="space-y-3">
                 <div className="flex gap-1">
                   {([7, 30, 90] as const).map(r => (
-                    <button key={r} onClick={() => setHrRange(r)} className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-sm border transition-colors ${hrRange === r ? 'bg-[#FCD000] text-black border-[#FCD000]' : 'border-zinc-700 text-white/40 hover:text-white hover:border-zinc-500'}`}>{r}d</button>
+                    <button key={r} onClick={() => setHrRange(r)} className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-sm border transition-colors ${hrRange === r ? 'bg-[#FDD000] text-black border-[#FDD000]' : 'border-zinc-700 text-white/40 hover:text-white hover:border-zinc-500'}`}>{r}d</button>
                   ))}
                 </div>
                 {healthGoalFormOpen === 'heart_rate' && (
@@ -5751,7 +5751,7 @@ export default function Fitness() {
                       <Button size="sm" variant="ghost" className="text-white/40 h-7 text-xs" onClick={() => setHealthGoalFormOpen(null)}>Cancel</Button>
                       <Button
                         size="sm"
-                        className="bg-[#FCD000] text-black hover:bg-[#FCD000]/80 font-black uppercase text-[10px] h-7 px-3 rounded-sm"
+                        className="bg-[#FDD000] text-black hover:bg-[#FDD000]/80 font-black uppercase text-[10px] h-7 px-3 rounded-sm"
                         disabled={!healthGoalInputs.heart_rate || upsertHealthGoalMutation.isPending}
                         onClick={() => upsertHealthGoalMutation.mutate({ type: 'heart_rate', targetValue: parseFloat(healthGoalInputs.heart_rate) })}
                       >Save Goal</Button>
@@ -5767,16 +5767,16 @@ export default function Fitness() {
                     <div className="bg-black/40 border border-zinc-800 rounded-sm px-3 py-2 space-y-1.5">
                       <div className="flex justify-between items-center">
                         <span className="text-white/50 text-[10px] uppercase font-bold">Goal: ≤{goal.targetValue} bpm resting</span>
-                        <span className="text-[10px] font-black text-[#FCD000]">{hits}/7 days this week</span>
+                        <span className="text-[10px] font-black text-[#FDD000]">{hits}/7 days this week</span>
                       </div>
                       <div className="w-full bg-zinc-800 rounded-full h-1.5">
-                        <div className="bg-[#FCD000] h-1.5 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                        <div className="bg-[#FDD000] h-1.5 rounded-full transition-all" style={{ width: `${pct}%` }} />
                       </div>
                     </div>
                   );
                 })()}
                 {healthOpenForm === 'heart_rate' && (
-                  <div className="bg-black border border-[#FCD000]/30 rounded-sm p-3 space-y-2">
+                  <div className="bg-black border border-[#FDD000]/30 rounded-sm p-3 space-y-2">
                     <div className="grid grid-cols-3 gap-2">
                       <div>
                         <label className="text-white/60 text-[10px] uppercase font-bold block mb-1">Date</label>
@@ -5812,7 +5812,7 @@ export default function Fitness() {
                       <Button size="sm" variant="ghost" className="text-white/40 h-7 text-xs" onClick={() => setHealthOpenForm(null)}>Cancel</Button>
                       <Button
                         size="sm"
-                        className="bg-[#FCD000] text-black hover:bg-[#FCD000]/80 font-black uppercase text-[10px] h-7 px-3 rounded-sm"
+                        className="bg-[#FDD000] text-black hover:bg-[#FDD000]/80 font-black uppercase text-[10px] h-7 px-3 rounded-sm"
                         disabled={!healthHrForm.resting || createHealthMetricMutation.isPending}
                         onClick={() => {
                           createHealthMetricMutation.mutate({
@@ -5836,11 +5836,11 @@ export default function Fitness() {
                         <LineChart data={[...hrMetrics].reverse().slice(-hrRange).map(m => ({ date: m.date.slice(5), value: m.primaryValue }))} margin={{ top: 4, right: 4, left: -30, bottom: 0 }}>
                           <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9 }} axisLine={false} tickLine={false} />
                           <YAxis tick={false} axisLine={false} tickLine={false} domain={['auto', 'auto']} />
-                          <Tooltip contentStyle={{ background: '#111', border: '1px solid rgba(252,208,0,0.3)', borderRadius: 2, fontSize: 11, color: '#fff' }} labelStyle={{ color: 'rgba(255,255,255,0.5)' }} formatter={(v: number) => [`${v} bpm`, 'Resting HR']} />
-                          <ReferenceArea y1={60} y2={100} fill="rgba(252,208,0,0.07)" strokeOpacity={0} ifOverflow="extendDomain" />
-                          <ReferenceLine y={60} stroke="rgba(252,208,0,0.25)" strokeDasharray="3 3" strokeWidth={1} ifOverflow="extendDomain" />
-                          <ReferenceLine y={100} stroke="rgba(252,208,0,0.25)" strokeDasharray="3 3" strokeWidth={1} ifOverflow="extendDomain" />
-                          <Line dataKey="value" stroke="#FCD000" strokeWidth={2} dot={{ fill: '#FCD000', r: 3 }} activeDot={{ r: 4 }} />
+                          <Tooltip contentStyle={{ background: '#111', border: '1px solid rgba(253,208,0,0.3)', borderRadius: 2, fontSize: 11, color: '#fff' }} labelStyle={{ color: 'rgba(255,255,255,0.5)' }} formatter={(v: number) => [`${v} bpm`, 'Resting HR']} />
+                          <ReferenceArea y1={60} y2={100} fill="rgba(253,208,0,0.07)" strokeOpacity={0} ifOverflow="extendDomain" />
+                          <ReferenceLine y={60} stroke="rgba(253,208,0,0.25)" strokeDasharray="3 3" strokeWidth={1} ifOverflow="extendDomain" />
+                          <ReferenceLine y={100} stroke="rgba(253,208,0,0.25)" strokeDasharray="3 3" strokeWidth={1} ifOverflow="extendDomain" />
+                          <Line dataKey="value" stroke="#FDD000" strokeWidth={2} dot={{ fill: '#FDD000', r: 3 }} activeDot={{ r: 4 }} />
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
@@ -5872,7 +5872,7 @@ export default function Fitness() {
             <Card className="bg-zinc-900 border-2 border-black rounded-sm">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-white font-black uppercase tracking-wide text-sm">
-                  <Moon className="w-5 h-5 text-[#FCD000]" />
+                  <Moon className="w-5 h-5 text-[#FDD000]" />
                   Sleep
                   {sleepMetrics[0] && (
                     <span className="ml-1 text-white/40 font-normal normal-case tracking-normal text-[10px]">
@@ -5892,7 +5892,7 @@ export default function Fitness() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="border-[#FCD000] text-[#FCD000] hover:bg-[#FCD000] hover:text-black font-black uppercase text-[10px] h-7 px-2 rounded-sm"
+                      className="border-[#FDD000] text-[#FDD000] hover:bg-[#FDD000] hover:text-black font-black uppercase text-[10px] h-7 px-2 rounded-sm"
                       onClick={() => { setHealthOpenForm(healthOpenForm === 'sleep' ? null : 'sleep'); setHealthGoalFormOpen(null); }}
                     >
                       <Plus className="w-3 h-3 mr-1" />
@@ -5904,7 +5904,7 @@ export default function Fitness() {
               <CardContent className="space-y-3">
                 <div className="flex gap-1">
                   {([7, 30, 90] as const).map(r => (
-                    <button key={r} onClick={() => setSleepRange(r)} className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-sm border transition-colors ${sleepRange === r ? 'bg-[#FCD000] text-black border-[#FCD000]' : 'border-zinc-700 text-white/40 hover:text-white hover:border-zinc-500'}`}>{r}d</button>
+                    <button key={r} onClick={() => setSleepRange(r)} className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-sm border transition-colors ${sleepRange === r ? 'bg-[#FDD000] text-black border-[#FDD000]' : 'border-zinc-700 text-white/40 hover:text-white hover:border-zinc-500'}`}>{r}d</button>
                   ))}
                 </div>
                 {healthGoalFormOpen === 'sleep' && (
@@ -5925,7 +5925,7 @@ export default function Fitness() {
                       <Button size="sm" variant="ghost" className="text-white/40 h-7 text-xs" onClick={() => setHealthGoalFormOpen(null)}>Cancel</Button>
                       <Button
                         size="sm"
-                        className="bg-[#FCD000] text-black hover:bg-[#FCD000]/80 font-black uppercase text-[10px] h-7 px-3 rounded-sm"
+                        className="bg-[#FDD000] text-black hover:bg-[#FDD000]/80 font-black uppercase text-[10px] h-7 px-3 rounded-sm"
                         disabled={!healthGoalInputs.sleep || upsertHealthGoalMutation.isPending}
                         onClick={() => upsertHealthGoalMutation.mutate({ type: 'sleep', targetValue: parseFloat(healthGoalInputs.sleep) })}
                       >Save Goal</Button>
@@ -5941,16 +5941,16 @@ export default function Fitness() {
                     <div className="bg-black/40 border border-zinc-800 rounded-sm px-3 py-2 space-y-1.5">
                       <div className="flex justify-between items-center">
                         <span className="text-white/50 text-[10px] uppercase font-bold">Goal: {goal.targetValue} hrs/night</span>
-                        <span className="text-[10px] font-black text-[#FCD000]">{hits}/7 days this week</span>
+                        <span className="text-[10px] font-black text-[#FDD000]">{hits}/7 days this week</span>
                       </div>
                       <div className="w-full bg-zinc-800 rounded-full h-1.5">
-                        <div className="bg-[#FCD000] h-1.5 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                        <div className="bg-[#FDD000] h-1.5 rounded-full transition-all" style={{ width: `${pct}%` }} />
                       </div>
                     </div>
                   );
                 })()}
                 {healthOpenForm === 'sleep' && (
-                  <div className="bg-black border border-[#FCD000]/30 rounded-sm p-3 space-y-2">
+                  <div className="bg-black border border-[#FDD000]/30 rounded-sm p-3 space-y-2">
                     <div className="grid grid-cols-3 gap-2">
                       <div>
                         <label className="text-white/60 text-[10px] uppercase font-bold block mb-1">Date</label>
@@ -5989,7 +5989,7 @@ export default function Fitness() {
                       <Button size="sm" variant="ghost" className="text-white/40 h-7 text-xs" onClick={() => setHealthOpenForm(null)}>Cancel</Button>
                       <Button
                         size="sm"
-                        className="bg-[#FCD000] text-black hover:bg-[#FCD000]/80 font-black uppercase text-[10px] h-7 px-3 rounded-sm"
+                        className="bg-[#FDD000] text-black hover:bg-[#FDD000]/80 font-black uppercase text-[10px] h-7 px-3 rounded-sm"
                         disabled={!healthSleepForm.hours || createHealthMetricMutation.isPending}
                         onClick={() => {
                           createHealthMetricMutation.mutate({
@@ -6013,11 +6013,11 @@ export default function Fitness() {
                         <BarChart data={[...sleepMetrics].reverse().slice(-sleepRange).map(m => ({ date: m.date.slice(5), value: m.primaryValue }))} margin={{ top: 4, right: 4, left: -30, bottom: 0 }}>
                           <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9 }} axisLine={false} tickLine={false} />
                           <YAxis tick={false} axisLine={false} tickLine={false} />
-                          <Tooltip contentStyle={{ background: '#111', border: '1px solid rgba(252,208,0,0.3)', borderRadius: 2, fontSize: 11, color: '#fff' }} labelStyle={{ color: 'rgba(255,255,255,0.5)' }} formatter={(v: number) => [`${v} hr`, 'Sleep']} />
-                          <ReferenceArea y1={7} y2={9} fill="rgba(252,208,0,0.07)" strokeOpacity={0} ifOverflow="extendDomain" />
-                          <ReferenceLine y={7} stroke="rgba(252,208,0,0.25)" strokeDasharray="3 3" strokeWidth={1} ifOverflow="extendDomain" />
-                          <ReferenceLine y={9} stroke="rgba(252,208,0,0.25)" strokeDasharray="3 3" strokeWidth={1} ifOverflow="extendDomain" />
-                          <Bar dataKey="value" fill="#FCD000" radius={[2, 2, 0, 0]} maxBarSize={24} />
+                          <Tooltip contentStyle={{ background: '#111', border: '1px solid rgba(253,208,0,0.3)', borderRadius: 2, fontSize: 11, color: '#fff' }} labelStyle={{ color: 'rgba(255,255,255,0.5)' }} formatter={(v: number) => [`${v} hr`, 'Sleep']} />
+                          <ReferenceArea y1={7} y2={9} fill="rgba(253,208,0,0.07)" strokeOpacity={0} ifOverflow="extendDomain" />
+                          <ReferenceLine y={7} stroke="rgba(253,208,0,0.25)" strokeDasharray="3 3" strokeWidth={1} ifOverflow="extendDomain" />
+                          <ReferenceLine y={9} stroke="rgba(253,208,0,0.25)" strokeDasharray="3 3" strokeWidth={1} ifOverflow="extendDomain" />
+                          <Bar dataKey="value" fill="#FDD000" radius={[2, 2, 0, 0]} maxBarSize={24} />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
@@ -6049,7 +6049,7 @@ export default function Fitness() {
             <Card className="bg-zinc-900 border-2 border-black rounded-sm">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-white font-black uppercase tracking-wide text-sm">
-                  <Scale className="w-5 h-5 text-[#FCD000]" />
+                  <Scale className="w-5 h-5 text-[#FDD000]" />
                   Weight &amp; Measurements
                   {weightMetrics[0] && (
                     <span className="ml-1 text-white/40 font-normal normal-case tracking-normal text-[10px]">
@@ -6069,7 +6069,7 @@ export default function Fitness() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="border-[#FCD000] text-[#FCD000] hover:bg-[#FCD000] hover:text-black font-black uppercase text-[10px] h-7 px-2 rounded-sm"
+                      className="border-[#FDD000] text-[#FDD000] hover:bg-[#FDD000] hover:text-black font-black uppercase text-[10px] h-7 px-2 rounded-sm"
                       onClick={() => { setHealthOpenForm(healthOpenForm === 'weight' ? null : 'weight'); setHealthGoalFormOpen(null); }}
                     >
                       <Plus className="w-3 h-3 mr-1" />
@@ -6081,7 +6081,7 @@ export default function Fitness() {
               <CardContent className="space-y-3">
                 <div className="flex gap-1">
                   {([7, 30, 90] as const).map(r => (
-                    <button key={r} onClick={() => setWeightRange(r)} className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-sm border transition-colors ${weightRange === r ? 'bg-[#FCD000] text-black border-[#FCD000]' : 'border-zinc-700 text-white/40 hover:text-white hover:border-zinc-500'}`}>{r}d</button>
+                    <button key={r} onClick={() => setWeightRange(r)} className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-sm border transition-colors ${weightRange === r ? 'bg-[#FDD000] text-black border-[#FDD000]' : 'border-zinc-700 text-white/40 hover:text-white hover:border-zinc-500'}`}>{r}d</button>
                   ))}
                 </div>
                 {healthGoalFormOpen === 'weight' && (
@@ -6102,7 +6102,7 @@ export default function Fitness() {
                       <Button size="sm" variant="ghost" className="text-white/40 h-7 text-xs" onClick={() => setHealthGoalFormOpen(null)}>Cancel</Button>
                       <Button
                         size="sm"
-                        className="bg-[#FCD000] text-black hover:bg-[#FCD000]/80 font-black uppercase text-[10px] h-7 px-3 rounded-sm"
+                        className="bg-[#FDD000] text-black hover:bg-[#FDD000]/80 font-black uppercase text-[10px] h-7 px-3 rounded-sm"
                         disabled={!healthGoalInputs.weight || upsertHealthGoalMutation.isPending}
                         onClick={() => upsertHealthGoalMutation.mutate({ type: 'weight', targetValue: parseFloat(healthGoalInputs.weight) })}
                       >Save Goal</Button>
@@ -6122,16 +6122,16 @@ export default function Fitness() {
                         <span className="text-white/50 text-[10px] uppercase font-bold">
                           Target: {goal.targetValue} lbs{diff != null ? ` · ${current! <= goal.targetValue ? 'At goal' : `${diff.toFixed(1)} lbs to go`}` : ''}
                         </span>
-                        <span className="text-[10px] font-black text-[#FCD000]">{hits}/7 days this week</span>
+                        <span className="text-[10px] font-black text-[#FDD000]">{hits}/7 days this week</span>
                       </div>
                       <div className="w-full bg-zinc-800 rounded-full h-1.5">
-                        <div className="bg-[#FCD000] h-1.5 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                        <div className="bg-[#FDD000] h-1.5 rounded-full transition-all" style={{ width: `${pct}%` }} />
                       </div>
                     </div>
                   );
                 })()}
                 {healthOpenForm === 'weight' && (
-                  <div className="bg-black border border-[#FCD000]/30 rounded-sm p-3 space-y-2">
+                  <div className="bg-black border border-[#FDD000]/30 rounded-sm p-3 space-y-2">
                     <div className="grid grid-cols-3 gap-2">
                       <div>
                         <label className="text-white/60 text-[10px] uppercase font-bold block mb-1">Date</label>
@@ -6185,7 +6185,7 @@ export default function Fitness() {
                       <Button size="sm" variant="ghost" className="text-white/40 h-7 text-xs" onClick={() => setHealthOpenForm(null)}>Cancel</Button>
                       <Button
                         size="sm"
-                        className="bg-[#FCD000] text-black hover:bg-[#FCD000]/80 font-black uppercase text-[10px] h-7 px-3 rounded-sm"
+                        className="bg-[#FDD000] text-black hover:bg-[#FDD000]/80 font-black uppercase text-[10px] h-7 px-3 rounded-sm"
                         disabled={!healthWeightForm.weight || createHealthMetricMutation.isPending}
                         onClick={() => {
                           const measurements: Partial<Record<'chest' | 'waist' | 'hips' | 'neck', number>> = {};
@@ -6215,11 +6215,11 @@ export default function Fitness() {
                         <LineChart data={[...weightMetrics].reverse().slice(-weightRange).map(m => ({ date: m.date.slice(5), value: m.primaryValue }))} margin={{ top: 4, right: 4, left: -30, bottom: 0 }}>
                           <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9 }} axisLine={false} tickLine={false} />
                           <YAxis tick={false} axisLine={false} tickLine={false} />
-                          <Tooltip contentStyle={{ background: '#111', border: '1px solid rgba(252,208,0,0.3)', borderRadius: 2, fontSize: 11, color: '#fff' }} labelStyle={{ color: 'rgba(255,255,255,0.5)' }} formatter={(v: number) => [`${v} lbs`, 'Weight']} />
-                          <ReferenceArea y1={125} y2={169} fill="rgba(252,208,0,0.07)" strokeOpacity={0} ifOverflow="extendDomain" />
-                          <ReferenceLine y={125} stroke="rgba(252,208,0,0.25)" strokeDasharray="3 3" strokeWidth={1} ifOverflow="extendDomain" />
-                          <ReferenceLine y={169} stroke="rgba(252,208,0,0.25)" strokeDasharray="3 3" strokeWidth={1} ifOverflow="extendDomain" />
-                          <Line dataKey="value" stroke="#FCD000" strokeWidth={2} dot={{ fill: '#FCD000', r: 3 }} activeDot={{ r: 4 }} />
+                          <Tooltip contentStyle={{ background: '#111', border: '1px solid rgba(253,208,0,0.3)', borderRadius: 2, fontSize: 11, color: '#fff' }} labelStyle={{ color: 'rgba(255,255,255,0.5)' }} formatter={(v: number) => [`${v} lbs`, 'Weight']} />
+                          <ReferenceArea y1={125} y2={169} fill="rgba(253,208,0,0.07)" strokeOpacity={0} ifOverflow="extendDomain" />
+                          <ReferenceLine y={125} stroke="rgba(253,208,0,0.25)" strokeDasharray="3 3" strokeWidth={1} ifOverflow="extendDomain" />
+                          <ReferenceLine y={169} stroke="rgba(253,208,0,0.25)" strokeDasharray="3 3" strokeWidth={1} ifOverflow="extendDomain" />
+                          <Line dataKey="value" stroke="#FDD000" strokeWidth={2} dot={{ fill: '#FDD000', r: 3 }} activeDot={{ r: 4 }} />
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
@@ -6272,7 +6272,7 @@ export default function Fitness() {
       <Dialog open={showPlanModal} onOpenChange={setShowPlanModal}>
         <DialogContent className="w-[95vw] max-w-2xl max-h-[85svh] flex flex-col p-0 rounded-sm border-2 border-black bg-black">
           {/* Header */}
-          <div className="bg-[#FCD000] px-5 py-4 border-b-2 border-black flex-shrink-0">
+          <div className="bg-[#FDD000] px-5 py-4 border-b-2 border-black flex-shrink-0">
             <div className="flex items-center gap-2">
               <Dumbbell className="w-5 h-5 text-black" />
               <h2 className="font-black text-black uppercase tracking-tight text-lg">Plan Exercises</h2>
@@ -6319,16 +6319,16 @@ export default function Fitness() {
                       <div className="flex gap-2">
                         <div className="flex flex-col items-center bg-black/60 rounded-sm px-3 py-2 border border-zinc-700 flex-1">
                           <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Sets</span>
-                          <span className="font-black text-[#FCD000] text-xl leading-none" data-testid={`text-modal-sets-${exercise.exerciseId}`}>{exercise.sets}</span>
+                          <span className="font-black text-[#FDD000] text-xl leading-none" data-testid={`text-modal-sets-${exercise.exerciseId}`}>{exercise.sets}</span>
                         </div>
                         <div className="flex flex-col items-center bg-black/60 rounded-sm px-3 py-2 border border-zinc-700 flex-1">
                           <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Reps</span>
-                          <span className="font-black text-[#FCD000] text-xl leading-none" data-testid={`text-modal-reps-${exercise.exerciseId}`}>{exercise.reps}</span>
+                          <span className="font-black text-[#FDD000] text-xl leading-none" data-testid={`text-modal-reps-${exercise.exerciseId}`}>{exercise.reps}</span>
                         </div>
                         {exercise.duration && (
                           <div className="flex flex-col items-center bg-black/60 rounded-sm px-3 py-2 border border-zinc-700 flex-1">
                             <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Time</span>
-                            <span className="font-black text-[#FCD000] text-xl leading-none" data-testid={`text-modal-minutes-${exercise.exerciseId}`}>{exercise.duration}<span className="text-xs">m</span></span>
+                            <span className="font-black text-[#FDD000] text-xl leading-none" data-testid={`text-modal-minutes-${exercise.exerciseId}`}>{exercise.duration}<span className="text-xs">m</span></span>
                           </div>
                         )}
                       </div>
@@ -6339,7 +6339,7 @@ export default function Fitness() {
                           <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Scheduled Days</p>
                           <div className="flex flex-wrap gap-1">
                             {exercise.daysOfWeek.map((day: string) => (
-                              <span key={day} className="text-[10px] font-black uppercase bg-zinc-800 text-[#FCD000] border border-zinc-600 px-2 py-0.5 rounded-sm capitalize">
+                              <span key={day} className="text-[10px] font-black uppercase bg-zinc-800 text-[#FDD000] border border-zinc-600 px-2 py-0.5 rounded-sm capitalize">
                                 {day}
                               </span>
                             ))}
@@ -6349,7 +6349,7 @@ export default function Fitness() {
 
                       {/* Notes */}
                       {exercise.notes && (
-                        <div className="p-2 bg-[#FCD000] rounded-sm border-2 border-black text-sm text-black">
+                        <div className="p-2 bg-[#FDD000] rounded-sm border-2 border-black text-sm text-black">
                           <strong>Notes:</strong> {exercise.notes}
                         </div>
                       )}
@@ -6465,7 +6465,7 @@ export default function Fitness() {
 
                             {/* Notes */}
                             {exercise.notes && (
-                              <div className="mt-2 p-2 bg-[#FCD000] rounded-sm border-2 border-black text-sm text-black">
+                              <div className="mt-2 p-2 bg-[#FDD000] rounded-sm border-2 border-black text-sm text-black">
                                 <strong>Notes:</strong> {exercise.notes}
                               </div>
                             )}
@@ -6502,7 +6502,7 @@ export default function Fitness() {
       {/* Add to Intake Dialog */}
       <Dialog open={showAddIntakeDialog} onOpenChange={(open) => { if (!open) { setShowAddIntakeDialog(false); setAddIntakePrefill(null); } }}>
         <DialogContent className="w-[95vw] max-w-sm p-0 rounded-sm border-2 border-black bg-black">
-          <div className="bg-[#FCD000] px-5 py-4 border-b-2 border-black">
+          <div className="bg-[#FDD000] px-5 py-4 border-b-2 border-black">
             <div className="flex items-center gap-2">
               <Utensils className="w-5 h-5 text-black" />
               <h2 className="font-black text-black uppercase tracking-tight text-lg">
@@ -6520,7 +6520,7 @@ export default function Fitness() {
                 onChange={(e) => !addIntakePrefill && setIntakeForm(f => ({ ...f, foodName: e.target.value }))}
                 readOnly={!!addIntakePrefill}
                 placeholder="e.g. Chicken Breast"
-                className={`bg-zinc-900 border-2 border-white/20 text-white placeholder:text-white/30 rounded-sm ${addIntakePrefill ? 'opacity-70' : 'focus:border-[#FCD000]'}`}
+                className={`bg-zinc-900 border-2 border-white/20 text-white placeholder:text-white/30 rounded-sm ${addIntakePrefill ? 'opacity-70' : 'focus:border-[#FDD000]'}`}
               />
             </div>
 
@@ -6534,7 +6534,7 @@ export default function Fitness() {
                 readOnly={!!addIntakePrefill}
                 min={0}
                 placeholder="e.g. 165"
-                className={`bg-zinc-900 border-2 border-white/20 text-white placeholder:text-white/30 rounded-sm ${addIntakePrefill ? 'opacity-70' : 'focus:border-[#FCD000]'}`}
+                className={`bg-zinc-900 border-2 border-white/20 text-white placeholder:text-white/30 rounded-sm ${addIntakePrefill ? 'opacity-70' : 'focus:border-[#FDD000]'}`}
               />
             </div>
 
@@ -6548,7 +6548,7 @@ export default function Fitness() {
                 min={0.1}
                 step={0.5}
                 placeholder="e.g. 1.5"
-                className="bg-zinc-900 border-2 border-white/20 text-white placeholder:text-white/30 focus:border-[#FCD000] rounded-sm"
+                className="bg-zinc-900 border-2 border-white/20 text-white placeholder:text-white/30 focus:border-[#FDD000] rounded-sm"
               />
             </div>
 
@@ -6556,7 +6556,7 @@ export default function Fitness() {
             <div className="space-y-1">
               <label className="text-[10px] font-black text-white/60 uppercase tracking-widest">Meal</label>
               <Select value={intakeFormMeal} onValueChange={(v) => setIntakeFormMeal(v as 'breakfast' | 'lunch' | 'dinner' | 'snack')}>
-                <SelectTrigger className="bg-zinc-900 border-2 border-white/20 text-white rounded-sm focus:border-[#FCD000]">
+                <SelectTrigger className="bg-zinc-900 border-2 border-white/20 text-white rounded-sm focus:border-[#FDD000]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-zinc-900 border-2 border-white/20 text-white rounded-sm">
@@ -6574,9 +6574,9 @@ export default function Fitness() {
               const srv = parseFloat(intakeForm.servings);
               const total = !isNaN(cal) && !isNaN(srv) && srv > 0 ? Math.round(cal * srv) : null;
               return total !== null ? (
-                <div className="flex items-center justify-between bg-[#FCD000]/10 border border-[#FCD000]/30 rounded-sm px-3 py-2">
-                  <span className="text-[#FCD000] text-xs font-black uppercase tracking-wide">Total Calories</span>
-                  <span className="text-[#FCD000] font-black text-lg tabular-nums">{total} kcal</span>
+                <div className="flex items-center justify-between bg-[#FDD000]/10 border border-[#FDD000]/30 rounded-sm px-3 py-2">
+                  <span className="text-[#FDD000] text-xs font-black uppercase tracking-wide">Total Calories</span>
+                  <span className="text-[#FDD000] font-black text-lg tabular-nums">{total} kcal</span>
                 </div>
               ) : null;
             })()}
@@ -6585,7 +6585,7 @@ export default function Fitness() {
             <Button
               onClick={handleSubmitIntake}
               disabled={addIntakeMutation.isPending}
-              className="w-full bg-[#FCD000] text-black font-black uppercase hover:bg-[#FCD000]/90 rounded-sm border-2 border-black"
+              className="w-full bg-[#FDD000] text-black font-black uppercase hover:bg-[#FDD000]/90 rounded-sm border-2 border-black"
             >
               {addIntakeMutation.isPending ? 'Saving…' : 'Save Entry'}
             </Button>
@@ -6595,9 +6595,9 @@ export default function Fitness() {
 
       {/* Plan Detail Dialog — today's exercises preview with Start Workout */}
       <Dialog open={!!detailPlan} onOpenChange={(open) => { if (!open) { setDetailPlan(null); setDetailExercises([]); } }}>
-        <DialogContent className="max-w-md bg-zinc-950 border-2 border-[#FCD000] text-white">
+        <DialogContent className="max-w-md bg-zinc-950 border-2 border-[#FDD000] text-white">
           <DialogHeader>
-            <DialogTitle className="text-[#FCD000] font-black uppercase tracking-tight">
+            <DialogTitle className="text-[#FDD000] font-black uppercase tracking-tight">
               {detailPlan?.name}
             </DialogTitle>
             {detailPlan && (
@@ -6615,7 +6615,7 @@ export default function Fitness() {
                   className="flex items-center gap-3 bg-black/40 border border-zinc-800 rounded-sm p-3"
                   data-testid={`detail-exercise-${ex.id}`}
                 >
-                  <span className="text-[#FCD000] font-black text-sm w-5 shrink-0">{i + 1}.</span>
+                  <span className="text-[#FDD000] font-black text-sm w-5 shrink-0">{i + 1}.</span>
                   <div className="flex-1 min-w-0">
                     <p className="font-black text-white text-sm truncate">{ex.exerciseName}</p>
                     <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider truncate">
@@ -6623,10 +6623,10 @@ export default function Fitness() {
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
-                    <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm bg-[#FCD000]/15 text-[#FCD000] border border-[#FCD000]/40">
+                    <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm bg-[#FDD000]/15 text-[#FDD000] border border-[#FDD000]/40">
                       {weekday.slice(0, 3)}
                     </span>
-                    <span className="text-xs text-[#FCD000] font-black tabular-nums">
+                    <span className="text-xs text-[#FDD000] font-black tabular-nums">
                       {ex.sets}×{ex.reps}
                     </span>
                   </div>
@@ -6643,7 +6643,7 @@ export default function Fitness() {
               setDetailExercises([]);
               setPlayerOpen(true);
             }}
-            className="w-full bg-[#FCD000] hover:bg-[#FCD000]/90 text-black font-black uppercase tracking-wide border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+            className="w-full bg-[#FDD000] hover:bg-[#FDD000]/90 text-black font-black uppercase tracking-wide border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
             data-testid="button-start-from-detail"
           >
             <Play className="w-5 h-5 mr-2 fill-black" />
@@ -6697,7 +6697,7 @@ export default function Fitness() {
 
       {/* Fine-tune your workout difficulty (Manual Override) */}
       <Dialog open={!!tunePlan} onOpenChange={(open) => { if (!open) setTunePlan(null); }}>
-        <DialogContent className="bg-zinc-950 border-2 border-[#FCD000] text-white sm:max-w-md" data-testid="dialog-finetune">
+        <DialogContent className="bg-zinc-950 border-2 border-[#FDD000] text-white sm:max-w-md" data-testid="dialog-finetune">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black uppercase">Fine-tune your workout difficulty</DialogTitle>
             <DialogDescription className="text-white/60">
@@ -6709,7 +6709,7 @@ export default function Fitness() {
             {/* Rest time slider — 5-second increments, ±60s range */}
             <div data-testid="slider-rest-row">
               <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-black uppercase tracking-widest text-[#FCD000]">Rest time</label>
+                <label className="text-xs font-black uppercase tracking-widest text-[#FDD000]">Rest time</label>
                 <span className="text-xs font-bold tabular-nums text-white/80" data-testid="text-rest-delta">
                   {restDelta > 0 ? `+${restDelta}` : restDelta}s
                 </span>
@@ -6731,7 +6731,7 @@ export default function Fitness() {
             {/* Intensity slider — ±2 reps per click */}
             <div data-testid="slider-reps-row">
               <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-black uppercase tracking-widest text-[#FCD000]">Intensity (reps)</label>
+                <label className="text-xs font-black uppercase tracking-widest text-[#FDD000]">Intensity (reps)</label>
                 <span className="text-xs font-bold tabular-nums text-white/80" data-testid="text-reps-delta">
                   {repsDelta > 0 ? `+${repsDelta}` : repsDelta}
                 </span>
@@ -6753,7 +6753,7 @@ export default function Fitness() {
             {/* Volume slider — ±1 set per click */}
             <div data-testid="slider-sets-row">
               <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-black uppercase tracking-widest text-[#FCD000]">Volume (sets)</label>
+                <label className="text-xs font-black uppercase tracking-widest text-[#FDD000]">Volume (sets)</label>
                 <span className="text-xs font-bold tabular-nums text-white/80" data-testid="text-sets-delta">
                   {setsDelta > 0 ? `+${setsDelta}` : setsDelta}
                 </span>
@@ -6796,7 +6796,7 @@ export default function Fitness() {
                   setTuneSubmitting(false);
                 }
               }}
-              className="bg-[#FCD000] text-black font-black uppercase border-2 border-black"
+              className="bg-[#FDD000] text-black font-black uppercase border-2 border-black"
               data-testid="button-apply-finetune"
             >
               Apply to next session
@@ -6855,7 +6855,7 @@ export default function Fitness() {
       {/* Adjustment history — read-only audit feed. Manual entries
           are tagged in yellow, automatic ones in white. */}
       <Dialog open={!!historyPlan} onOpenChange={(open) => { if (!open) { setHistoryPlan(null); setHistoryRows([]); } }}>
-        <DialogContent className="bg-zinc-950 border-2 border-[#FCD000] text-white sm:max-w-lg max-h-[80vh] overflow-y-auto" data-testid="dialog-history">
+        <DialogContent className="bg-zinc-950 border-2 border-[#FDD000] text-white sm:max-w-lg max-h-[80vh] overflow-y-auto" data-testid="dialog-history">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black uppercase">Adjustment history</DialogTitle>
             <DialogDescription className="text-white/60">
@@ -6877,11 +6877,11 @@ export default function Fitness() {
                 return (
                   <li
                     key={row.id}
-                    className={`p-3 border-2 rounded-sm ${row.source === 'manual' ? 'border-[#FCD000]/60 bg-[#FCD000]/5' : 'border-white/15 bg-white/5'} ${rolledBack ? 'opacity-50' : ''}`}
+                    className={`p-3 border-2 rounded-sm ${row.source === 'manual' ? 'border-[#FDD000]/60 bg-[#FDD000]/5' : 'border-white/15 bg-white/5'} ${rolledBack ? 'opacity-50' : ''}`}
                     data-testid={`row-history-${row.id}`}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className={`text-[10px] uppercase font-black tracking-widest ${row.source === 'manual' ? 'text-[#FCD000]' : 'text-white/70'}`}>
+                      <span className={`text-[10px] uppercase font-black tracking-widest ${row.source === 'manual' ? 'text-[#FDD000]' : 'text-white/70'}`}>
                         {row.source === 'manual' ? 'Manual' : `Lever ${row.leverId} · ${row.direction}`}
                       </span>
                       <span className="text-[10px] text-white/50 tabular-nums">{dateLabel}</span>
@@ -6985,17 +6985,17 @@ export default function Fitness() {
             aria-modal="true"
           >
             <div
-              className="relative bg-zinc-900 border-2 border-[#FCD000] rounded-sm w-full max-w-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-[6px_6px_0px_0px_rgba(252,208,0,1)]"
+              className="relative bg-zinc-900 border-2 border-[#FDD000] rounded-sm w-full max-w-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-[6px_6px_0px_0px_rgba(253,208,0,1)]"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between px-4 py-3 border-b-2 border-[#FCD000] bg-zinc-900">
-                <h3 className="text-[#FCD000] font-black uppercase tracking-wide text-base sm:text-lg pr-4 truncate">
+              <div className="flex items-center justify-between px-4 py-3 border-b-2 border-[#FDD000] bg-zinc-900">
+                <h3 className="text-[#FDD000] font-black uppercase tracking-wide text-base sm:text-lg pr-4 truncate">
                   {previewExercise.name?.replace(/_/g, ' ')}
                 </h3>
                 <button
                   type="button"
                   onClick={closePreview}
-                  className="flex items-center gap-1 bg-[#FCD000] text-black px-3 py-1.5 rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-white font-black uppercase text-xs sm:text-sm shrink-0"
+                  className="flex items-center gap-1 bg-[#FDD000] text-black px-3 py-1.5 rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-white font-black uppercase text-xs sm:text-sm shrink-0"
                   data-testid="button-close-preview"
                   aria-label="Close preview"
                 >
@@ -7739,15 +7739,15 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
     'set-rest': 'bg-sky-500',
     'side-switch': 'bg-violet-500',
     rest: 'bg-sky-500',
-    done: 'bg-[#FCD000]'
+    done: 'bg-[#FDD000]'
   };
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col" data-testid="workout-player">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b-2 border-[#FCD000]">
+      <div className="flex items-center justify-between p-4 border-b-2 border-[#FDD000]">
         <div>
-          <p className="text-xs font-black text-[#FCD000] uppercase tracking-widest">{plan.name}</p>
+          <p className="text-xs font-black text-[#FDD000] uppercase tracking-widest">{plan.name}</p>
           <p className="text-sm text-white/70 font-bold">
             Exercise {exerciseIdx + 1} of {exercises.length}
           </p>
@@ -7768,7 +7768,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                 role="radio"
                 aria-checked={pacingMode === 'timed'}
                 onClick={() => setPacingMode('timed')}
-                className={`px-2 py-1 text-[10px] font-black uppercase tracking-widest transition-colors ${pacingMode === 'timed' ? 'bg-[#FCD000] text-black' : 'text-white/60 hover:bg-white/10'}`}
+                className={`px-2 py-1 text-[10px] font-black uppercase tracking-widest transition-colors ${pacingMode === 'timed' ? 'bg-[#FDD000] text-black' : 'text-white/60 hover:bg-white/10'}`}
                 data-testid="button-mode-timed"
               >
                 Timed
@@ -7778,7 +7778,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                 role="radio"
                 aria-checked={pacingMode === 'manual'}
                 onClick={() => setPacingMode('manual')}
-                className={`px-2 py-1 text-[10px] font-black uppercase tracking-widest transition-colors ${pacingMode === 'manual' ? 'bg-[#FCD000] text-black' : 'text-white/60 hover:bg-white/10'}`}
+                className={`px-2 py-1 text-[10px] font-black uppercase tracking-widest transition-colors ${pacingMode === 'manual' ? 'bg-[#FDD000] text-black' : 'text-white/60 hover:bg-white/10'}`}
                 data-testid="button-mode-manual"
               >
                 Manual
@@ -7821,7 +7821,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
         {phase === 'done' ? (
           <>
             <div className="text-6xl mb-4">🏆</div>
-            <h2 className="text-4xl font-black text-[#FCD000] uppercase mb-2">Workout Complete</h2>
+            <h2 className="text-4xl font-black text-[#FDD000] uppercase mb-2">Workout Complete</h2>
             <p className="text-white/70 mb-6">Great work. All {exercises.length} exercises done.</p>
 
             {!feedbackDone ? (
@@ -7869,7 +7869,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                 {feedbackResult?.lever && (
                   <div
                     className={`mb-4 px-3 py-1 rounded-sm border-2 border-black font-black uppercase tracking-widest text-xs ${
-                      feedbackResult.lever.requiresConfirmation ? 'bg-red-400 text-black' : 'bg-[#FCD000] text-black'
+                      feedbackResult.lever.requiresConfirmation ? 'bg-red-400 text-black' : 'bg-[#FDD000] text-black'
                     }`}
                     data-testid="text-feedback-lever"
                   >
@@ -7906,7 +7906,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                       <Button
                         onClick={() => submitMixedDecision(true)}
                         disabled={mixedSubmitting}
-                        className="bg-[#FCD000] text-black font-black uppercase border-2 border-black"
+                        className="bg-[#FDD000] text-black font-black uppercase border-2 border-black"
                         data-testid="button-mixed-happy"
                       >
                         {feedbackResult.mixedFeedback.confirmText}
@@ -7942,7 +7942,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                 {/* List of concrete changes the system applied this round */}
                 {feedbackResult?.adjustment?.applied && feedbackResult.adjustment.changes.length > 0 && (
                   <div className="w-full max-w-md mb-4 bg-white/5 border-2 border-white/20 rounded-sm p-3 text-left" data-testid="list-adjustment-changes">
-                    <div className="text-xs uppercase font-black text-[#FCD000] tracking-widest mb-2">
+                    <div className="text-xs uppercase font-black text-[#FDD000] tracking-widest mb-2">
                       What changed for next time
                     </div>
                     <ul className="space-y-1 text-xs text-white/80">
@@ -7970,7 +7970,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                 {/* Lever 6 confirmation prompt — only shown when the server
                     flagged a level change. Three explicit choices per spec. */}
                 {feedbackResult?.adjustment?.prompt && !lever6Decided ? (
-                  <div className="w-full max-w-md mb-6 bg-zinc-900 border-2 border-[#FCD000] rounded-sm p-4 text-left" data-testid="prompt-lever6">
+                  <div className="w-full max-w-md mb-6 bg-zinc-900 border-2 border-[#FDD000] rounded-sm p-4 text-left" data-testid="prompt-lever6">
                     <h4 className="text-lg font-black text-white mb-2">
                       {feedbackResult.adjustment.prompt.title}
                     </h4>
@@ -7981,7 +7981,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                       <Button
                         onClick={() => submitLever6Decision('yes')}
                         disabled={lever6Submitting}
-                        className="bg-[#FCD000] text-black font-black uppercase border-2 border-black"
+                        className="bg-[#FDD000] text-black font-black uppercase border-2 border-black"
                         data-testid="button-lever6-yes"
                       >
                         {feedbackResult.adjustment.prompt.confirmText}
@@ -8009,7 +8009,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                   <div className="flex flex-col items-center gap-3">
                     <Button
                       onClick={onClose}
-                      className="bg-[#FCD000] text-black font-black uppercase px-8 py-6 text-lg border-2 border-black"
+                      className="bg-[#FDD000] text-black font-black uppercase px-8 py-6 text-lg border-2 border-black"
                       data-testid="button-finish-workout"
                     >
                       Finish
@@ -8047,7 +8047,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                                 setFullRollbackSubmitting(false);
                               }
                             }}
-                            className="bg-[#FCD000] text-black font-black uppercase border-2 border-black flex-1"
+                            className="bg-[#FDD000] text-black font-black uppercase border-2 border-black flex-1"
                             data-testid="button-confirm-rollback"
                           >
                             Yes, restore
@@ -8077,7 +8077,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
             <h2 className="text-3xl md:text-4xl font-black text-white uppercase mb-2 max-w-2xl" data-testid="text-current-exercise">
               {currentExercise?.exerciseName}
             </h2>
-            <p className="text-[#FCD000] font-bold uppercase tracking-wide mb-6">
+            <p className="text-[#FDD000] font-bold uppercase tracking-wide mb-6">
               {/* HIIT has no set structure — show the time-based length
                   instead of "Set 1 of 1". Everything else keeps the
                   standard "Set X of Y" header. */}
@@ -8103,7 +8103,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                     type="button"
                     onClick={previous}
                     aria-label="Previous exercise"
-                    className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#FCD000] text-black border-2 border-black flex items-center justify-center shadow-lg hover:bg-[#FCD000]/90 active:scale-95 transition"
+                    className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#FDD000] text-black border-2 border-black flex items-center justify-center shadow-lg hover:bg-[#FDD000]/90 active:scale-95 transition"
                     data-testid="button-manual-prev"
                   >
                     <ChevronLeft className="w-6 h-6 md:w-7 md:h-7" />
@@ -8115,7 +8115,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                 onClick={togglePause}
                 onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); togglePause(); } }}
                 aria-label={awaitingStart ? 'Begin workout' : (paused ? 'Resume workout' : 'Pause workout')}
-                className="relative w-48 h-48 md:w-64 md:h-64 bg-white rounded-sm border-2 border-[#FCD000] overflow-hidden cursor-pointer select-none"
+                className="relative w-48 h-48 md:w-64 md:h-64 bg-white rounded-sm border-2 border-[#FDD000] overflow-hidden cursor-pointer select-none"
                 data-testid="media-tap-to-pause"
               >
                 {isVideo ? (
@@ -8162,7 +8162,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                 )}
                 {awaitingStart && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm pointer-events-none">
-                    <div className="px-6 py-3 bg-[#FCD000] text-black font-black uppercase tracking-widest text-lg border-2 border-black rounded-sm shadow-lg" data-testid="overlay-begin-label">
+                    <div className="px-6 py-3 bg-[#FDD000] text-black font-black uppercase tracking-widest text-lg border-2 border-black rounded-sm shadow-lg" data-testid="overlay-begin-label">
                       Begin
                     </div>
                   </div>
@@ -8176,7 +8176,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                     type="button"
                     onClick={nextManual}
                     aria-label="Next phase"
-                    className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#FCD000] text-black border-2 border-black flex items-center justify-center shadow-lg hover:bg-[#FCD000]/90 active:scale-95 transition"
+                    className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#FDD000] text-black border-2 border-black flex items-center justify-center shadow-lg hover:bg-[#FDD000]/90 active:scale-95 transition"
                     data-testid="button-manual-next"
                   >
                     <ChevronRight className="w-6 h-6 md:w-7 md:h-7" />
@@ -8227,7 +8227,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                 onClick={begin}
                 onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); begin(); } }}
                 aria-label="Begin workout"
-                className="w-48 h-48 md:w-64 md:h-64 mb-6 flex items-center justify-center bg-[#FCD000] text-black font-black uppercase tracking-widest text-2xl border-2 border-black rounded-sm cursor-pointer select-none"
+                className="w-48 h-48 md:w-64 md:h-64 mb-6 flex items-center justify-center bg-[#FDD000] text-black font-black uppercase tracking-widest text-2xl border-2 border-black rounded-sm cursor-pointer select-none"
                 data-testid="button-begin-no-media"
               >
                 Begin
@@ -8246,7 +8246,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
               {(!isTimeBased && phase === 'work' && numReps > 0) ? (
                 /* Rep-based work: show live rep counter as the primary display */
                 <>
-                  <div className="text-8xl md:text-9xl font-black text-[#FCD000] tabular-nums mb-2" data-testid="text-timer">
+                  <div className="text-8xl md:text-9xl font-black text-[#FDD000] tabular-nums mb-2" data-testid="text-timer">
                     {Math.min(repCount, numReps)}
                   </div>
                   <p className="text-white/50 text-sm uppercase tracking-widest font-bold mb-2">
@@ -8256,7 +8256,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
               ) : (
                 /* Time-based or non-work phases: show countdown */
                 <>
-                  <div className="text-8xl md:text-9xl font-black text-[#FCD000] tabular-nums mb-2" data-testid="text-timer">
+                  <div className="text-8xl md:text-9xl font-black text-[#FDD000] tabular-nums mb-2" data-testid="text-timer">
                     {secondsLeft}
                   </div>
                   <p className="text-white/50 text-sm uppercase tracking-widest font-bold mb-2">seconds</p>
@@ -8314,7 +8314,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
               <Button
                 onClick={skip}
                 variant="outline"
-                className="border-2 border-[#FCD000] text-[#FCD000] hover:bg-[#FCD000] hover:text-black font-black uppercase"
+                className="border-2 border-[#FDD000] text-[#FDD000] hover:bg-[#FDD000] hover:text-black font-black uppercase"
                 data-testid="button-skip-phase"
               >
                 Skip
@@ -8342,9 +8342,9 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
           while the user reads. Falls back to a friendly message when the
           plan exercise has no notes saved. */}
       <Dialog open={instructionsOpen} onOpenChange={(open) => (open ? openInstructions() : closeInstructions())}>
-        <DialogContent className="bg-zinc-900 border-2 border-[#FCD000] text-white max-w-3xl w-[92vw] z-[200]" data-testid="dialog-instructions">
+        <DialogContent className="bg-zinc-900 border-2 border-[#FDD000] text-white max-w-3xl w-[92vw] z-[200]" data-testid="dialog-instructions">
           <DialogHeader>
-            <DialogTitle className="text-[#FCD000] font-black uppercase tracking-wide">
+            <DialogTitle className="text-[#FDD000] font-black uppercase tracking-wide">
               {currentExercise?.exerciseName}
             </DialogTitle>
             <DialogDescription className="sr-only">
@@ -8368,7 +8368,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
                 closeInstructions();
                 setPaused(false);
               }}
-              className="bg-[#FCD000] text-black font-black uppercase border-2 border-black flex-1"
+              className="bg-[#FDD000] text-black font-black uppercase border-2 border-black flex-1"
               data-testid="button-instructions-resume"
             >
               <Play className="w-4 h-4 mr-1" />
@@ -8392,7 +8392,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
           whether the change applies just to this workout (local state)
           or sticks for every future workout (PUT to the plan row). */}
       <Dialog open={adjustOpen} onOpenChange={(open) => { if (!open) closeAdjust(); }}>
-        <DialogContent className="bg-zinc-950 border-2 border-[#FCD000] text-white sm:max-w-md z-[200]" data-testid="dialog-adjust-exercise">
+        <DialogContent className="bg-zinc-950 border-2 border-[#FDD000] text-white sm:max-w-md z-[200]" data-testid="dialog-adjust-exercise">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black uppercase">Adjust this exercise</DialogTitle>
             <DialogDescription className="text-white/60">
@@ -8404,7 +8404,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
             {/* Sets slider */}
             <div data-testid="slider-adjust-sets-row">
               <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-black uppercase tracking-widest text-[#FCD000]">Sets</label>
+                <label className="text-xs font-black uppercase tracking-widest text-[#FDD000]">Sets</label>
                 <span className="text-xs font-bold tabular-nums text-white/80" data-testid="text-adjust-sets-value">
                   {adjustSets}
                 </span>
@@ -8426,7 +8426,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
             {/* Reps slider */}
             <div data-testid="slider-adjust-reps-row">
               <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-black uppercase tracking-widest text-[#FCD000]">Reps</label>
+                <label className="text-xs font-black uppercase tracking-widest text-[#FDD000]">Reps</label>
                 <span className="text-xs font-bold tabular-nums text-white/80" data-testid="text-adjust-reps-value">
                   {adjustReps}
                 </span>
@@ -8448,7 +8448,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
             {/* Rest slider */}
             <div data-testid="slider-adjust-rest-row">
               <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-black uppercase tracking-widest text-[#FCD000]">Rest time</label>
+                <label className="text-xs font-black uppercase tracking-widest text-[#FDD000]">Rest time</label>
                 <span className="text-xs font-bold tabular-nums text-white/80" data-testid="text-adjust-rest-value">
                   {adjustRest}s
                 </span>
@@ -8472,7 +8472,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
             <Button
               disabled={adjustSubmitting}
               onClick={() => saveAdjust('session')}
-              className="bg-[#FCD000] text-black font-black uppercase border-2 border-black"
+              className="bg-[#FDD000] text-black font-black uppercase border-2 border-black"
               data-testid="button-adjust-save-session"
             >
               {adjustSubmitting ? 'Saving…' : 'Just this workout'}
@@ -8502,7 +8502,7 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
       {/* Progress bar */}
       <div className="h-2 bg-zinc-900">
         <div
-          className="h-full bg-[#FCD000] transition-all duration-500"
+          className="h-full bg-[#FDD000] transition-all duration-500"
           style={{ width: `${((exerciseIdx + (phase === 'done' ? 1 : 0)) / exercises.length) * 100}%` }}
         />
       </div>

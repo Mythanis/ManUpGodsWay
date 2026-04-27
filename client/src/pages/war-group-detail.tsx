@@ -341,7 +341,7 @@ export default function WarGroupDetail() {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         // Briefly highlight the post so the user knows which one was linked
         el.style.transition = 'box-shadow 0.3s ease';
-        el.style.boxShadow = '0 0 0 3px #FCD000';
+        el.style.boxShadow = '0 0 0 3px #FDD000';
         setTimeout(() => { el.style.boxShadow = ''; }, 2500);
       }
     }, 400);
@@ -588,7 +588,7 @@ export default function WarGroupDetail() {
       <div className="max-w-4xl mx-auto p-4 space-y-6">
         {/* Join/Status Card */}
         {!isMember && (
-          <Card className="bg-black/90 border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(252,208,0,0.15)]">
+          <Card className="bg-black/90 border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(253,208,0,0.15)]">
             <CardContent className="pt-6">
               {hasPendingRequest ? (
                 <div className="text-center">
@@ -613,7 +613,7 @@ export default function WarGroupDetail() {
         )}
 
         {isMember && (
-          <Card className="bg-black/90 border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(252,208,0,0.15)]">
+          <Card className="bg-black/90 border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(253,208,0,0.15)]">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -640,7 +640,7 @@ export default function WarGroupDetail() {
 
         {/* Pending Requests (For Leaders and Managers) */}
         {canManageMembers && pendingRequests.length > 0 && (
-          <Card className="bg-black border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(252,208,0,0.1)]">
+          <Card className="bg-black border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(253,208,0,0.1)]">
             <CardHeader>
               <CardTitle className="text-ministry-gold-exact flex items-center gap-2 text-xl font-black uppercase tracking-tight">
                 <UserPlus className="h-5 w-5" />
@@ -704,7 +704,7 @@ export default function WarGroupDetail() {
 
         {/* Members Management Section (For Leaders and Managers) */}
         {canManageMembers && (
-          <Card className="bg-black border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(252,208,0,0.1)]">
+          <Card className="bg-black border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(253,208,0,0.1)]">
             <CardHeader>
               <div 
                 className="flex items-center justify-between cursor-pointer"
@@ -809,7 +809,7 @@ export default function WarGroupDetail() {
         )}
 
         {/* Group Info */}
-        <Card className="bg-black border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(252,208,0,0.1)]">
+        <Card className="bg-black border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(253,208,0,0.1)]">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-2xl font-black uppercase tracking-tight text-ministry-gold-exact">About This Group</CardTitle>
@@ -933,7 +933,7 @@ export default function WarGroupDetail() {
           <div className="w-full space-y-4">
             <h2 className="text-2xl font-black uppercase tracking-tight text-white">Community</h2>
               {/* Create Post */}
-              <Card className="bg-black/90 border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(252,208,0,0.1)]">
+              <Card className="bg-black/90 border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(253,208,0,0.1)]">
                 <CardContent className="pt-4">
                   <Textarea
                     placeholder="SHARE SOMETHING WITH YOUR GROUP..."
@@ -1137,7 +1137,7 @@ function PostCard({
   });
 
   return (
-    <Card id={`post-${post.id}`} className="bg-black/90 border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(252,208,0,0.1)]" data-testid={`post-${post.id}`}>
+    <Card id={`post-${post.id}`} className="bg-black/90 border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(253,208,0,0.1)]" data-testid={`post-${post.id}`}>
       <CardContent className="p-4">
         {/* Post Header — dark area */}
         <div className="flex items-start justify-between mb-3">

@@ -17,7 +17,7 @@ export default function PrivacyPolicy() {
               size="icon"
               className="rounded-full w-10 h-10 bg-black hover:bg-black/80 mb-4"
             >
-              <ArrowLeft className="h-5 w-5 text-[#FCD000]" />
+              <ArrowLeft className="h-5 w-5 text-[#FDD000]" />
             </Button>
           </Link>
           
@@ -36,7 +36,7 @@ export default function PrivacyPolicy() {
       </div>
       
       <div className="px-6 py-6 space-y-6">
-        <Card className="liquid-black border-2 border-ministry-gold-exact overflow-hidden rounded-sm shadow-[4px_4px_0px_0px_rgba(252,208,0,1)]">
+        <Card className="liquid-black border-2 border-ministry-gold-exact overflow-hidden rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,1)]">
           <CardContent className="p-6 space-y-6">
             <div>
               <p className="text-gray-400 text-sm mb-1">App Name: ManUp God's Way</p>

@@ -31,8 +31,8 @@ export default function TrialPaywallModal({ open, reason, backTo = "/" }: TrialP
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
       <DialogContent className="max-w-sm p-0 border-0 bg-transparent shadow-none [&>button]:hidden">
-        <div className="bg-black border-4 border-[#FCD000] shadow-[6px_6px_0px_0px_rgba(252,208,0,0.5)] rounded-sm overflow-hidden">
-          <div className="bg-[#FCD000] px-6 py-4 flex items-center gap-3">
+        <div className="bg-black border-4 border-[#FDD000] shadow-[6px_6px_0px_0px_rgba(253,208,0,0.5)] rounded-sm overflow-hidden">
+          <div className="bg-[#FDD000] px-6 py-4 flex items-center gap-3">
             <Lock className="w-6 h-6 text-black flex-shrink-0" />
             <h2 className="font-black uppercase text-black tracking-wide text-lg leading-tight">
               Subscription Required
@@ -45,7 +45,7 @@ export default function TrialPaywallModal({ open, reason, backTo = "/" }: TrialP
             <div className="flex flex-col gap-3">
               <Button
                 onClick={handleSubscribe}
-                className="w-full h-12 bg-[#FCD000] text-black font-black uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
+                className="w-full h-12 bg-[#FDD000] text-black font-black uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
               >
                 <CreditCard className="w-4 h-4 mr-2" />
                 Subscribe Now
