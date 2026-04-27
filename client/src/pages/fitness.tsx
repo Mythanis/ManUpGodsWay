@@ -4328,56 +4328,45 @@ export default function Fitness() {
                 ) : (
                   generatedPlans.map((plan, index) => (
                   <Card key={index} className="bg-ministry-gold-exact border border-ministry-gold/30">
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <CardTitle className="text-black flex items-center gap-2">
-                            <BookOpen className="w-5 h-5 text-ministry-gold" />
-                            {plan.name}
-                          </CardTitle>
-                          <p className="text-sm text-black mt-1">{plan.description}</p>
-                        </div>
-                        <Badge variant="outline" className="border-ministry-gold text-ministry-gold">
+                    <CardContent className="pt-5 pb-4 space-y-4">
+                      {/* Title row */}
+                      <div className="flex items-start justify-between gap-3">
+                        <h3 className="text-black font-black text-lg leading-snug flex-1">{plan.name}</h3>
+                        <span className="shrink-0 text-[11px] font-bold uppercase tracking-widest bg-black/15 text-black rounded-full px-3 py-1">
                           {plan.duration}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
-                        <div>
-                          <span className="font-medium text-ministry-gold">Level:</span>
-                          <p className="text-black capitalize">{plan.level}</p>
-                        </div>
-                        <div>
-                          <span className="font-medium text-ministry-gold">Workouts/Week:</span>
-                          <p className="text-black">{plan.workoutsPerWeek}</p>
-                        </div>
-                        <div>
-                          <span className="font-medium text-ministry-gold">Equipment:</span>
-                          <p className="text-black capitalize">{plan.equipment}</p>
-                        </div>
-                        <div>
-                          <span className="font-medium text-ministry-gold">Start Day:</span>
-                          <p className="text-black capitalize">{plan.startDay}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="mb-4">
-                        <h4 className="font-medium text-ministry-gold mb-2">Weekly Schedule:</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {(plan.schedule || []).map((day, dayIndex) => (
-                            <Badge key={dayIndex} variant="secondary" className="bg-ministry-gold/20 text-black">
-                              {day}
-                            </Badge>
-                          ))}
-                        </div>
+                        </span>
                       </div>
 
-                      <div className="flex gap-2">
+                      {/* Compact stat pills */}
+                      <div className="flex flex-wrap gap-2 text-[13px]">
+                        {[
+                          { label: 'Level', value: plan.level },
+                          { label: 'Days/wk', value: String(plan.workoutsPerWeek) },
+                          { label: 'Equipment', value: plan.equipment },
+                          { label: 'Starts', value: plan.startDay },
+                        ].map(({ label, value }) => (
+                          <div key={label} className="flex items-center gap-1.5 bg-black/10 rounded-full px-3 py-1">
+                            <span className="text-black/50 text-[10px] uppercase tracking-wide font-bold">{label}</span>
+                            <span className="text-black font-bold capitalize">{value}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Day chips — abbreviated */}
+                      <div className="flex flex-wrap gap-1.5">
+                        {(plan.schedule || []).map((day, dayIndex) => (
+                          <span key={dayIndex} className="px-2.5 py-1 bg-black/15 rounded-md text-black text-xs font-bold capitalize">
+                            {day.slice(0, 3)}
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex gap-2 pt-1">
                         <Button
                           onClick={() => handleCreatePlanFromPrebuilt(plan)}
                           disabled={createPrebuiltPlanMutation.isPending}
-                          className="bg-ministry-gold hover:bg-ministry-gold/90 text-black"
+                          className="bg-black hover:bg-black/80 text-[#FCD000] font-bold"
                           data-testid={`button-create-prebuilt-plan-${index}`}
                         >
                           {createPrebuiltPlanMutation.isPending ? "Creating..." : "Create This Plan"}
@@ -4385,7 +4374,7 @@ export default function Fitness() {
                         <Button
                           onClick={() => setSelectedPlanForPreview(plan)}
                           variant="outline"
-                          className="border-ministry-gold text-ministry-gold hover:bg-ministry-gold/10"
+                          className="border-black/30 text-black hover:bg-black/10 font-semibold"
                           data-testid={`button-preview-plan-${index}`}
                         >
                           Preview Exercises
