@@ -3114,7 +3114,7 @@ export const userInjuries = pgTable("user_injuries", {
   bodyArea: varchar("body_area").notNull(),
   injuryType: varchar("injury_type").notNull().$type<'currently_injured' | 'long_term_limitation' | 'recovery'>(),
   note: text("note"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const insertUserInjurySchema = createInsertSchema(userInjuries).omit({

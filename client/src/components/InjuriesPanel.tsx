@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { X, Plus, AlertTriangle } from "lucide-react";
 import type { UserInjury } from "@shared/schema";
@@ -231,7 +232,11 @@ export default function InjuriesPanel() {
               <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
                 Type
               </label>
-              <div className="grid grid-cols-1 gap-2">
+              <RadioGroup
+                value={injuryType}
+                onValueChange={setInjuryType}
+                className="grid grid-cols-1 gap-2"
+              >
                 {(
                   [
                     { value: "currently_injured", label: "Currently Injured" },
@@ -239,20 +244,25 @@ export default function InjuriesPanel() {
                     { value: "recovery", label: "Recovery" },
                   ] as const
                 ).map((option) => (
-                  <button
+                  <label
                     key={option.value}
-                    onClick={() => setInjuryType(option.value)}
-                    className={`px-3 py-2 rounded-sm text-sm font-semibold border-2 text-left transition-colors ${
+                    htmlFor={`injury-type-${option.value}`}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-sm text-sm font-semibold border-2 cursor-pointer transition-colors ${
                       injuryType === option.value
                         ? "bg-[#FDD000] border-[#FDD000] text-black"
                         : "bg-transparent border-zinc-600 text-zinc-300 hover:border-zinc-400"
                     }`}
-                    data-testid={`injury-type-${option.value}`}
                   >
+                    <RadioGroupItem
+                      value={option.value}
+                      id={`injury-type-${option.value}`}
+                      data-testid={`injury-type-${option.value}`}
+                      className="border-current text-current"
+                    />
                     {option.label}
-                  </button>
+                  </label>
                 ))}
-              </div>
+              </RadioGroup>
             </div>
 
             <div className="space-y-1.5">
