@@ -239,6 +239,60 @@ console.log('\n=== Compensation list tests ===');
   assert('Ankle rec has tibialis strengthen', rec?.compensationStrengthen.some(x => x.name.toLowerCase().includes('tibialis')));
 }
 
+// ─── Direct-body-part stretches (not pattern-matched) ─────────────────────
+console.log('\n=== Direct body-part stretch (no name-pattern match) ===');
+
+// "Deltoid stretch" — bodyPart Shoulders (direct) but NOT in stretchAreaPatterns
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Deltoid stretch', bodyPart: 'Shoulders', stretching: 'Yes' },
+    [{ bodyArea: 'Shoulders', injuryType: 'currently_injured' }],
+  );
+  assert('Deltoid stretch (direct, non-pattern) blocked for current Shoulder injury', r.status === 'blocked');
+  assert('Reason mentions 20-second holds', r.reasons.some(r => r.includes('20-second')));
+}
+
+// "Knee mobility stretch" — bodyPart Knees (direct) but "knee mobility stretch" doesn't match stretchAreaPatterns
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Knee mobility stretch', bodyPart: 'Knees', stretching: 'Yes' },
+    [{ bodyArea: 'Knees', injuryType: 'recovery', startedAt: weeksAgo(3) }],
+  );
+  assert('Knee mobility stretch (direct, non-pattern) blocked for Knee recovery Week 3 (<6)', r.status === 'blocked');
+  assert('Reason mentions Week 6', r.reasons.some(r => r.includes('Week 6')));
+}
+
+// "Knee mobility stretch" — recovery Week 8 → modify with hold-time hint
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Knee mobility stretch', bodyPart: 'Knees', stretching: 'Yes' },
+    [{ bodyArea: 'Knees', injuryType: 'recovery', startedAt: weeksAgo(8) }],
+  );
+  assert('Knee mobility stretch (direct, non-pattern) modify at Knee recovery Week 8', r.status === 'modify');
+  assert('Reason mentions 50% hold time', r.reasons.some(r => r.includes('50%')));
+}
+
+// "Deltoid stretch" — long-term limitation → allowed (coaching only)
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Deltoid stretch', bodyPart: 'Shoulders', stretching: 'Yes' },
+    [{ bodyArea: 'Shoulders', injuryType: 'long_term_limitation' }],
+  );
+  assert('Deltoid stretch (direct, non-pattern) allowed for long-term Shoulder limitation', r.status === 'allowed');
+}
+
+// Affinity-only stretch with currently_injured — should still get modify/caution from
+// fallthrough (not blocked by state-driven rule, since it's neither direct nor pattern-matched)
+{
+  const r = evaluateExerciseAgainstInjuries(
+    // Hamstrings is in KNEES affinity but not a direct body part
+    { name: 'Lying hamstring stretch', bodyPart: 'Hamstrings', stretching: 'Yes' },
+    [{ bodyArea: 'Knees', injuryType: 'currently_injured' }],
+  );
+  // stretchAllowPatterns for KNEES includes 'lying hamstring' → should be allowed
+  assert('Lying hamstring stretch allowed for current Knee injury via stretchAllowPatterns', r.status === 'allowed');
+}
+
 // ─── stretchAllowPatterns still override state logic ──────────────────────
 console.log('\n=== stretchAllowPatterns precedence ===');
 {

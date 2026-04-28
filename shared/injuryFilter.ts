@@ -807,10 +807,12 @@ function evaluateAgainstPack(
     }
 
     // 2c. State-driven area-stretch rules (new).
-    //     Only applies when the stretch name matches stretchAreaPatterns —
-    //     i.e. the stretch targets this injury area specifically.
+    //     Applies when the stretch DIRECTLY targets the injured body part
+    //     (exercise.bodyPart is in pack.bodyParts) OR when the exercise name
+    //     matches stretchAreaPatterns — both indicate the stretch loads the
+    //     exact injury area rather than merely using it as a stabilizer.
     const matchesArea = matchesAny(exercise.name, pack.stretchAreaPatterns);
-    if (matchesArea) {
+    if (direct || matchesArea) {
       const exName = exerciseDisplay(exercise.name);
 
       if (injury.injuryType === 'currently_injured') {
@@ -843,7 +845,8 @@ function evaluateAgainstPack(
       // exercise doesn't fall through to the direct-load caution rule below.
       if (injury.injuryType === 'long_term_limitation') return;
     }
-    // Unmatched stretch on the affected area — fall through to type rules.
+    // Unmatched stretch on affected area (affinity only, no name match) —
+    // fall through to type-based rules which apply the appropriate caution.
   }
 
   // Short, human-readable name for this exercise — used in every reason so
