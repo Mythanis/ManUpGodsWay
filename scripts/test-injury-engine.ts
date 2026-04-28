@@ -469,6 +469,121 @@ console.log('\n=== Compensation lists ===');
   assert('Ankle comp strengthen includes tibialis', !!rec?.compensationStrengthen.some(x => x.name.toLowerCase().includes('tibialis')));
 }
 
+// ─── Name resolver logic (mirrors resolveByName in fitness.tsx) ───────────
+console.log('\n=== Name resolver ===');
+
+// Mirrors the normName / resolveByName helpers implemented in fitness.tsx.
+// These tests ensure the matching logic works before real DB exercises are
+// available in the test environment.
+function normName(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+interface FakeEx { id: string; name: string }
+function resolveByName(name: string, pool: FakeEx[]): FakeEx | undefined {
+  const n = normName(name);
+  let found = pool.find(e => normName(e.name) === n);
+  if (found) return found;
+  found = pool.find(e => { const en = normName(e.name); return en.length > 3 && n.includes(en); });
+  if (found) return found;
+  found = pool.find(e => { const en = normName(e.name); return n.length > 3 && en.includes(n); });
+  if (found) return found;
+  const nWords = n.split(' ').filter((w: string) => w.length > 3);
+  found = pool.find(e => {
+    const eWords = normName(e.name).split(' ').filter((w: string) => w.length > 3);
+    return nWords.filter((w: string) => eWords.includes(w)).length >= 2;
+  });
+  return found;
+}
+
+const fakePool: FakeEx[] = [
+  { id: '1', name: 'Cat-Cow Stretch' },
+  { id: '2', name: 'Hip Flexor Stretch' },
+  { id: '3', name: 'Glute Bridge' },
+  { id: '4', name: 'Side Plank' },
+  { id: '5', name: 'Pigeon Pose' },
+  { id: '6', name: 'Tibialis Raise (Bodyweight)' },
+  { id: '7', name: 'Banded Shoulder External Rotation' },
+];
+
+{
+  // Exact match (after normalization: "cat cow stretch")
+  const found = resolveByName('Cat-Cow Stretch', fakePool);
+  assert('Exact match Cat-Cow Stretch', !!found && found.id === '1');
+}
+{
+  // Punctuation stripped: "cat cow" matches "cat cow stretch" (catalog contains target?)
+  // "cat cow" (n) is 7 chars, normName("Cat-Cow Stretch") = "cat cow stretch" includes "cat cow" → yes
+  const found = resolveByName('cat cow', fakePool);
+  assert('Alias cat-cow resolves to Cat-Cow Stretch', !!found && found.id === '1');
+}
+{
+  // Exact match Glute Bridge
+  const found = resolveByName('Glute Bridge', fakePool);
+  assert('Exact match Glute Bridge', !!found && found.id === '3');
+}
+{
+  // Token word overlap: "Tibialis Raise" should match "Tibialis Raise (Bodyweight)"
+  const found = resolveByName('Tibialis Raise', fakePool);
+  assert('Tibialis Raise resolves via partial match', !!found && found.id === '6');
+}
+{
+  // Bird Dog → not in catalog → should return undefined
+  const found = resolveByName('Bird Dog', fakePool);
+  assert('Bird Dog not in catalog → silently skipped (undefined)', found === undefined);
+}
+{
+  // McGill Curl-Up → not in catalog → undefined
+  const found = resolveByName('McGill Curl-Up', fakePool);
+  assert('McGill Curl-Up not in catalog → silently skipped (undefined)', found === undefined);
+}
+
+// ─── Integration: Lower Back injury produces expected recommendations ──────
+console.log('\n=== Integration: plan-level compensation data ===');
+{
+  const recs = getInjuryRecommendations([
+    { bodyArea: 'Lower Back', injuryType: 'currently_injured' },
+  ]);
+  const rec = recs.find(r => r.bodyArea === 'Lower Back');
+  assert('Lower Back rec: compensationStretch is non-empty', !!rec && rec.compensationStretch.length > 0);
+  assert('Lower Back rec: compensationStrengthen is non-empty', !!rec && rec.compensationStrengthen.length > 0);
+
+  // At least one of the stretch names resolves in the fake pool (Hip Flexor Stretch, Cat-Cow Stretch)
+  const stretches = rec?.compensationStretch ?? [];
+  const anyStretchResolved = stretches.some(s => !!resolveByName(s.name, fakePool));
+  assert('Lower Back comp-stretch: at least one resolves in fake pool', anyStretchResolved);
+
+  // At least one of the strengthen names resolves (Glute Bridge, Side Plank)
+  const strengthens = rec?.compensationStrengthen ?? [];
+  const anyStrengthResolved = strengthens.some(s => !!resolveByName(s.name, fakePool));
+  assert('Lower Back comp-strengthen: at least one resolves in fake pool', anyStrengthResolved);
+}
+{
+  // No injuries → no recs → plan unchanged
+  const recs = getInjuryRecommendations([]);
+  assert('No injuries → empty recommendations', recs.length === 0);
+
+  const policy = getInjuryStretchPolicy([]);
+  assert('No injuries → empty policy map', Object.keys(policy).length === 0);
+}
+{
+  // Knees: "Standing hip flexor stretch" should resolve to fakePool id '2'
+  // (via substring match: "standing hip flexor stretch" includes "hip flexor stretch")
+  const recs = getInjuryRecommendations([{ bodyArea: 'Knees', injuryType: 'currently_injured' }]);
+  const rec = recs.find(r => r.bodyArea === 'Knees');
+  const stretchResolvedIds = (rec?.compensationStretch ?? [])
+    .map(s => resolveByName(s.name, fakePool)?.id)
+    .filter(Boolean);
+  assert('Knees comp-stretch: at least one item resolves in fake pool', stretchResolvedIds.length > 0);
+
+  // Knees comp-strengthen items have long descriptive names ("Glute medius (clamshells, side-lying abduction)")
+  // which don't match our simple fake pool — this is expected behaviour (silently skipped).
+  const strengthResolvedIds = (rec?.compensationStrengthen ?? [])
+    .map(s => resolveByName(s.name, fakePool)?.id)
+    .filter(Boolean);
+  // Just verify the recommendation set is non-empty even if none resolve in the small fake pool.
+  assert('Knees comp-strengthen: recommendation list non-empty', !!rec && rec.compensationStrengthen.length > 0);
+}
+
 // ─── Summary ─────────────────────────────────────────────────────────────
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`Results: ${passed} passed, ${failed} failed`);

@@ -266,6 +266,13 @@ Requires `ANTHROPIC_API_KEY` (already configured as a Replit secret).
 
 **Recommendations:** `getInjuryRecommendations(injuries)` returns `[{ bodyArea, recommendations, compensationStretch, compensationStrengthen, stretchPolicy }]` from each pack. InjuriesPanel renders three subsections: Always Include, Stretch every session (blue), Strengthen every session (yellow).
 
+**Plan generator wiring (Task #166 — fitness.tsx):**
+- `generatePreBuiltPlans` resolves injury compensation items against the live exercise catalog via `resolveByName` (case-insensitive, punctuation-stripped, substring + token-overlap matching). Unresolved names (Bird Dog, McGill Curl-Up, etc.) are silently skipped.
+- `generateDynamicPlan` accepts optional `injuryRehab: { compStretches, compStrengthen }`.
+- `emitOpeningStretch` / `emitCooldown` each inject 1 priority compensation stretch before normal body-part picks.
+- Up to 2 compensation-strengthen exercises are injected after the warm-up block (before main work) on every workout day (not stretching-only days).
+- `stretchPolicy` coaching string (from `getInjuryStretchPolicy`) is stored on `PreBuiltPlan.stretchPolicy` and rendered as an injury guidance banner on plan cards and in the plan preview dialog.
+
 **Frontend (create-plan.tsx & edit-plan.tsx):**
 - Exercise browser cards show 🔴 Blocked / 🟡 Caution badges when user has recorded injuries
 - Toggle "Hide exercises that conflict with my injuries" (auto-ON when any current injury)

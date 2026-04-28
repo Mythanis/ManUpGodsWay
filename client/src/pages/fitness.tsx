@@ -91,7 +91,7 @@ import { Link } from "wouter";
 import seanMcManusPhoto from "@assets/531400631_10229732604879918_951068179454150284_n_1766855745199.jpeg";
 import { PushConsentDialog } from "@/components/push-consent-dialog";
 import InjuriesPanel from "@/components/InjuriesPanel";
-import { evaluateExerciseAgainstInjuries } from "@shared/injuryFilter";
+import { evaluateExerciseAgainstInjuries, getInjuryRecommendations, getInjuryStretchPolicy } from "@shared/injuryFilter";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { HealthMetric, HealthMetricType, HealthGoal } from "@shared/schema";
@@ -211,6 +211,7 @@ interface PreBuiltPlan {
   startDay: string;
   schedule: string[];
   exercises: PreBuiltExercise[];
+  stretchPolicy?: string;
 }
 
 interface PreBuiltExercise {
@@ -1964,6 +1965,67 @@ export default function Fitness() {
       }
       const stretchPool = bodyweightPool.filter(e => e.name.toLowerCase().includes('stretch'));
 
+      // ── Injury rehab resolver ──────────────────────────────────────────────
+      // Build a combined search pool (exercises + bodyweight), resolve each
+      // compensation name against it. Unresolved names are silently skipped.
+      const normName = (s: string) =>
+        s.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+      const resolveByName = (name: string, pool: APIExercise[]): APIExercise | undefined => {
+        const n = normName(name);
+        let found = pool.find(e => normName(e.name) === n);
+        if (found) return found;
+        found = pool.find(e => {
+          const en = normName(e.name);
+          return en.length > 3 && n.includes(en);
+        });
+        if (found) return found;
+        found = pool.find(e => {
+          const en = normName(e.name);
+          return n.length > 3 && en.includes(n);
+        });
+        if (found) return found;
+        const nWords = n.split(' ').filter((w: string) => w.length > 3);
+        found = pool.find(e => {
+          const eWords = normName(e.name).split(' ').filter((w: string) => w.length > 3);
+          return nWords.filter((w: string) => eWords.includes(w)).length >= 2;
+        });
+        return found;
+      };
+
+      // Deduplicated combined pool (exercises + bodyweight) for name resolution
+      const combinedIdSet = new Set<string>();
+      const rehabPool: APIExercise[] = [];
+      for (const ex of [...exercises, ...bodyweightPool]) {
+        if (!combinedIdSet.has(ex.id)) { combinedIdSet.add(ex.id); rehabPool.push(ex); }
+      }
+
+      const activeInjuries: any[] = Array.isArray(fitnessPageInjuries) ? fitnessPageInjuries : [];
+      const rehabRecs = activeInjuries.length > 0 ? getInjuryRecommendations(activeInjuries) : [];
+      const stretchPolicyMap = activeInjuries.length > 0 ? getInjuryStretchPolicy(activeInjuries) : {};
+
+      const resolvedCompStretches: APIExercise[] = [];
+      const resolvedCompStrengthen: APIExercise[] = [];
+      const seenRehabIds = new Set<string>();
+
+      for (const rec of rehabRecs) {
+        for (const item of rec.compensationStretch) {
+          const ex = resolveByName(item.name, rehabPool);
+          if (ex && !seenRehabIds.has(ex.id)) { seenRehabIds.add(ex.id); resolvedCompStretches.push(ex); }
+        }
+        for (const item of rec.compensationStrengthen) {
+          const ex = resolveByName(item.name, rehabPool);
+          if (ex && !seenRehabIds.has(ex.id)) { seenRehabIds.add(ex.id); resolvedCompStrengthen.push(ex); }
+        }
+      }
+
+      const injuryRehab = { compStretches: resolvedCompStretches, compStrengthen: resolvedCompStrengthen };
+      const stretchPolicy = Object.values(stretchPolicyMap).filter(Boolean).join(' | ');
+
+      if (activeInjuries.length > 0) {
+        console.log(`[InjuryRehab] ${resolvedCompStretches.length} comp-stretches, ${resolvedCompStrengthen.length} comp-strengthen resolved from ${activeInjuries.length} injuries`);
+      }
+      // ── End injury rehab resolver ──────────────────────────────────────────
+
       let cardioPool: APIExercise[] = [];
       if (workoutStyle === 'standard-cardio') {
         const cardioEquipment = ['Treadmill','Stationary Bike','Rowing Machine','Elliptical Machine','Assault Bike','Jump Rope','Stepmill','Battle Ropes','Ski Ergometer','Rebounder'];
@@ -1995,8 +2057,9 @@ export default function Fitness() {
           const bodyweightExercises = await getExercisesForEquipment(bodyweightEquipment, level);
           if (bodyweightExercises.length >= 5) {
             console.log('Falling back to bodyweight exercises');
-            const weeklyPlan = generateDynamicPlan(bodyweightExercises, level as "Beginner"|"Intermediate"|"Advanced"|"Tabata", 'bodyweight', workoutDays.length, workoutStyle, parseInt(duration), stretchPool, cardioPool);
+            const weeklyPlan = generateDynamicPlan(bodyweightExercises, level as "Beginner"|"Intermediate"|"Advanced"|"Tabata", 'bodyweight', workoutDays.length, workoutStyle, parseInt(duration), stretchPool, cardioPool, injuryRehab);
             const preBuiltPlan = convertWeeklyPlanToPreBuiltPlan(weeklyPlan, startDay, workoutDays);
+            if (stretchPolicy) preBuiltPlan.stretchPolicy = stretchPolicy;
             return [preBuiltPlan];
           }
         }
@@ -2024,9 +2087,11 @@ export default function Fitness() {
         workoutStyle,
         parseInt(duration),
         stretchPool,
-        cardioPool
+        cardioPool,
+        injuryRehab
       );
       const preBuiltPlan = convertWeeklyPlanToPreBuiltPlan(weeklyPlan, startDay, workoutDays);
+      if (stretchPolicy) preBuiltPlan.stretchPolicy = stretchPolicy;
       
       // Customize plan based on additional parameters
       const styleLabel =
@@ -2360,7 +2425,8 @@ export default function Fitness() {
     workoutStyle: string = 'standard-no-cardio',
     durationMin: number = 45,
     stretchPool: APIExercise[] = [],
-    cardioPool: APIExercise[] = []
+    cardioPool: APIExercise[] = [],
+    injuryRehab: { compStretches: APIExercise[]; compStrengthen: APIExercise[] } = { compStretches: [], compStrengthen: [] }
   ): WeeklyPlan {
     // Defensive normalization: the level select can emit lowercase
     // values ("intermediate") that the TS cast at the callsite swallows
@@ -2670,10 +2736,22 @@ export default function Fitness() {
 
     // Helper: prepend the OPENING STRETCH block (4-6 dynamic stretches,
     // 20-30s each, no rest between). Biased toward today's body parts.
-    const emitOpeningStretch = (parts: string[], dayExercises: PlanExercise[]) => {
+    const emitOpeningStretch = (parts: string[], dayExercises: PlanExercise[], priorityStretches: APIExercise[] = []) => {
       if (openingStretchCount === 0 || stretchPool.length === 0) return;
       const usedWarm = new Set<string>();
       let added = 0;
+      // Inject up to 1 priority (compensation rehab) stretch first
+      for (const ps of priorityStretches) {
+        if (added >= Math.min(1, openingStretchCount)) break;
+        if (!usedWarm.has(ps.id)) {
+          usedWarm.add(ps.id);
+          dayExercises.push({
+            exercise: ps, sets: 1, reps: null,
+            durationSec: OPENING_STRETCH_HOLD, restSec: OPENING_TRANSITION,
+          });
+          added++;
+        }
+      }
       for (const bp of parts) {
         if (added >= openingStretchCount) break;
         const bpMatch = stretchPool.filter(s => s.bodyPart.toLowerCase() === bp.toLowerCase() && !usedWarm.has(s.id));
@@ -2728,11 +2806,23 @@ export default function Fitness() {
     // held per level: Beg 30s, Int 40s, Adv 50-60s; no rest between).
     // Biased toward today's body parts and avoiding duplicates already
     // used earlier in the day.
-    const emitCooldown = (parts: string[], dayExercises: PlanExercise[]) => {
+    const emitCooldown = (parts: string[], dayExercises: PlanExercise[], priorityStretches: APIExercise[] = []) => {
       if (cooldownCount === 0 || stretchPool.length === 0) return;
       const usedCool = new Set<string>();
       dayExercises.forEach(e => usedCool.add(e.exercise.id));
       let added = 0;
+      // Inject up to 1 priority (compensation rehab) stretch that wasn't used in opening
+      for (const ps of priorityStretches) {
+        if (added >= Math.min(1, cooldownCount)) break;
+        if (!usedCool.has(ps.id)) {
+          usedCool.add(ps.id);
+          dayExercises.push({
+            exercise: ps, sets: 1, reps: null,
+            durationSec: COOLDOWN_HOLD, restSec: COOLDOWN_TRANSITION,
+          });
+          added++;
+        }
+      }
       for (const bp of parts) {
         if (added >= cooldownCount) break;
         const bpMatch = stretchPool.filter(s => s.bodyPart.toLowerCase() === bp.toLowerCase() && !usedCool.has(s.id));
@@ -2787,8 +2877,28 @@ export default function Fitness() {
         // Header blocks per spec — opening stretch (5 min) then warm-up
         // (5 min). Both skipped for stretching-only sessions, where the
         // budget IS the holds.
-        emitOpeningStretch(dayPlan.parts, dayExercises);
+        emitOpeningStretch(dayPlan.parts, dayExercises, injuryRehab.compStretches);
         emitWarmupCardio(dayExercises);
+
+        // Injury compensation strengthening — injected after warm-up, before main
+        // block (max 2 per day, silently skip if already in day or not resolved).
+        if (injuryRehab.compStrengthen.length > 0 && workoutStyle !== 'stretching') {
+          const usedIds = new Set(dayExercises.map(pe => pe.exercise.id));
+          let strengthCount = 0;
+          for (const ex of injuryRehab.compStrengthen) {
+            if (strengthCount >= 2) break;
+            if (!usedIds.has(ex.id)) {
+              usedIds.add(ex.id);
+              dayExercises.push({
+                exercise: ex,
+                sets: 2,
+                reps: 15,
+                restSec: 30,
+              });
+              strengthCount++;
+            }
+          }
+        }
 
         // Main work block
         if (workoutStyle === 'stretching') {
@@ -3014,7 +3124,7 @@ export default function Fitness() {
         // Append the cooldown stretch block (~5 min) to every day. For pure
         // stretching sessions the budget already excluded the cooldown, so
         // these extra holds bring total time back up to the selected duration.
-        emitCooldown(dayPlan.parts, dayExercises);
+        emitCooldown(dayPlan.parts, dayExercises, injuryRehab.compStretches);
 
         const dayLabel = workoutStyle === 'stretching' ? `${dayPlan.name} Stretch` : dayPlan.name;
 
@@ -4424,6 +4534,14 @@ export default function Fitness() {
                           </span>
                         ))}
                       </div>
+
+                      {/* Injury rehab coaching note */}
+                      {plan.stretchPolicy && (
+                        <div className="flex items-start gap-2 bg-black/10 border border-black/20 rounded-md px-3 py-2">
+                          <span className="text-base shrink-0">🩺</span>
+                          <p className="text-[11px] font-semibold text-black/80 leading-snug">{plan.stretchPolicy}</p>
+                        </div>
+                      )}
 
                       {/* Actions */}
                       <div className="flex gap-2 pt-1">
@@ -6525,6 +6643,17 @@ export default function Fitness() {
                     <p>{selectedPlanForPreview.workoutsPerWeek}</p>
                   </div>
                 </div>
+
+                {/* Injury rehab coaching note in preview */}
+                {selectedPlanForPreview.stretchPolicy && (
+                  <div className="mt-3 flex items-start gap-2 bg-yellow-50 border border-yellow-300 rounded-md px-3 py-2">
+                    <span className="text-base shrink-0">🩺</span>
+                    <div>
+                      <p className="text-xs font-bold text-yellow-800 mb-0.5">Injury Rehab Guidance</p>
+                      <p className="text-xs text-yellow-700 leading-snug">{selectedPlanForPreview.stretchPolicy}</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Exercises List */}
