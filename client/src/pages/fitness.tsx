@@ -3399,12 +3399,28 @@ export default function Fitness() {
       // Send all exercises in a single bulk request. This avoids hitting
       // the per-IP rate limiter (200 req/min) when a plan has 100+
       // exercises and is also one DB write instead of N.
+      // When the plan contains injury-compensation exercises the server may
+      // return 409 INJURY_RISK because those exercises were specifically
+      // curated for the user's condition. In that case we retry with the
+      // acknowledgeInjuryRisk flag — the generator already filtered the
+      // main-block picks for safety, so the override is appropriate.
       if (exercisePayloads.length > 0) {
-        await apiRequest(
-          'POST',
-          `/api/fitness-plans/${planResponse.id}/exercises/bulk`,
-          { exercises: exercisePayloads }
-        );
+        const bulkUrl = `/api/fitness-plans/${planResponse.id}/exercises/bulk`;
+        try {
+          await apiRequest('POST', bulkUrl, { exercises: exercisePayloads });
+        } catch (err: any) {
+          // apiRequest throws on non-2xx. If the status was 409 and the plan
+          // has injury-rehab exercises, retry with the override flag.
+          const status = err?.status ?? err?.response?.status;
+          if (status === 409 && preBuiltPlan.stretchPolicy) {
+            await apiRequest('POST', bulkUrl, {
+              exercises: exercisePayloads,
+              acknowledgeInjuryRisk: true,
+            });
+          } else {
+            throw err;
+          }
+        }
       }
 
       return planResponse;
@@ -6591,8 +6607,22 @@ export default function Fitness() {
               );
             }
 
+            // Surface injury guidance coaching note at the top of the day modal
+            const planDesc = selectedPlanForView.description ?? '';
+            const injuryMarkerModal = '\n\nInjury Guidance: ';
+            const injuryIdxModal = planDesc.indexOf(injuryMarkerModal);
+            const modalInjuryNote = injuryIdxModal >= 0
+              ? planDesc.slice(injuryIdxModal + injuryMarkerModal.length)
+              : null;
+
             return (
               <div className="space-y-3">
+                {modalInjuryNote && (
+                  <div className="flex items-start gap-2 bg-yellow-900/30 border border-yellow-600/30 rounded-sm px-3 py-2">
+                    <span className="text-yellow-400 text-[10px] font-black uppercase tracking-wide flex-shrink-0 mt-px">Injury Guidance</span>
+                    <p className="text-yellow-300/80 text-[11px] leading-snug">{modalInjuryNote}</p>
+                  </div>
+                )}
                 {uniqueExercises.map((exercise, index) => (
                   <div key={exercise.id} className="liquid-black rounded-sm border-2 border-zinc-700 overflow-hidden">
                     {/* Exercise name bar */}
