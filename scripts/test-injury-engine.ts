@@ -117,8 +117,10 @@ console.log('\n=== LOWER_BACK pack ===');
     { bodyArea: 'Lower Back', injuryType: 'currently_injured' },
   ]);
   const pack = recs.find(r => r.bodyArea === 'Lower Back');
-  assert('Lower back recs include Bird Dog', !!pack?.recommendations.some(x => x.name === 'Bird Dog'));
+  // alwaysInclude is now curated to exercises we actually carry in the
+  // database — Side Plank stays, Bird Dog/Modified Curl-up were removed.
   assert('Lower back recs include Side Plank', !!pack?.recommendations.some(x => x.name === 'Side Plank'));
+  assert('Lower back recs include Hip flexor stretch', !!pack?.recommendations.some(x => x.name === 'Hip flexor stretch'));
 }
 {
   const r = evaluateExerciseAgainstInjuries(
@@ -527,14 +529,17 @@ const fakePool: FakeEx[] = [
   assert('Tibialis Raise resolves via partial match', !!found && found.id === '6');
 }
 {
-  // Bird Dog → not in catalog → should return undefined
-  const found = resolveByName('Bird Dog', fakePool);
-  assert('Bird Dog not in catalog → silently skipped (undefined)', found === undefined);
+  // Synthetic name not in catalog → should return undefined.
+  // (Bird Dog used to live here when it was in alwaysInclude — now it's
+  // been removed since it's not in the exercise database.)
+  const found = resolveByName('Nonexistent Phantom Movement', fakePool);
+  assert('Unknown exercise → silently skipped (undefined)', found === undefined);
 }
 {
-  // McGill Curl-Up → not in catalog → undefined
-  const found = resolveByName('McGill Curl-Up', fakePool);
-  assert('McGill Curl-Up not in catalog → silently skipped (undefined)', found === undefined);
+  // Another synthetic miss to confirm the resolver doesn't fuzz to false
+  // positives when no real match exists.
+  const found = resolveByName('McGill Made-Up Curl Variant', fakePool);
+  assert('Unknown variant → silently skipped (undefined)', found === undefined);
 }
 
 // ─── Integration: Lower Back injury produces expected recommendations ──────
@@ -589,23 +594,33 @@ console.log('\n=== Integration: plan-level compensation data ===');
 //   • alwaysInclude items (rec.recommendations) resolve and appear in the
 //     combined injection list, just like compStrengthen items.
 //   • Per-day cap: combined list (alwaysInclude + compStrengthen) ≤ 2 items.
-//   • Unresolved names (Bird Dog) do NOT block other items from resolving.
+//   • Unresolved synthetic names do NOT block other items from resolving.
 //   • No-injury path produces zero injection candidates (plan unchanged).
 console.log('\n=== Generator-level outcome tests ===');
 {
   // Lower Back currently_injured: alwaysInclude list ("rec.recommendations")
-  // should include Bird Dog and Side Plank. Side Plank IS in fakePool (id '4').
+  // is curated to exercises in the database (Side Plank, Hip flexor stretch).
+  // Side Plank IS in fakePool (id '4').
   const recs = getInjuryRecommendations([{ bodyArea: 'Lower Back', injuryType: 'currently_injured' }]);
   const rec = recs.find(r => r.bodyArea === 'Lower Back');
   assert('Lower Back alwaysInclude list is non-empty', !!rec && rec.recommendations.length > 0);
   assert('Lower Back alwaysInclude includes Side Plank', !!rec?.recommendations.some(x => x.name === 'Side Plank'));
 
-  // Resolve alwaysInclude from fakePool (Bird Dog silently dropped, Side Plank found)
+  // Resolve alwaysInclude from fakePool (Side Plank found, etc.)
   const resolvedAlwaysInclude = (rec?.recommendations ?? [])
     .map(x => resolveByName(x.name, fakePool))
     .filter(Boolean) as FakeEx[];
   assert('Side Plank resolves from alwaysInclude', resolvedAlwaysInclude.some(e => e.id === '4'));
-  assert('Bird Dog is silently skipped (not in pool)', !resolvedAlwaysInclude.some(e => normName(e.name).includes('bird dog')));
+
+  // Inject a synthetic unresolved name and confirm it doesn't block the
+  // real items from resolving (the silently-skip behaviour the generator
+  // depends on).
+  const withSynthetic = [...(rec?.recommendations ?? []), { name: 'Phantom Move XYZ', why: '' }];
+  const resolvedWithSynthetic = withSynthetic
+    .map(x => resolveByName(x.name, fakePool))
+    .filter(Boolean) as FakeEx[];
+  assert('Synthetic miss is silently skipped (not in pool)', !resolvedWithSynthetic.some(e => normName(e.name).includes('phantom')));
+  assert('Real items still resolve when a synthetic miss is present', resolvedWithSynthetic.some(e => e.id === '4'));
 }
 {
   // Per-day cap simulation: combined (alwaysInclude + compStrengthen) → ≤ 2 injected

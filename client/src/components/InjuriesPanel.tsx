@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import { X, Plus, AlertTriangle, Sparkles } from "lucide-react";
 import type { UserInjury } from "@shared/schema";
 import {
-  computeRecoveryWeek,
+  getCurrentInjuryWeek,
   UMBRELLA_BODY_AREAS,
   type InjuryRecommendation,
 } from "@shared/injuryFilter";
@@ -54,6 +54,7 @@ export default function InjuriesPanel() {
   const [injuryType, setInjuryType] = useState<string>("");
   const [note, setNote] = useState("");
   const [startedAt, setStartedAt] = useState<string>("");
+  const [weekNumber, setWeekNumber] = useState<string>("");
 
   const { data: injuries = [], isLoading: injuriesLoading } = useQuery<UserInjury[]>({
     queryKey: ["/api/user/injuries"],
@@ -73,7 +74,7 @@ export default function InjuriesPanel() {
   const { toast } = useToast();
 
   const addMutation = useMutation({
-    mutationFn: async (data: { bodyArea: string; injuryType: string; note?: string; startedAt?: string }) =>
+    mutationFn: async (data: { bodyArea: string; injuryType: string; note?: string; startedAt?: string; weekNumber?: number }) =>
       apiRequest("POST", "/api/user/injuries", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user/injuries"] });
@@ -86,6 +87,7 @@ export default function InjuriesPanel() {
     setInjuryType("");
     setNote("");
     setStartedAt("");
+    setWeekNumber("");
   }
 
   const deleteMutation = useMutation({
@@ -106,19 +108,23 @@ export default function InjuriesPanel() {
   });
 
   function openAddDialog() {
-    setBodyArea("");
-    setInjuryType("");
-    setNote("");
-    setStartedAt("");
+    resetInjuryForm();
     setDialogOpen(true);
   }
 
+  // Both currently_injured and recovery support a "what week are you on?"
+  // input. long_term_limitation does not (it's chronic, not progressing).
+  const supportsWeek = injuryType === "currently_injured" || injuryType === "recovery";
+
   function handleSave(keepOpen: boolean = false) {
     if (!bodyArea || !injuryType) return;
-    // Recovery requires a start date so the Week N math is real (not a
-    // silent fallback to Week 1).
-    if (injuryType === "recovery" && !startedAt) return;
+    // Recovery still requires a start date OR an explicit week so the
+    // Week N math is real (not a silent fallback to Week 1).
+    if (injuryType === "recovery" && !startedAt && !weekNumber) return;
     const savedBodyArea = bodyArea;
+    const parsedWeek = supportsWeek && weekNumber.trim()
+      ? Math.max(1, Math.min(52, parseInt(weekNumber, 10) || 0))
+      : undefined;
     addMutation.mutate(
       {
         bodyArea,
@@ -126,6 +132,9 @@ export default function InjuriesPanel() {
         note: note.trim() || undefined,
         // Only send a start date when the injury is in recovery.
         startedAt: injuryType === "recovery" && startedAt ? startedAt : undefined,
+        // Send the explicit week number when provided (currently_injured
+        // or recovery). Backend ignores it for long_term_limitation.
+        weekNumber: parsedWeek,
       },
       {
         onSuccess: () => {
@@ -206,9 +215,15 @@ export default function InjuriesPanel() {
       {!injuriesLoading && injuries.length > 0 && (
         <div className="space-y-2">
           {injuries.map((injury) => {
-            const week = injury.injuryType === "recovery"
-              ? computeRecoveryWeek(injury.startedAt)
-              : null;
+            // Show a Week N badge whenever we have actual data — explicit
+            // weekNumber, OR a startedAt for recovery (legacy data path).
+            const hasWeekData =
+              typeof injury.weekNumber === "number" ||
+              (injury.injuryType === "recovery" && !!injury.startedAt);
+            const week =
+              (injury.injuryType === "recovery" || injury.injuryType === "currently_injured") && hasWeekData
+                ? getCurrentInjuryWeek(injury)
+                : null;
             return (
               <div
                 key={injury.id}
@@ -383,6 +398,11 @@ export default function InjuriesPanel() {
                   // Auto-fill recovery start date with today the first time
                   // the user picks Recovery — they can adjust it.
                   if (v === "recovery" && !startedAt) setStartedAt(todayStr());
+                  // Default to Week 1 the first time the user picks an
+                  // injury type that supports a week — they can change it.
+                  if ((v === "currently_injured" || v === "recovery") && !weekNumber) {
+                    setWeekNumber("1");
+                  }
                 }}
                 className="grid grid-cols-1 gap-2"
               >
@@ -414,13 +434,42 @@ export default function InjuriesPanel() {
               </RadioGroup>
             </div>
 
-            {/* Recovery start date — drives the per-week reintroduction
-               schedule defined in shared/injuryFilter.ts. Only shown when
-               the user picks Recovery. */}
+            {/* Week of injury / recovery — drives the per-week
+               reintroduction schedule defined in shared/injuryFilter.ts.
+               Shown for both Currently Injured and Recovery so the
+               engine can adjust progression accordingly. */}
+            {supportsWeek && (
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+                  {injuryType === "recovery"
+                    ? "What week of recovery are you on?"
+                    : "What week of injury are you on?"}
+                </label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={52}
+                  value={weekNumber}
+                  onChange={(e) => setWeekNumber(e.target.value)}
+                  placeholder="1"
+                  className="bg-black border-zinc-600 text-white w-full"
+                  data-testid="injury-week-number-input"
+                />
+                <p className="text-[10px] text-zinc-500">
+                  {injuryType === "recovery"
+                    ? "Determines which exercises are reintroduced as you heal."
+                    : "Helps the plan adjust progression as you stay injured longer."}
+                </p>
+              </div>
+            )}
+
+            {/* Optional: recovery start date — only shown for Recovery as
+               a fallback when the user prefers to log a date instead of a
+               week number. */}
             {injuryType === "recovery" && (
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
-                  Recovery started on
+                  Or recovery started on (optional)
                 </label>
                 <Input
                   type="date"
@@ -430,9 +479,6 @@ export default function InjuriesPanel() {
                   className="bg-black border-zinc-600 text-white w-full"
                   data-testid="injury-started-at-input"
                 />
-                <p className="text-[10px] text-zinc-500">
-                  Used to unlock exercises week-by-week as you heal.
-                </p>
               </div>
             )}
 

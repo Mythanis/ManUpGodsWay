@@ -18,9 +18,13 @@ export interface ExerciseForEval {
 export interface InjuryForEval {
   bodyArea: string;
   injuryType: 'currently_injured' | 'recovery' | 'long_term_limitation';
-  // Recovery start date — used to compute current recovery week.
-  // ISO string, Date, or null/undefined → treat as week 1.
+  // Recovery start date — used to compute current recovery week when
+  // weekNumber is not provided. ISO string, Date, or null/undefined →
+  // fall back to week 1.
   startedAt?: string | Date | null;
+  // Explicit current week of injury or recovery. When set, takes
+  // precedence over startedAt-based math. 1-indexed.
+  weekNumber?: number | null;
 }
 
 export interface InjuryRecommendation {
@@ -199,8 +203,6 @@ const LOWER_BACK: RulePack = {
     { week: 9, allowed: ['deadlift', 'barbell squat', 'back squat'] },
   ],
   alwaysInclude: [
-    { name: 'Bird Dog', why: 'McGill Big Three — evidence-based lumbar stability.' },
-    { name: 'Modified Curl-up', why: 'McGill Big Three — abdominal endurance without spine flexion under load.' },
     { name: 'Side Plank', why: 'McGill Big Three — quadratus lumborum and oblique stability.' },
     { name: 'Hip flexor stretch', why: 'Tight hip flexors pull on the lumbar spine.' },
   ],
@@ -346,7 +348,7 @@ const HIPS: RulePack = {
   ],
   alwaysInclude: [
     { name: 'Hip flexor stretch', why: 'Tightness is a major driver of hip pain.' },
-    { name: 'Glute strengthening (clamshells, bridges)', why: 'Weak glutes overload the hip joint.' },
+    { name: 'Clamshell', why: 'Strengthens the glute medius — weak glutes overload the hip joint.' },
   ],
   compensationStretch: [
     { name: 'Standing hip flexor (lunge stretch)', why: 'Hip flexor tightness is the most common contributor to hip joint impingement.' },
@@ -409,11 +411,7 @@ const UPPER_BACK_NECK: RulePack = {
     { week: 5, allowed: ['lat pulldown', 'seated row'] },
     { week: 6, allowed: ['goblet squat', 'trap bar', 'trap-bar'] },
   ],
-  alwaysInclude: [
-    { name: 'Chin tucks', why: 'Corrects forward head posture — common driver of neck pain.' },
-    { name: 'Upper trap stretch', why: 'Releases chronic tension.' },
-    { name: 'Thoracic mobility (cat-cow, foam roll)', why: 'Restores upper-back rotation.' },
-  ],
+  alwaysInclude: [],
   compensationStretch: [
     { name: 'Upper trapezius stretch (ear to shoulder, no force)', why: 'Upper trap is chronically overloaded by forward-head posture and stress.' },
     { name: 'Levator scapulae stretch (chin down and across)', why: 'Levator tightness creates the "stiff neck" sensation and restricts rotation.' },
@@ -621,6 +619,17 @@ export function computeRecoveryWeek(startedAt: string | Date | null | undefined)
   return Math.floor(days / 7) + 1;
 }
 
+// Resolve the current week of an injury. Prefers the user-supplied
+// weekNumber (explicit "I'm in week 3"), falls back to startedAt-based
+// math, then to week 1. Used for both currently_injured and recovery
+// injuries so the engine can adjust progression accordingly.
+export function getCurrentInjuryWeek(injury: Pick<InjuryForEval, 'weekNumber' | 'startedAt'>): number {
+  if (typeof injury.weekNumber === 'number' && injury.weekNumber >= 1) {
+    return Math.min(52, Math.floor(injury.weekNumber));
+  }
+  return computeRecoveryWeek(injury.startedAt);
+}
+
 // Patterns unlocked at or before the current week (cumulative).
 function allowedUpToWeek(reintroduce: { week: number; allowed: string[] }[], currentWeek: number): string[] {
   const set = new Set<string>();
@@ -824,7 +833,7 @@ function evaluateAgainstPack(
       }
 
       if (injury.injuryType === 'recovery') {
-        const week = computeRecoveryWeek(injury.startedAt);
+        const week = getCurrentInjuryWeek(injury);
         if (week < 6) {
           acc.status = worsenStatus(acc.status, 'blocked');
           acc.reasons.push(
@@ -899,7 +908,7 @@ function evaluateAgainstPack(
 
   // 4. Recovery
   if (injury.injuryType === 'recovery') {
-    const week = computeRecoveryWeek(injury.startedAt);
+    const week = getCurrentInjuryWeek(injury);
     const allowedThisWeek = allowedUpToWeek(pack.reintroduceByWeek, week);
     const matchedAllowedNow = allowedThisWeek.find(p => lower(exercise.name).includes(p));
     if (matchedAllowedNow) {
@@ -1061,7 +1070,7 @@ export function getInjuryStretchPolicy(injuries: InjuryForEval[]): Record<string
       result[label] =
         'While currently injured: only seated / lying stretches, max 20-second holds, never load the injured area.';
     } else if (injury.injuryType === 'recovery') {
-      const week = computeRecoveryWeek(injury.startedAt);
+      const week = getCurrentInjuryWeek(injury);
       if (week < 6) {
         result[label] =
           `Avoid stretching the ${label} area until Week 6 of recovery (currently Week ${week}). Focus on compensation muscles only.`;

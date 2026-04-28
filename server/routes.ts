@@ -12736,6 +12736,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bodyArea: i.bodyArea,
         injuryType: i.injuryType,
         startedAt: i.startedAt,
+        weekNumber: i.weekNumber,
       })));
       res.json(recs);
     } catch (error) {

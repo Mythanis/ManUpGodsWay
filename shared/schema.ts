@@ -3118,6 +3118,10 @@ export const userInjuries = pgTable("user_injuries", {
   // the current recovery week and unlock exercises per the reintroduction
   // schedule in shared/injuryFilter.ts. Nullable so existing rows remain valid.
   startedAt: timestamp("started_at"),
+  // Explicit current week of injury (currently_injured) or recovery
+  // (recovery). When set, takes precedence over startedAt-based math —
+  // lets the user say "I'm in week 3" directly. Nullable.
+  weekNumber: integer("week_number"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -3128,6 +3132,8 @@ export const insertUserInjurySchema = createInsertSchema(userInjuries).omit({
   injuryType: z.enum(['currently_injured', 'long_term_limitation', 'recovery']),
   // Accept ISO string from the client; Drizzle will coerce on insert.
   startedAt: z.coerce.date().nullable().optional(),
+  // 1-indexed week number, capped at a reasonable upper bound (52).
+  weekNumber: z.coerce.number().int().min(1).max(52).nullable().optional(),
 });
 
 export type UserInjury = typeof userInjuries.$inferSelect;
