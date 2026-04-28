@@ -3139,6 +3139,39 @@ export const insertUserInjurySchema = createInsertSchema(userInjuries).omit({
 export type UserInjury = typeof userInjuries.$inferSelect;
 export type InsertUserInjury = z.infer<typeof insertUserInjurySchema>;
 
+// ─── Workout Injury Acknowledgements ──────────────────────────────────────────
+// One row per time the user clicks "Accept" on the pre-workout warning that
+// some of today's planned exercises may be harmful for their recorded
+// injuries. Used as an audit trail (date/time + which exercises were flagged
+// + at what status) so we can prove informed consent before they began.
+export const workoutInjuryAcknowledgements = pgTable("workout_injury_acknowledgements", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  planId: varchar("plan_id").references(() => fitnessPlans.id, { onDelete: 'set null' }),
+  // Snapshot of the flagged exercises shown in the warning. Each entry:
+  // { exerciseId, exerciseName, status: 'caution'|'modify'|'blocked', reasons: string[] }
+  flaggedExercises: jsonb("flagged_exercises").notNull().default(sql`'[]'::jsonb`),
+  acknowledgedAt: timestamp("acknowledged_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_workout_inj_ack_user").on(table.userId, table.acknowledgedAt),
+]);
+
+export const insertWorkoutInjuryAcknowledgementSchema = createInsertSchema(workoutInjuryAcknowledgements).omit({
+  id: true,
+  acknowledgedAt: true,
+}).extend({
+  planId: z.string().nullable().optional(),
+  flaggedExercises: z.array(z.object({
+    exerciseId: z.string().optional(),
+    exerciseName: z.string(),
+    status: z.enum(['caution', 'modify', 'blocked']),
+    reasons: z.array(z.string()).default([]),
+  })).default([]),
+});
+
+export type WorkoutInjuryAcknowledgement = typeof workoutInjuryAcknowledgements.$inferSelect;
+export type InsertWorkoutInjuryAcknowledgement = z.infer<typeof insertWorkoutInjuryAcknowledgementSchema>;
+
 // ─── Stripe Test Subscription (Owner testing tool) ────────────────────────────
 
 export const stripeTestSubscriptions = pgTable("stripe_test_subscriptions", {

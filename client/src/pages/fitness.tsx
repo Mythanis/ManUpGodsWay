@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -72,6 +72,7 @@ import {
   Moon,
   Scale,
   Footprints,
+  AlertTriangle,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { format, isToday, isPast, isFuture } from "date-fns";
@@ -1074,6 +1075,13 @@ export default function Fitness() {
   // Get today's exercises from a plan (filtered by current week and current day).
   // Uses the explicit weekNumber column when present; falls back to the legacy
   // index-based estimation for older plans.
+  //
+  // Additionally drops any exercise that the injury engine evaluates as
+  // `blocked` for the user's recorded injuries — this covers both
+  // body-area conflicts (e.g., knee strain blocking deep squats) and
+  // week-gated rules (e.g., area stretches blocked until recovery
+  // week 6). Caution / modify exercises stay in the list and surface
+  // their warning badges + the pre-workout acknowledgement gate.
   const getTodaysExercises = (plan: FitnessPlan) => {
     const today = getCurrentDayOfWeek();
     if (!plan.exercises) return [];
@@ -1102,7 +1110,27 @@ export default function Fitness() {
       const exerciseDay = getExerciseDay(candidate, index);
       return exerciseDay === today;
     });
-    
+
+    // Drop blocked exercises (including week-gated ones) when the user
+    // has recorded injuries. We never want a plan to silently load a
+    // move the rule pack flags as harmful for today's state.
+    if (fitnessPageInjuries.length > 0) {
+      return todaysExercises.filter((ex) => {
+        const ev = evaluateExerciseAgainstInjuries(
+          {
+            name: ex.exerciseName ?? '',
+            bodyPart: ex.bodyPart ?? '',
+            hiit: 'No',
+            stretching: 'No',
+            equipment: ex.equipment ?? '',
+            level: '',
+          },
+          fitnessPageInjuries,
+        );
+        return ev.status !== 'blocked';
+      });
+    }
+
     return todaysExercises;
   };
 
@@ -7307,6 +7335,7 @@ export default function Fitness() {
         <WorkoutPlayer
           plan={playerPlan}
           exercises={playerExercises}
+          injuries={fitnessPageInjuries}
           onClose={() => {
             setPlayerOpen(false);
             setPlayerPlan(null);
@@ -7450,13 +7479,14 @@ export default function Fitness() {
 interface WorkoutPlayerProps {
   plan: FitnessPlan;
   exercises: FitnessPlanExercise[];
+  injuries?: any[];
   onClose: () => void;
   onExerciseComplete: (exerciseId: string) => void;
 }
 
 type PlayerPhase = 'countdown' | 'work' | 'rest' | 'set-rest' | 'side-switch' | 'done';
 
-function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseComplete }: WorkoutPlayerProps) {
+function WorkoutPlayer({ plan, exercises: initialExercises, injuries = [], onClose, onExerciseComplete }: WorkoutPlayerProps) {
   const { toast } = useToast();
   // Local mutable copy of the plan exercises so mid-workout adjustments
   // (sets / reps / rest) are reflected immediately without waiting for
@@ -7496,6 +7526,65 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
   // is shown on top of the exercise media. The user explicitly taps it
   // to start the very first countdown so they have time to get set up.
   const [awaitingStart, setAwaitingStart] = useState(true);
+
+  // ── Pre-workout injury acknowledgement gate ───────────────────────────────
+  // If the user has recorded injuries AND any of today's planned exercises
+  // evaluate to caution / modify / blocked against those injuries, we show
+  // a full-screen warning before the workout can begin. The user must hit
+  // "I Accept" to proceed; the click is logged server-side with timestamp
+  // and the list of flagged exercises as an audit trail of informed consent.
+  const flaggedExercises = useMemo(() => {
+    if (!injuries || injuries.length === 0) return [];
+    return initialExercises
+      .map((ex) => {
+        const ev = evaluateExerciseAgainstInjuries(
+          {
+            name: ex.exerciseName ?? '',
+            bodyPart: ex.bodyPart ?? '',
+            hiit: 'No',
+            stretching: 'No',
+            equipment: ex.equipment ?? '',
+            level: '',
+          },
+          injuries,
+        );
+        return { ex, ev };
+      })
+      .filter(({ ev }) => ev.status !== 'allowed')
+      .map(({ ex, ev }) => ({
+        exerciseId: ex.id,
+        exerciseName: ex.exerciseName ?? '',
+        status: ev.status as 'caution' | 'modify' | 'blocked',
+        reasons: ev.reasons,
+      }));
+  }, [initialExercises, injuries]);
+
+  const [injuryAcknowledged, setInjuryAcknowledged] = useState<boolean>(
+    flaggedExercises.length === 0,
+  );
+  const [injuryAckSubmitting, setInjuryAckSubmitting] = useState(false);
+
+  const acknowledgeInjuryRisk = async () => {
+    if (injuryAckSubmitting || injuryAcknowledged) return;
+    setInjuryAckSubmitting(true);
+    try {
+      await apiRequest('POST', '/api/workout-injury-acknowledgements', {
+        planId: plan.id,
+        flaggedExercises,
+      });
+      setInjuryAcknowledged(true);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to record acknowledgement';
+      console.error('[WorkoutPlayer] injury ack failed:', err);
+      toast({
+        title: 'Could not record acknowledgement',
+        description: message,
+        variant: 'destructive',
+      });
+    } finally {
+      setInjuryAckSubmitting(false);
+    }
+  };
   // Pacing mode: 'timed' = current behavior (timer auto-advances through
   // sets/rest); 'manual' = countdowns still tick but the workout never
   // auto-advances when they hit 0 — the user steps through every phase
@@ -8145,6 +8234,95 @@ function WorkoutPlayer({ plan, exercises: initialExercises, onClose, onExerciseC
     rest: 'bg-sky-500',
     done: 'bg-[#FDD000]'
   };
+
+  // ── Pre-workout warning screen ────────────────────────────────────────────
+  // Hard gate. Until the user clicks "I Accept" (or backs out), they cannot
+  // advance to the player UI. Each Accept click is logged via
+  // POST /api/workout-injury-acknowledgements with the planId and the full
+  // list of flagged exercises, plus a server-stamped acknowledgedAt.
+  if (!injuryAcknowledged && flaggedExercises.length > 0) {
+    return (
+      <div
+        className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-start overflow-y-auto p-4 sm:p-6"
+        data-testid="injury-warning-overlay"
+      >
+        <div className="w-full max-w-xl bg-zinc-900 border-2 border-red-500 rounded-sm shadow-[6px_6px_0px_0px_rgba(239,68,68,1)] p-5 mt-6">
+          <div className="flex items-center gap-3 mb-3">
+            <AlertTriangle className="w-7 h-7 text-red-400 shrink-0" />
+            <h2
+              className="text-xl sm:text-2xl font-black text-red-400 uppercase tracking-wide"
+              data-testid="injury-warning-title"
+            >
+              Heads up before you start
+            </h2>
+          </div>
+          <p className="text-sm text-white/80 mb-4 leading-relaxed">
+            Some exercises in today&apos;s workout may aggravate your recorded
+            injuries. Review them below and only proceed if you&apos;re comfortable
+            modifying or skipping them as needed.
+          </p>
+
+          <ul
+            className="space-y-2 mb-5 max-h-[40vh] overflow-y-auto pr-1"
+            data-testid="injury-warning-list"
+          >
+            {flaggedExercises.map((f, i) => (
+              <li
+                key={`${f.exerciseId}-${i}`}
+                className="bg-black/40 border border-zinc-700 rounded-sm p-2.5"
+                data-testid={`injury-warning-item-${i}`}
+              >
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <span className="text-sm font-black text-white">
+                    {f.exerciseName}
+                  </span>
+                  <span
+                    className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm border shrink-0 ${
+                      f.status === 'blocked'
+                        ? 'bg-red-900/40 text-red-400 border-red-700/50'
+                        : f.status === 'modify'
+                        ? 'bg-yellow-900/30 text-yellow-400 border-yellow-700/40'
+                        : 'bg-orange-900/30 text-orange-400 border-orange-700/40'
+                    }`}
+                  >
+                    {f.status}
+                  </span>
+                </div>
+                {f.reasons.length > 0 && (
+                  <p className="text-xs text-white/70 italic leading-snug">
+                    {f.reasons[0]}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button
+              onClick={acknowledgeInjuryRisk}
+              disabled={injuryAckSubmitting}
+              className="flex-1 bg-[#FDD000] hover:bg-[#FDD000]/90 text-black font-black uppercase tracking-widest border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] py-5"
+              data-testid="injury-warning-accept-button"
+            >
+              {injuryAckSubmitting ? 'Saving…' : 'I Accept — Start Workout'}
+            </Button>
+            <Button
+              onClick={onClose}
+              variant="outline"
+              disabled={injuryAckSubmitting}
+              className="flex-1 sm:flex-initial border-2 border-white/40 text-white hover:bg-white/10 font-black uppercase tracking-widest py-5"
+              data-testid="injury-warning-cancel-button"
+            >
+              Cancel
+            </Button>
+          </div>
+          <p className="text-[10px] text-white/40 mt-3 text-center uppercase tracking-widest">
+            Acknowledgement is logged with date &amp; time
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col" data-testid="workout-player">

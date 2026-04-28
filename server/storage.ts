@@ -229,6 +229,9 @@ import {
   userInjuries,
   type UserInjury,
   type InsertUserInjury,
+  workoutInjuryAcknowledgements,
+  type WorkoutInjuryAcknowledgement,
+  type InsertWorkoutInjuryAcknowledgement,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt, ne, gt } from "drizzle-orm";
@@ -694,6 +697,9 @@ export interface IStorage {
   createUserInjury(data: InsertUserInjury): Promise<UserInjury>;
   deleteUserInjury(id: string, userId: string): Promise<boolean>;
   clearUserInjuries(userId: string): Promise<void>;
+
+  // Workout injury acknowledgement audit log
+  createWorkoutInjuryAcknowledgement(data: InsertWorkoutInjuryAcknowledgement): Promise<WorkoutInjuryAcknowledgement>;
 
   // VATMEBOP accountability chart
   getVatmebopChart(userId: string, year: number): Promise<VatmebopCheck[]>;
@@ -8265,6 +8271,16 @@ export class DatabaseStorage implements IStorage {
 
   async clearUserInjuries(userId: string): Promise<void> {
     await db.delete(userInjuries).where(eq(userInjuries.userId, userId));
+  }
+
+  async createWorkoutInjuryAcknowledgement(
+    data: InsertWorkoutInjuryAcknowledgement,
+  ): Promise<WorkoutInjuryAcknowledgement> {
+    const [row] = await db
+      .insert(workoutInjuryAcknowledgements)
+      .values(data)
+      .returning();
+    return row;
   }
 
   async upsertVatmebopCheck(

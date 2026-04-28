@@ -56,6 +56,7 @@ import {
   insertHealthMetricSchema,
   type HealthMetricType,
   insertUserInjurySchema,
+  insertWorkoutInjuryAcknowledgementSchema,
 } from "@shared/schema";
 import { z, ZodError } from "zod";
 import { devotionalNotificationService } from "./devotionalNotificationService";
@@ -12719,6 +12720,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       console.error('Error deleting user injury:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Audit log: user clicked "Accept" on the pre-workout warning that some of
+  // today's planned exercises may aggravate a recorded injury. Stores the
+  // exact list of flagged exercises and a server-stamped acknowledgedAt time.
+  app.post('/api/workout-injury-acknowledgements', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const parsed = insertWorkoutInjuryAcknowledgementSchema.safeParse({
+        ...req.body,
+        userId,
+      });
+      if (!parsed.success) {
+        return res.status(400).json({ message: 'Invalid acknowledgement payload', issues: parsed.error.issues });
+      }
+      const row = await storage.createWorkoutInjuryAcknowledgement(parsed.data);
+      res.status(201).json(row);
+    } catch (error) {
+      console.error('Error creating workout injury acknowledgement:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
