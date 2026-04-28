@@ -808,6 +808,8 @@ export default function EditPlan() {
                         ? 'border-red-400 bg-red-50'
                         : selEval?.status === 'modify'
                         ? 'border-yellow-400 bg-yellow-50/50'
+                        : selEval?.status === 'caution'
+                        ? 'border-green-400/60 bg-green-50/30'
                         : 'border-black/20'
                     }`}
                   >
@@ -819,8 +821,10 @@ export default function EditPlan() {
                         {selEval && selEval.status !== 'allowed' && selEval.reasons.length > 0 && (
                           <div className="flex items-start gap-1 mt-1">
                             {selEval.status === 'blocked'
-                              ? <span className="text-xs font-semibold bg-red-600 text-white px-1.5 py-0.5 rounded shrink-0">🔴 Blocked</span>
-                              : <span className="text-xs font-semibold bg-yellow-500 text-black px-1.5 py-0.5 rounded shrink-0">🟡 Caution</span>
+                              ? <span className="text-xs font-semibold bg-red-600 text-white px-1.5 py-0.5 rounded shrink-0" title={selEval.reasons.join(' | ')}>🔴 Blocked</span>
+                              : selEval.status === 'modify'
+                              ? <span className="text-xs font-semibold bg-yellow-500 text-black px-1.5 py-0.5 rounded shrink-0" title={selEval.reasons.join(' | ')}>🟡 Caution</span>
+                              : <span className="text-xs font-semibold bg-green-700 text-white px-1.5 py-0.5 rounded shrink-0" title={selEval.reasons.join(' | ')}>🟢 Caution</span>
                             }
                             <span className="text-xs text-black/70 italic">{selEval.reasons[0]}</span>
                           </div>
@@ -1035,6 +1039,8 @@ export default function EditPlan() {
                           ? 'border-red-400/60 opacity-80'
                           : injStatus === 'modify'
                           ? 'border-yellow-400/60'
+                          : injStatus === 'caution'
+                          ? 'border-green-600/50'
                           : 'border-black/20'
                       }`}
                     >
@@ -1072,6 +1078,11 @@ export default function EditPlan() {
                                 🟡 Caution
                               </span>
                             )}
+                            {injStatus === 'caution' && (
+                              <span className="text-xs font-semibold bg-green-700 text-white px-1.5 py-0.5 rounded" title={injuryEval?.reasons.join(' | ')}>
+                                🟢 Caution
+                              </span>
+                            )}
                           </div>
                           {injuryEval && injStatus !== 'allowed' && injuryEval.reasons.length > 0 && (
                             <p className="text-xs text-black/70 italic mb-1">{injuryEval.reasons[0]}</p>
@@ -1096,7 +1107,13 @@ export default function EditPlan() {
                         <Button
                           size="sm"
                           onClick={() => handleAddExercise(exercise)}
-                          className={injStatus === 'blocked' ? 'bg-red-700 hover:bg-red-800 text-white' : 'bg-ministry-gold hover:bg-ministry-gold/90 text-black'}
+                          className={
+                            injStatus === 'blocked'
+                              ? 'bg-red-700 hover:bg-red-800 text-white'
+                              : injStatus === 'modify'
+                              ? 'bg-yellow-500 hover:bg-yellow-600 text-black'
+                              : 'bg-ministry-gold hover:bg-ministry-gold/90 text-black'
+                          }
                           data-testid={`button-add-exercise-${exId}`}
                         >
                           {injStatus === 'blocked' ? <ShieldAlert className="w-4 h-4 mr-1" /> : <Plus className="w-4 h-4 mr-1" />}

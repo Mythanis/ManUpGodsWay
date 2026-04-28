@@ -837,6 +837,8 @@ export default function CreatePlan() {
                             ? 'border-red-400/60 opacity-75 hover:opacity-100 hover:border-red-500'
                             : injStatus === 'modify'
                             ? 'border-yellow-400/60 hover:border-yellow-500'
+                            : injStatus === 'caution'
+                            ? 'border-green-600/50 hover:border-green-500'
                             : 'hover:border-ministry-steel'
                         }`}
                         onClick={() => handleExerciseSelect(exercise)}
@@ -853,6 +855,11 @@ export default function CreatePlan() {
                             {injStatus === 'modify' && (
                               <span className="text-xs font-semibold bg-yellow-500 text-black px-1.5 py-0.5 rounded" title={injuryEval?.reasons.join(' | ')}>
                                 🟡 Caution
+                              </span>
+                            )}
+                            {injStatus === 'caution' && (
+                              <span className="text-xs font-semibold bg-green-700 text-white px-1.5 py-0.5 rounded" title={injuryEval?.reasons.join(' | ')}>
+                                🟢 Caution
                               </span>
                             )}
                             {isFav && <Heart className="h-4 w-4 text-red-500 fill-red-500" />}

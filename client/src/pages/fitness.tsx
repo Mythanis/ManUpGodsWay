@@ -3786,10 +3786,16 @@ export default function Fitness() {
                                 <span className="flex-1 truncate">{ex.exerciseName}</span>
                                 {exInjuryEval && exInjuryEval.status !== 'allowed' && (
                                   <span
-                                    className={`text-[9px] font-black uppercase tracking-wider px-1 py-0.5 rounded-sm border ${exInjuryEval.status === 'blocked' ? 'bg-red-900/40 text-red-400 border-red-700/50' : 'bg-yellow-900/30 text-yellow-400 border-yellow-700/40'}`}
-                                    title={exInjuryEval.reasons[0] ?? 'Injury conflict'}
+                                    className={`text-[9px] font-black uppercase tracking-wider px-1 py-0.5 rounded-sm border ${
+                                      exInjuryEval.status === 'blocked'
+                                        ? 'bg-red-900/40 text-red-400 border-red-700/50'
+                                        : exInjuryEval.status === 'modify'
+                                        ? 'bg-yellow-900/30 text-yellow-400 border-yellow-700/40'
+                                        : 'bg-green-900/30 text-green-400 border-green-700/40'
+                                    }`}
+                                    title={exInjuryEval.reasons[0] ?? 'Injury note'}
                                   >
-                                    {exInjuryEval.status === 'blocked' ? '🔴' : '🟡'}
+                                    {exInjuryEval.status === 'blocked' ? '🔴' : exInjuryEval.status === 'modify' ? '🟡' : '🟢'}
                                   </span>
                                 )}
                                 <span
@@ -6715,27 +6721,74 @@ export default function Fitness() {
           <div className="space-y-2 max-h-[55vh] overflow-y-auto pr-1">
             {detailExercises.map((ex, i) => {
               const weekday = (ex.daysOfWeek && ex.daysOfWeek[0]) || getCurrentDayOfWeek();
+              const exDetailInjEval = fitnessPageInjuries.length > 0
+                ? evaluateExerciseAgainstInjuries(
+                    { name: ex.exerciseName ?? '', bodyPart: ex.bodyPart ?? '', hiit: 'No', stretching: 'No', equipment: ex.equipment ?? '', level: '' },
+                    fitnessPageInjuries
+                  )
+                : null;
+              const hasConflict = exDetailInjEval && exDetailInjEval.status !== 'allowed';
               return (
                 <div
                   key={ex.id}
-                  className="flex items-center gap-3 bg-black/40 border border-zinc-800 rounded-sm p-3"
+                  className={`bg-black/40 border rounded-sm p-3 ${
+                    exDetailInjEval?.status === 'blocked'
+                      ? 'border-red-700/70'
+                      : exDetailInjEval?.status === 'modify'
+                      ? 'border-yellow-600/60'
+                      : exDetailInjEval?.status === 'caution'
+                      ? 'border-green-600/50'
+                      : 'border-zinc-800'
+                  }`}
                   data-testid={`detail-exercise-${ex.id}`}
                 >
-                  <span className="text-[#FDD000] font-black text-sm w-5 shrink-0">{i + 1}.</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-black text-white text-sm truncate">{ex.exerciseName}</p>
-                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider truncate">
-                      {ex.bodyPart || ex.targetMuscle || 'Workout'} • {ex.equipment || 'bodyweight'}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[#FDD000] font-black text-sm w-5 shrink-0">{i + 1}.</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-black text-white text-sm truncate">{ex.exerciseName}</p>
+                      <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider truncate">
+                        {ex.bodyPart || ex.targetMuscle || 'Workout'} • {ex.equipment || 'bodyweight'}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm bg-[#FDD000]/15 text-[#FDD000] border border-[#FDD000]/40">
+                        {weekday.slice(0, 3)}
+                      </span>
+                      <span className="text-xs text-[#FDD000] font-black tabular-nums">
+                        {ex.sets}×{ex.reps}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm bg-[#FDD000]/15 text-[#FDD000] border border-[#FDD000]/40">
-                      {weekday.slice(0, 3)}
-                    </span>
-                    <span className="text-xs text-[#FDD000] font-black tabular-nums">
-                      {ex.sets}×{ex.reps}
-                    </span>
-                  </div>
+                  {hasConflict && exDetailInjEval && (
+                    <div className="mt-2 flex items-start gap-2 flex-wrap">
+                      <span
+                        className={`text-[10px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded shrink-0 ${
+                          exDetailInjEval.status === 'blocked'
+                            ? 'bg-red-900/50 text-red-400 border border-red-700/50'
+                            : exDetailInjEval.status === 'modify'
+                            ? 'bg-yellow-900/40 text-yellow-400 border border-yellow-700/40'
+                            : 'bg-green-900/40 text-green-400 border border-green-700/40'
+                        }`}
+                        title={exDetailInjEval.reasons.join(' | ')}
+                      >
+                        {exDetailInjEval.status === 'blocked' ? '🔴 Blocked' : exDetailInjEval.status === 'modify' ? '🟡 Caution' : '🟢 Caution'}
+                      </span>
+                      <span className="text-[10px] text-zinc-400 italic leading-tight flex-1">{exDetailInjEval.reasons[0]}</span>
+                      {detailPlan && (
+                        <button
+                          onClick={() => {
+                            setDetailPlan(null);
+                            setDetailExercises([]);
+                            window.location.href = `/edit-plan/${detailPlan.id}`;
+                          }}
+                          className="text-[9px] font-black uppercase tracking-wider text-[#FDD000] underline underline-offset-2 hover:text-white shrink-0"
+                          title="Edit plan to swap or remove this exercise"
+                        >
+                          Edit Plan
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}

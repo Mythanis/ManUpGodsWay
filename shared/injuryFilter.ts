@@ -1,4 +1,4 @@
-export type InjuryStatus = 'allowed' | 'modify' | 'blocked';
+export type InjuryStatus = 'allowed' | 'caution' | 'modify' | 'blocked';
 
 export interface InjuryEvaluation {
   status: InjuryStatus;
@@ -77,10 +77,16 @@ function isInAffinity(injuredArea: string, exerciseBodyPart: string): boolean {
   return affinity.some(p => p.toLowerCase() === exerciseBodyPart.toLowerCase());
 }
 
+// Status severity order: blocked > modify > caution > allowed
+const STATUS_RANK: Record<InjuryStatus, number> = {
+  blocked: 3,
+  modify: 2,
+  caution: 1,
+  allowed: 0,
+};
+
 function worsenStatus(current: InjuryStatus, incoming: InjuryStatus): InjuryStatus {
-  if (incoming === 'blocked') return 'blocked';
-  if (incoming === 'modify' && current === 'allowed') return 'modify';
-  return current;
+  return STATUS_RANK[incoming] > STATUS_RANK[current] ? incoming : current;
 }
 
 export function evaluateExerciseAgainstInjuries(
@@ -99,7 +105,6 @@ export function evaluateExerciseAgainstInjuries(
   const isStretch = exercise.stretching === 'Yes';
   const isBallistic = isHIIT || matchesKeyword(exercise.name, BALLISTIC_KEYWORDS);
   const isHeavyCompound = matchesKeyword(exercise.name, HEAVY_COMPOUND_KEYWORDS);
-  const isAdvanced = exercise.level === 'Advanced';
   const equipmentStr = exercise.equipment || '';
   const isMachine = /machine|cable|smith/i.test(equipmentStr);
 
@@ -111,6 +116,7 @@ export function evaluateExerciseAgainstInjuries(
     if (!direct && !affected) continue;
 
     if (injuryType === 'currently_injured') {
+      // ── Currently injured: maximum protection ──────────────────────────
       if (direct) {
         status = worsenStatus(status, 'blocked');
         reasons.push(`Directly loads your ${bodyArea} injury — no direct work allowed.`);
@@ -129,15 +135,19 @@ export function evaluateExerciseAgainstInjuries(
         hints.push('Use bodyweight or minimal load only.');
         hints.push('Reduce range of motion; avoid end-range positions.');
       }
+
     } else if (injuryType === 'recovery') {
+      // ── Recovery: block aggravators, caution otherwise ─────────────────
       if (direct) {
         if (isBallistic) {
           status = worsenStatus(status, 'blocked');
           reasons.push(`Ballistic / high-impact too aggressive for recovering ${bodyArea}.`);
-        } else if (isStretch && isAdvanced) {
+        } else if (isStretch) {
+          // End-range loaded stretching risks re-injury even at any level during recovery
           status = worsenStatus(status, 'blocked');
           reasons.push(`End-range loaded stretching could re-injure recovering ${bodyArea}.`);
-        } else if (isHeavyCompound && isAdvanced) {
+        } else if (isHeavyCompound) {
+          // Heavy compounds are unsafe on recovering tissue regardless of level
           status = worsenStatus(status, 'blocked');
           reasons.push(`Heavy load on ${bodyArea} too soon — wait until pain-free at full range.`);
         } else {
@@ -148,6 +158,7 @@ export function evaluateExerciseAgainstInjuries(
           hints.push('Stop immediately if pain occurs — treat as current injury.');
         }
       } else {
+        // Affected (not direct) during recovery
         if (isBallistic) {
           status = worsenStatus(status, 'blocked');
           reasons.push(`High-impact stresses the recovering ${bodyArea} area.`);
@@ -161,33 +172,56 @@ export function evaluateExerciseAgainstInjuries(
           hints.push('Monitor for any pain or discomfort.');
         }
       }
+
     } else if (injuryType === 'long_term_limitation') {
+      // ── Long-term limitation: block known aggravators, caution otherwise ─
       if (direct) {
         if (isBallistic) {
-          status = worsenStatus(status, 'modify');
-          reasons.push(`High-impact may aggravate your ${bodyArea} limitation.`);
-          hints.push('Substitute with a low-impact alternative if possible.');
+          // High-impact directly on the limitation area — block as aggravator
+          status = worsenStatus(status, 'blocked');
+          reasons.push(`High-impact directly stresses your ${bodyArea} long-term limitation.`);
+          hints.push('Substitute with a low-impact alternative.');
         } else if (isHeavyCompound && !isMachine) {
-          status = worsenStatus(status, 'modify');
-          reasons.push(`Heavy free-weight compounds stress your ${bodyArea} limitation.`);
-          hints.push('Prefer machine or cable alternatives for better joint stability.');
+          // Heavy free-weight compounds directly on limitation — block
+          status = worsenStatus(status, 'blocked');
+          reasons.push(`Heavy free-weight compound directly loads your ${bodyArea} limitation.`);
+          hints.push('Use machine or cable alternatives for better joint stability.');
           hints.push('Never go to maximum effort on the affected area.');
         } else if (isStretch) {
           status = worsenStatus(status, 'modify');
           reasons.push(`Monitor stretch intensity — ${bodyArea} limitation limits end-range stretch.`);
           hints.push('Stay within comfortable range; avoid end-range positions.');
         } else {
-          reasons.push(`Involves your ${bodyArea} — use moderate weight only.`);
+          // All other direct exercises: show a green caution
+          status = worsenStatus(status, 'caution');
+          reasons.push(`Involves your ${bodyArea} limitation — use moderate weight only.`);
           hints.push('Never max-effort the affected area.');
+          hints.push('Stop if you feel any pain beyond normal exertion.');
         }
+      } else {
+        // Affected (not direct) for long-term limitation
+        if (isBallistic) {
+          status = worsenStatus(status, 'modify');
+          reasons.push(`High-impact stresses your ${bodyArea} long-term limitation area.`);
+          hints.push('Substitute with a low-impact alternative if possible.');
+        } else if (isHeavyCompound && !isMachine) {
+          status = worsenStatus(status, 'caution');
+          reasons.push(`Heavy compound loads your ${bodyArea} limitation area.`);
+          hints.push('Use machine alternatives for better joint stability.');
+        } else if (isStretch) {
+          status = worsenStatus(status, 'caution');
+          reasons.push(`Stretching near your ${bodyArea} limitation — keep within comfortable range.`);
+          hints.push('Avoid end-range positions on the affected area.');
+        }
+        // Non-aggravating exercises near a long-term limitation are allowed with no badge
       }
     }
   }
 
   return {
     status,
-    reasons: [...new Set(reasons)],
-    modificationHints: [...new Set(hints)],
+    reasons: Array.from(new Set(reasons)),
+    modificationHints: Array.from(new Set(hints)),
   };
 }
 
@@ -195,6 +229,7 @@ export function getInjuryStatusLabel(status: InjuryStatus): string {
   switch (status) {
     case 'blocked': return '🔴 Blocked';
     case 'modify':  return '🟡 Caution';
+    case 'caution': return '🟢 Caution';
     default:        return '';
   }
 }
@@ -203,6 +238,7 @@ export function getInjuryStatusColor(status: InjuryStatus): string {
   switch (status) {
     case 'blocked': return 'bg-red-600 text-white';
     case 'modify':  return 'bg-yellow-500 text-black';
+    case 'caution': return 'bg-green-700 text-white';
     default:        return '';
   }
 }
