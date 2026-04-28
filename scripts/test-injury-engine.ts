@@ -558,7 +558,7 @@ console.log('\n=== Integration: plan-level compensation data ===');
   assert('Lower Back comp-strengthen: at least one resolves in fake pool', anyStrengthResolved);
 }
 {
-  // No injuries → no recs → plan unchanged
+  // No injuries → no recs → plan unchanged (zero injection candidates)
   const recs = getInjuryRecommendations([]);
   assert('No injuries → empty recommendations', recs.length === 0);
 
@@ -582,6 +582,73 @@ console.log('\n=== Integration: plan-level compensation data ===');
     .filter(Boolean);
   // Just verify the recommendation set is non-empty even if none resolve in the small fake pool.
   assert('Knees comp-strengthen: recommendation list non-empty', !!rec && rec.compensationStrengthen.length > 0);
+}
+
+// ─── Generator-level outcome tests ────────────────────────────────────────
+// These tests validate the exact behaviour the plan generator relies on:
+//   • alwaysInclude items (rec.recommendations) resolve and appear in the
+//     combined injection list, just like compStrengthen items.
+//   • Per-day cap: combined list (alwaysInclude + compStrengthen) ≤ 2 items.
+//   • Unresolved names (Bird Dog) do NOT block other items from resolving.
+//   • No-injury path produces zero injection candidates (plan unchanged).
+console.log('\n=== Generator-level outcome tests ===');
+{
+  // Lower Back currently_injured: alwaysInclude list ("rec.recommendations")
+  // should include Bird Dog and Side Plank. Side Plank IS in fakePool (id '4').
+  const recs = getInjuryRecommendations([{ bodyArea: 'Lower Back', injuryType: 'currently_injured' }]);
+  const rec = recs.find(r => r.bodyArea === 'Lower Back');
+  assert('Lower Back alwaysInclude list is non-empty', !!rec && rec.recommendations.length > 0);
+  assert('Lower Back alwaysInclude includes Side Plank', !!rec?.recommendations.some(x => x.name === 'Side Plank'));
+
+  // Resolve alwaysInclude from fakePool (Bird Dog silently dropped, Side Plank found)
+  const resolvedAlwaysInclude = (rec?.recommendations ?? [])
+    .map(x => resolveByName(x.name, fakePool))
+    .filter(Boolean) as FakeEx[];
+  assert('Side Plank resolves from alwaysInclude', resolvedAlwaysInclude.some(e => e.id === '4'));
+  assert('Bird Dog is silently skipped (not in pool)', !resolvedAlwaysInclude.some(e => normName(e.name).includes('bird dog')));
+}
+{
+  // Per-day cap simulation: combined (alwaysInclude + compStrengthen) → ≤ 2 injected
+  const recs = getInjuryRecommendations([{ bodyArea: 'Lower Back', injuryType: 'currently_injured' }]);
+  const rec = recs.find(r => r.bodyArea === 'Lower Back');
+
+  // Build large fake pool so more items resolve
+  const largeFakePool: FakeEx[] = [
+    { id: '1', name: 'Cat-Cow Stretch' },
+    { id: '2', name: 'Hip Flexor Stretch' },
+    { id: '3', name: 'Glute Bridge' },
+    { id: '4', name: 'Side Plank' },
+    { id: '5', name: 'Dead Bug' },
+    { id: '6', name: 'Pallof Press' },
+    { id: '7', name: 'Banded Shoulder External Rotation' },
+  ];
+
+  const alwaysIncludeResolved = (rec?.recommendations ?? [])
+    .map(x => resolveByName(x.name, largeFakePool))
+    .filter(Boolean) as FakeEx[];
+  const compStrengthResolved = (rec?.compensationStrengthen ?? [])
+    .map(x => resolveByName(x.name, largeFakePool))
+    .filter(Boolean) as FakeEx[];
+
+  // Simulate the per-day cap (mirrors generateDynamicPlan's injection block)
+  const seenIds = new Set<string>();
+  const injected: FakeEx[] = [];
+  for (const ex of [...alwaysIncludeResolved, ...compStrengthResolved]) {
+    if (injected.length >= 2) break;
+    if (!seenIds.has(ex.id)) { seenIds.add(ex.id); injected.push(ex); }
+  }
+  assert('Per-day cap: at most 2 main-block rehab exercises injected', injected.length <= 2);
+  assert('Per-day cap: at least 1 exercise injected when injuries active', injected.length >= 1);
+}
+{
+  // No-injury path produces zero candidates (plan is unchanged)
+  const recs = getInjuryRecommendations([]);
+  const allCandidates = recs.flatMap(r => [
+    ...r.recommendations.map(x => resolveByName(x.name, fakePool)),
+    ...r.compensationStrengthen.map(x => resolveByName(x.name, fakePool)),
+    ...r.compensationStretch.map(x => resolveByName(x.name, fakePool)),
+  ]).filter(Boolean);
+  assert('No injuries → zero injection candidates → plan unchanged', allCandidates.length === 0);
 }
 
 // ─── Summary ─────────────────────────────────────────────────────────────

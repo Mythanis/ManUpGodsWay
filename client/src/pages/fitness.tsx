@@ -2005,6 +2005,7 @@ export default function Fitness() {
 
       const resolvedCompStretches: APIExercise[] = [];
       const resolvedCompStrengthen: APIExercise[] = [];
+      const resolvedAlwaysInclude: APIExercise[] = [];
       const seenRehabIds = new Set<string>();
 
       for (const rec of rehabRecs) {
@@ -2016,13 +2017,22 @@ export default function Fitness() {
           const ex = resolveByName(item.name, rehabPool);
           if (ex && !seenRehabIds.has(ex.id)) { seenRehabIds.add(ex.id); resolvedCompStrengthen.push(ex); }
         }
+        // rec.recommendations is the alwaysInclude list from the rule pack
+        for (const item of rec.recommendations) {
+          const ex = resolveByName(item.name, rehabPool);
+          if (ex && !seenRehabIds.has(ex.id)) { seenRehabIds.add(ex.id); resolvedAlwaysInclude.push(ex); }
+        }
       }
 
-      const injuryRehab = { compStretches: resolvedCompStretches, compStrengthen: resolvedCompStrengthen };
+      const injuryRehab = {
+        compStretches: resolvedCompStretches,
+        compStrengthen: resolvedCompStrengthen,
+        alwaysInclude: resolvedAlwaysInclude,
+      };
       const stretchPolicy = Object.values(stretchPolicyMap).filter(Boolean).join(' | ');
 
       if (activeInjuries.length > 0) {
-        console.log(`[InjuryRehab] ${resolvedCompStretches.length} comp-stretches, ${resolvedCompStrengthen.length} comp-strengthen resolved from ${activeInjuries.length} injuries`);
+        console.log(`[InjuryRehab] ${resolvedCompStretches.length} comp-stretches, ${resolvedCompStrengthen.length} comp-strengthen, ${resolvedAlwaysInclude.length} alwaysInclude resolved from ${activeInjuries.length} injuries`);
       }
       // ── End injury rehab resolver ──────────────────────────────────────────
 
@@ -2426,7 +2436,7 @@ export default function Fitness() {
     durationMin: number = 45,
     stretchPool: APIExercise[] = [],
     cardioPool: APIExercise[] = [],
-    injuryRehab: { compStretches: APIExercise[]; compStrengthen: APIExercise[] } = { compStretches: [], compStrengthen: [] }
+    injuryRehab: { compStretches: APIExercise[]; compStrengthen: APIExercise[]; alwaysInclude: APIExercise[] } = { compStretches: [], compStrengthen: [], alwaysInclude: [] }
   ): WeeklyPlan {
     // Defensive normalization: the level select can emit lowercase
     // values ("intermediate") that the TS cast at the callsite swallows
@@ -2880,22 +2890,27 @@ export default function Fitness() {
         emitOpeningStretch(dayPlan.parts, dayExercises, injuryRehab.compStretches);
         emitWarmupCardio(dayExercises);
 
-        // Injury compensation strengthening — injected after warm-up, before main
-        // block (max 2 per day, silently skip if already in day or not resolved).
-        if (injuryRehab.compStrengthen.length > 0 && workoutStyle !== 'stretching') {
-          const usedIds = new Set(dayExercises.map(pe => pe.exercise.id));
-          let strengthCount = 0;
-          for (const ex of injuryRehab.compStrengthen) {
-            if (strengthCount >= 2) break;
-            if (!usedIds.has(ex.id)) {
-              usedIds.add(ex.id);
+        // Injury compensation main-block injection — injected after warm-up,
+        // before main block (max 2 per day combined: alwaysInclude + compStrengthen).
+        // Adds injected IDs to usedExercisesThisWeek and usedAcrossProgram so
+        // the main-block picker cannot select the same exercises again.
+        if ((injuryRehab.alwaysInclude.length > 0 || injuryRehab.compStrengthen.length > 0) && workoutStyle !== 'stretching') {
+          const dayUsedIds = new Set(dayExercises.map(pe => pe.exercise.id));
+          let injectedCount = 0;
+          for (const ex of [...injuryRehab.alwaysInclude, ...injuryRehab.compStrengthen]) {
+            if (injectedCount >= 2) break;
+            if (!dayUsedIds.has(ex.id)) {
+              dayUsedIds.add(ex.id);
               dayExercises.push({
                 exercise: ex,
                 sets: 2,
                 reps: 15,
                 restSec: 30,
               });
-              strengthCount++;
+              // Prevent main-block picker from re-selecting these exercises
+              usedExercisesThisWeek.add(ex.id);
+              usedAcrossProgram.add(ex.id);
+              injectedCount++;
             }
           }
         }
