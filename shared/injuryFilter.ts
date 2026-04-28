@@ -112,7 +112,7 @@ const KNEES: RulePack = {
 const LOWER_BACK: RulePack = {
   label: 'Lower Back',
   bodyParts: ['Lower Back'],
-  affinity: ['Hamstrings', 'Glutes', 'Core', 'Abs', 'Obliques', 'Back', 'Lats', 'Upper Back', 'Full Body'],
+  affinity: ['Hamstrings', 'Glutes', 'Core', 'Abs', 'Obliques', 'Back', 'Lats', 'Upper Back', 'Quads', 'Legs', 'Full Body'],
   blockPatterns: [
     'deadlift', 'romanian deadlift', 'rdl',
     'barbell squat', 'back squat', 'front squat',
@@ -564,63 +564,65 @@ function evaluateGeneric(
   const isHeavyCompound = matchesAny(exercise.name, GENERIC_HEAVY_COMPOUND) !== null;
   const isMachine = isMachineEquipment(exercise.equipment);
 
+  const exName = exerciseDisplay(exercise.name);
+
   if (injury.injuryType === 'currently_injured') {
     if (direct) {
       acc.status = worsenStatus(acc.status, 'blocked');
-      acc.reasons.push(`Directly loads your ${bodyArea} injury — no direct work allowed.`);
+      acc.reasons.push(`${exName} directly loads your ${bodyArea} injury — no direct work allowed.`);
     } else if (isBallistic) {
       acc.status = worsenStatus(acc.status, 'blocked');
-      acc.reasons.push(`High-impact movement stresses your ${bodyArea} injury.`);
+      acc.reasons.push(`${exName} is high-impact and stresses your ${bodyArea} injury.`);
     } else if (isStretch) {
       acc.status = worsenStatus(acc.status, 'blocked');
-      acc.reasons.push(`Deep stretching can aggravate your ${bodyArea} injury.`);
+      acc.reasons.push(`${exName} stretches deeply and can aggravate your ${bodyArea} injury.`);
     } else if (isHeavyCompound) {
       acc.status = worsenStatus(acc.status, 'blocked');
-      acc.reasons.push(`Heavy compound requires ${bodyArea} to stabilize under full load.`);
+      acc.reasons.push(`${exName} requires ${bodyArea} to stabilize under full load.`);
     } else {
       acc.status = worsenStatus(acc.status, 'modify');
-      acc.reasons.push(`Uses ${bodyArea} as a stabilizer — reduce load and range of motion.`);
+      acc.reasons.push(`${exName} uses ${bodyArea} as a stabilizer — reduce load and range of motion.`);
       acc.hints.push('Use bodyweight or minimal load only.');
     }
   } else if (injury.injuryType === 'recovery') {
     if (direct) {
       if (isBallistic || isStretch || isHeavyCompound) {
         acc.status = worsenStatus(acc.status, 'blocked');
-        acc.reasons.push(`Too aggressive for recovering ${bodyArea} — wait until pain-free at full range.`);
+        acc.reasons.push(`${exName} is too aggressive for your recovering ${bodyArea} — wait until pain-free at full range.`);
       } else {
         acc.status = worsenStatus(acc.status, 'modify');
-        acc.reasons.push(`${bodyArea} is recovering — light load and reduced range of motion.`);
+        acc.reasons.push(`${exName} loads your recovering ${bodyArea} — use light load and reduced range of motion.`);
         acc.hints.push('Use the lightest weight; stop at any pain.');
       }
     } else if (isBallistic) {
       acc.status = worsenStatus(acc.status, 'blocked');
-      acc.reasons.push(`High-impact stresses the recovering ${bodyArea} area.`);
+      acc.reasons.push(`${exName} is high-impact and stresses your recovering ${bodyArea}.`);
     } else if (isHeavyCompound) {
       acc.status = worsenStatus(acc.status, 'modify');
-      acc.reasons.push(`Heavy compound involves recovering ${bodyArea} — reduce load.`);
+      acc.reasons.push(`${exName} is a heavy compound that involves your recovering ${bodyArea} — reduce load.`);
     }
   } else if (injury.injuryType === 'long_term_limitation') {
     if (direct) {
       if (isBallistic) {
         acc.status = worsenStatus(acc.status, 'blocked');
-        acc.reasons.push(`High-impact directly stresses your ${bodyArea} long-term limitation.`);
+        acc.reasons.push(`${exName} is high-impact and directly stresses your ${bodyArea} long-term limitation.`);
       } else if (isHeavyCompound && !isMachine) {
         acc.status = worsenStatus(acc.status, 'blocked');
-        acc.reasons.push(`Heavy free-weight compound directly loads your ${bodyArea} limitation.`);
+        acc.reasons.push(`${exName} is a heavy free-weight compound that directly loads your ${bodyArea} limitation.`);
         acc.hints.push('Use machine or cable alternatives for better joint stability.');
       } else if (isStretch) {
         acc.status = worsenStatus(acc.status, 'modify');
-        acc.reasons.push(`Monitor stretch intensity — ${bodyArea} limitation limits end-range stretch.`);
+        acc.reasons.push(`${exName} reaches end-range — monitor intensity for your ${bodyArea} limitation.`);
       } else {
         acc.status = worsenStatus(acc.status, 'caution');
-        acc.reasons.push(`Involves your ${bodyArea} limitation — use moderate weight only.`);
+        acc.reasons.push(`${exName} involves your ${bodyArea} limitation — use moderate weight only.`);
       }
     } else if (isBallistic) {
       acc.status = worsenStatus(acc.status, 'modify');
-      acc.reasons.push(`High-impact stresses your ${bodyArea} long-term limitation area.`);
+      acc.reasons.push(`${exName} is high-impact and stresses your ${bodyArea} long-term limitation area.`);
     } else if (isHeavyCompound && !isMachine) {
       acc.status = worsenStatus(acc.status, 'caution');
-      acc.reasons.push(`Heavy compound loads your ${bodyArea} limitation area.`);
+      acc.reasons.push(`${exName} is a heavy compound that loads your ${bodyArea} limitation area.`);
     }
   }
 }
@@ -691,13 +693,21 @@ function evaluateAgainstPack(
     // Unmatched stretch on the affected area — fall through to type rules.
   }
 
+  // Short, human-readable name for this exercise — used in every reason so
+  // the user always sees which exercise the rule applies to (rather than
+  // just the body area).
+  const exName = exerciseDisplay(exercise.name);
+
   // 3. Long-term limitation
   if (injury.injuryType === 'long_term_limitation') {
     const avoid = matchesAny(exercise.name, pack.longTermAvoidPatterns);
     if (avoid) {
       acc.status = worsenStatus(acc.status, 'blocked');
       acc.reasons.push(
-        `${formatExerciseRef(avoid)} is on the permanent avoid list for your ${pack.label} limitation.`,
+        withSubstitute(
+          `${exName} is on the permanent avoid list for your ${pack.label} limitation.`,
+          pack.longTermPreferPatterns,
+        ),
       );
       return;
     }
@@ -709,14 +719,20 @@ function evaluateAgainstPack(
     if (block && direct) {
       acc.status = worsenStatus(acc.status, 'blocked');
       acc.reasons.push(
-        `${formatExerciseRef(block)} aggravates your ${pack.label} limitation.`,
+        withSubstitute(
+          `${exName} aggravates your ${pack.label} limitation.`,
+          pack.longTermPreferPatterns,
+        ),
       );
       return;
     }
     if (direct) {
       acc.status = worsenStatus(acc.status, 'caution');
       acc.reasons.push(
-        `Involves your ${pack.label} limitation — use moderate weight only.`,
+        withSubstitute(
+          `${exName} loads your ${pack.label} limitation — use moderate weight only.`,
+          pack.longTermPreferPatterns,
+        ),
       );
       pack.preferHints.forEach(h => acc.hints.push(h));
       return;
@@ -733,7 +749,7 @@ function evaluateAgainstPack(
     if (matchedAllowedNow) {
       acc.status = worsenStatus(acc.status, 'modify');
       acc.reasons.push(
-        `${formatExerciseRef(matchedAllowedNow)} is reintroduced at Week ${week} of your ${pack.label} recovery — light load only.`,
+        `${exName} is reintroduced at Week ${week} of your ${pack.label} recovery — light load only.`,
       );
       pack.modifyHints.forEach(h => acc.hints.push(h));
       acc.hints.push('Use the lightest weight and stop at any pain.');
@@ -743,7 +759,10 @@ function evaluateAgainstPack(
     if (unlockWeek !== null && unlockWeek > week) {
       acc.status = worsenStatus(acc.status, 'blocked');
       acc.reasons.push(
-        `Unlocks at Week ${unlockWeek} of ${pack.label} recovery (currently Week ${week}).`,
+        withSubstitute(
+          `${exName} unlocks at Week ${unlockWeek} of your ${pack.label} recovery (currently Week ${week}).`,
+          allowedThisWeek.length > 0 ? allowedThisWeek : pack.allowPatterns,
+        ),
       );
       return;
     }
@@ -751,21 +770,27 @@ function evaluateAgainstPack(
     if (block) {
       acc.status = worsenStatus(acc.status, 'blocked');
       acc.reasons.push(
-        `${formatExerciseRef(block)} stays blocked until your ${pack.label} recovery is complete (currently Week ${week}).`,
+        withSubstitute(
+          `${exName} stays blocked until your ${pack.label} recovery is complete (currently Week ${week}).`,
+          allowedThisWeek.length > 0 ? allowedThisWeek : pack.allowPatterns,
+        ),
       );
       return;
     }
     if (direct) {
       acc.status = worsenStatus(acc.status, 'blocked');
       acc.reasons.push(
-        `Direct work on your recovering ${pack.label} not yet reintroduced (currently Week ${week}).`,
+        withSubstitute(
+          `${exName} loads your recovering ${pack.label} and isn't reintroduced yet (currently Week ${week}).`,
+          allowedThisWeek.length > 0 ? allowedThisWeek : pack.allowPatterns,
+        ),
       );
       return;
     }
     // Affected only, no specific match → light caution.
     acc.status = worsenStatus(acc.status, 'modify');
     acc.reasons.push(
-      `Involves the recovering ${pack.label} area — keep load light (Week ${week}).`,
+      `${exName} uses your recovering ${pack.label} area — keep load light (Week ${week}).`,
     );
     return;
   }
@@ -776,25 +801,58 @@ function evaluateAgainstPack(
     if (block) {
       acc.status = worsenStatus(acc.status, 'blocked');
       acc.reasons.push(
-        `${formatExerciseRef(block)} is blocked for your current ${pack.label} injury.`,
+        withSubstitute(
+          `${exName} is blocked for your current ${pack.label} injury.`,
+          pack.longTermPreferPatterns,
+          pack.allowPatterns,
+        ),
       );
       return;
     }
     if (direct) {
       acc.status = worsenStatus(acc.status, 'blocked');
       acc.reasons.push(
-        `Directly loads your current ${pack.label} injury — no direct work allowed.`,
+        withSubstitute(
+          `${exName} directly loads your current ${pack.label} injury — no direct work allowed.`,
+          pack.longTermPreferPatterns,
+          pack.allowPatterns,
+        ),
       );
       return;
     }
     // Affected only → modify with stabilizer warning.
     acc.status = worsenStatus(acc.status, 'modify');
     acc.reasons.push(
-      `Uses your ${pack.label} as a stabilizer — reduce load and range of motion.`,
+      `${exName} uses your ${pack.label} as a stabilizer — reduce load and range of motion.`,
     );
     pack.modifyHints.forEach(h => acc.hints.push(h));
     return;
   }
+}
+
+// Format the exercise name for use in user-facing reason text. Trims long
+// names, preserves capitalization, falls back to "This exercise".
+function exerciseDisplay(name: string | undefined | null): string {
+  const trimmed = (name ?? '').trim();
+  if (!trimmed) return 'This exercise';
+  return trimmed.length > 60 ? `${trimmed.slice(0, 57).trimEnd()}…` : trimmed;
+}
+
+// Append a "try X instead" hint when at least one substitute pattern exists.
+// Walks the candidate lists in priority order and returns the first match
+// that meaningfully resembles a real exercise (>= 3 chars, has letters).
+function withSubstitute(reason: string, ...candidateLists: (string[] | undefined)[]): string {
+  for (const list of candidateLists) {
+    if (!list) continue;
+    for (const c of list) {
+      const trimmed = (c ?? '').trim();
+      if (trimmed.length < 3) continue;
+      if (!/[a-z]/i.test(trimmed)) continue;
+      const sub = formatExerciseRef(trimmed);
+      if (sub) return `${reason} Try ${sub} instead.`;
+    }
+  }
+  return reason;
 }
 
 // Capitalize and clean up a matched pattern for human-readable reasons.

@@ -178,7 +178,7 @@ export default function InjuriesPanel() {
         <div className="space-y-2">
           {injuries.map((injury) => {
             const week = injury.injuryType === "recovery"
-              ? computeRecoveryWeek(injury.startedAt as any)
+              ? computeRecoveryWeek(injury.startedAt)
               : null;
             return (
               <div
