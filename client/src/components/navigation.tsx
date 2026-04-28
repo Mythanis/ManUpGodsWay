@@ -110,14 +110,12 @@ export default function Navigation() {
     }
   }, [unreadData?.count]);
 
-  // Clear badge immediately when app becomes visible (e.g. tapping icon from home screen)
+  // When the app comes back into view, refresh the unread count so the badge
+  // reflects reality. Do NOT pre-emptively clear the badge here — the useEffect
+  // above will clear it automatically if the refreshed count comes back as 0.
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        if ('clearAppBadge' in navigator) {
-          (navigator as any).clearAppBadge().catch(() => {});
-        }
-        // Refetch so the badge re-sets accurately if there are still unread notifications
         queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
       }
     };

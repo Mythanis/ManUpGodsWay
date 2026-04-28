@@ -1,4 +1,4 @@
-const CACHE_NAME = 'man-up-gods-way-v10';
+const CACHE_NAME = 'man-up-gods-way-v11';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -179,6 +179,15 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     Promise.all([
       self.registration.showNotification(data.title, options),
+      // Set the OS-level app badge so the home screen icon shows a red dot
+      (async () => {
+        try {
+          if ('setAppBadge' in self.registration) {
+            const badgeCount = typeof data.badgeCount === 'number' ? data.badgeCount : 1;
+            await self.registration.setAppBadge(badgeCount);
+          }
+        } catch (_) {}
+      })(),
       // Notify all open app windows so they can refresh data immediately
       clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
         clientList.forEach((client) => {
@@ -196,6 +205,11 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   console.log('Notification clicked:', event);
   event.notification.close();
+
+  // Clear the OS-level app badge when the user acts on a notification
+  if ('clearAppBadge' in self.registration) {
+    self.registration.clearAppBadge().catch(() => {});
+  }
 
   // Always resolve to an absolute URL — clients.openWindow() and client.navigate()
   // require absolute URLs per spec; passing a relative path causes browsers to
