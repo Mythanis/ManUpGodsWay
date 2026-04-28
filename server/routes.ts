@@ -11108,7 +11108,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (plan.userId !== user.id) {
         return res.status(403).json({ message: 'Access denied' });
       }
-      
+
+      // ── Injury risk guard (single-add) ──────────────────────────────────
+      if (!req.body?.acknowledgeInjuryRisk) {
+        const injuries = await storage.getUserInjuries(user.id);
+        if (injuries && injuries.length > 0) {
+          const numId = parseInt(req.body?.exerciseId, 10);
+          const exRow = !Number.isNaN(numId)
+            ? (await db.select({
+                id: schema.exercises.id,
+                name: schema.exercises.name,
+                bodyPart: schema.exercises.bodyPart,
+                hiit: schema.exercises.hiit,
+                stretching: schema.exercises.stretching,
+                equipment: schema.exercises.equipment,
+                level: schema.exercises.level,
+              }).from(schema.exercises).where(eq(schema.exercises.id, numId)).limit(1))[0]
+            : undefined;
+          const exForEval = {
+            name: exRow?.name ?? req.body?.exerciseName ?? '',
+            bodyPart: exRow?.bodyPart ?? req.body?.bodyPart ?? '',
+            hiit: exRow?.hiit ?? 'No',
+            stretching: exRow?.stretching ?? 'No',
+            equipment: exRow?.equipment ?? req.body?.equipment ?? '',
+            level: exRow?.level ?? '',
+          };
+          const evaluation = evaluateExerciseAgainstInjuries(exForEval, injuries);
+          if (evaluation.status === 'blocked') {
+            return res.status(409).json({
+              code: 'INJURY_RISK',
+              message: 'This exercise conflicts with your recorded injuries.',
+              blockedExercises: [{ exerciseId: req.body?.exerciseId, exerciseName: req.body?.exerciseName, reasons: evaluation.reasons }],
+            });
+          }
+        }
+      }
+      // ── End injury guard ─────────────────────────────────────────────────
+
       const parsed = insertFitnessPlanExerciseSchema.parse({
         ...req.body,
         planId: req.params.planId

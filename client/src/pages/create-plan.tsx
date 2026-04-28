@@ -414,10 +414,21 @@ export default function CreatePlan() {
       // Send all exercises in a single bulk request to avoid hitting the
       // per-IP rate limiter on large plans.
       if (exercisePayloads.length > 0) {
+        // If any selected exercise is injury-blocked, the user must have
+        // acknowledged via the confirmation dialog — pass the flag so the
+        // server guard allows the save.
+        const hasBlockedExercises = selectedExercises.some(sel => {
+          const key = getExKey(sel.exercise as any);
+          const ev = injuryEvalMap.get(key);
+          return ev?.status === 'blocked';
+        });
         await apiRequest(
           'POST',
           `/api/fitness-plans/${plan.id}/exercises/bulk`,
-          { exercises: exercisePayloads }
+          {
+            exercises: exercisePayloads,
+            ...(hasBlockedExercises ? { acknowledgeInjuryRisk: true } : {}),
+          }
         );
       }
 

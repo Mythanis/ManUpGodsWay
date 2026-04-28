@@ -377,6 +377,15 @@ export default function EditPlan() {
           exerciseData.minutes = selectedExercise.minutes;
         }
 
+        // If the exercise is injury-blocked the user acknowledged via the
+        // confirmation dialog before adding — pass the flag so the server
+        // guard allows the save.
+        const exKeyForGuard = getExKey(ex);
+        const evalForGuard = injuryEvalMap.get(exKeyForGuard);
+        if (evalForGuard?.status === 'blocked') {
+          (exerciseData as any).acknowledgeInjuryRisk = true;
+        }
+
         await apiRequest('POST', `/api/fitness-plans/${planId}/exercises`, exerciseData);
       }
 
@@ -1069,7 +1078,7 @@ export default function EditPlan() {
                         <Button
                           size="sm"
                           onClick={() => handleAddExercise(exercise)}
-                          className={`${injStatus === 'blocked' ? 'bg-red-700 hover:bg-red-800' : 'bg-ministry-gold hover:bg-ministry-gold/90'} text-${injStatus === 'blocked' ? 'white' : 'black'}`}
+                          className={injStatus === 'blocked' ? 'bg-red-700 hover:bg-red-800 text-white' : 'bg-ministry-gold hover:bg-ministry-gold/90 text-black'}
                           data-testid={`button-add-exercise-${exId}`}
                         >
                           {injStatus === 'blocked' ? <ShieldAlert className="w-4 h-4 mr-1" /> : <Plus className="w-4 h-4 mr-1" />}
