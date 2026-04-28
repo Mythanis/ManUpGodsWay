@@ -20,32 +20,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { X, Plus, AlertTriangle } from "lucide-react";
 import type { UserInjury } from "@shared/schema";
 
-const BODY_AREAS = [
-  "Abs",
-  "Adductors",
-  "Back",
-  "Biceps",
-  "Calves",
-  "Chest",
-  "Core",
-  "Forearms",
-  "Full Body",
-  "Glutes",
-  "Hamstrings",
-  "Hip Flexors",
-  "IT Band",
-  "Knees",
-  "Lats",
-  "Legs",
-  "Lower Back",
-  "Neck",
-  "Obliques",
-  "Quads",
-  "Shoulders",
-  "Triceps",
-  "Upper Back",
-];
-
 const INJURY_TYPE_LABELS: Record<string, string> = {
   currently_injured: "Currently Injured",
   long_term_limitation: "Long Term Limitation",
@@ -65,12 +39,15 @@ export default function InjuriesPanel() {
   const [injuryType, setInjuryType] = useState<string>("");
   const [note, setNote] = useState("");
 
-  const { data: injuries = [], isLoading } = useQuery<UserInjury[]>({
+  const { data: injuries = [], isLoading: injuriesLoading } = useQuery<UserInjury[]>({
     queryKey: ["/api/user/injuries"],
   });
 
-  const noInjuries = !isLoading && injuries.length === 0;
-  const showYes = hasInjuries === true || injuries.length > 0;
+  const { data: bodyAreas = [], isLoading: bodyAreasLoading } = useQuery<string[]>({
+    queryKey: ["/api/exercises/body-parts"],
+  });
+
+  const effectiveAnswer = injuries.length > 0 ? true : hasInjuries;
 
   const addMutation = useMutation({
     mutationFn: async (data: { bodyArea: string; injuryType: string; note?: string }) =>
@@ -120,7 +97,7 @@ export default function InjuriesPanel() {
     setHasInjuries(false);
   }
 
-  const effectiveAnswer = injuries.length > 0 ? true : hasInjuries;
+  const sortedBodyAreas = [...bodyAreas].sort();
 
   return (
     <div className="px-4 py-4">
@@ -153,14 +130,18 @@ export default function InjuriesPanel() {
         </button>
       </div>
 
-      {isLoading && (
+      {injuriesLoading && (
         <div className="flex items-center gap-2 py-2">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#FDD000]" />
           <span className="text-xs text-zinc-400">Loading...</span>
         </div>
       )}
 
-      {!isLoading && injuries.length > 0 && (
+      {!injuriesLoading && injuries.length === 0 && effectiveAnswer !== false && (
+        <p className="text-xs text-zinc-500 italic">No injuries recorded — tap Yes to add.</p>
+      )}
+
+      {!injuriesLoading && injuries.length > 0 && (
         <div className="space-y-2">
           {injuries.map((injury) => (
             <div
@@ -215,10 +196,6 @@ export default function InjuriesPanel() {
         </div>
       )}
 
-      {!isLoading && injuries.length === 0 && effectiveAnswer === true && (
-        <p className="text-xs text-zinc-500 italic">No injuries recorded yet — add one below.</p>
-      )}
-
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="bg-zinc-900 border-zinc-700 text-white max-w-sm">
           <DialogHeader>
@@ -238,10 +215,10 @@ export default function InjuriesPanel() {
                   className="bg-black border-zinc-600 text-white w-full"
                   data-testid="injury-body-area-select"
                 >
-                  <SelectValue placeholder="Select area" />
+                  <SelectValue placeholder={bodyAreasLoading ? "Loading areas..." : "Select area"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {BODY_AREAS.map((area) => (
+                  {sortedBodyAreas.map((area) => (
                     <SelectItem key={area} value={area}>
                       {area}
                     </SelectItem>
