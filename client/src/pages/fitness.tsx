@@ -501,6 +501,8 @@ export default function Fitness() {
   // Plan-detail dialog (today's exercises preview)
   const [detailPlan, setDetailPlan] = useState<FitnessPlan | null>(null);
   const [detailExercises, setDetailExercises] = useState<FitnessPlanExercise[]>([]);
+  // Server-evaluated injury map for the plan-detail dialog; keyed by exerciseId
+  const [detailInjEvalMap, setDetailInjEvalMap] = useState<Record<string, any>>({});
 
   // Exercise media preview dialog (Preview button on each ExerciseCard)
   const [previewExercise, setPreviewExercise] = useState<Exercise | null>(null);
@@ -3817,6 +3819,19 @@ export default function Fitness() {
                             onClick={() => {
                               setDetailPlan(plan);
                               setDetailExercises(exercises);
+                              setDetailInjEvalMap({});
+                              if (fitnessPageInjuries.length > 0 && exercises.length > 0) {
+                                apiRequest('POST', '/api/exercises/evaluate-injuries', {
+                                  exercises: exercises.map(ex => ({
+                                    exerciseId: ex.exerciseId,
+                                    exerciseName: ex.exerciseName,
+                                    bodyPart: ex.bodyPart,
+                                    equipment: ex.equipment,
+                                  })),
+                                })
+                                  .then((data: any) => setDetailInjEvalMap(data ?? {}))
+                                  .catch(() => {});
+                              }
                             }}
                             variant="outline"
                             className="flex-1 border-2 border-[#FDD000]/60 text-[#FDD000] hover:bg-[#FDD000]/10 font-black uppercase tracking-wide"
@@ -6706,7 +6721,7 @@ export default function Fitness() {
       </Dialog>
 
       {/* Plan Detail Dialog — today's exercises preview with Start Workout */}
-      <Dialog open={!!detailPlan} onOpenChange={(open) => { if (!open) { setDetailPlan(null); setDetailExercises([]); } }}>
+      <Dialog open={!!detailPlan} onOpenChange={(open) => { if (!open) { setDetailPlan(null); setDetailExercises([]); setDetailInjEvalMap({}); } }}>
         <DialogContent className="max-w-md bg-zinc-950 border-2 border-[#FDD000] text-white">
           <DialogHeader>
             <DialogTitle className="text-[#FDD000] font-black uppercase tracking-tight">
@@ -6721,12 +6736,8 @@ export default function Fitness() {
           <div className="space-y-2 max-h-[55vh] overflow-y-auto pr-1">
             {detailExercises.map((ex, i) => {
               const weekday = (ex.daysOfWeek && ex.daysOfWeek[0]) || getCurrentDayOfWeek();
-              const exDetailInjEval = fitnessPageInjuries.length > 0
-                ? evaluateExerciseAgainstInjuries(
-                    { name: ex.exerciseName ?? '', bodyPart: ex.bodyPart ?? '', hiit: 'No', stretching: 'No', equipment: ex.equipment ?? '', level: '' },
-                    fitnessPageInjuries
-                  )
-                : null;
+              // Use server-evaluated result keyed by exerciseId for full accuracy
+              const exDetailInjEval = detailInjEvalMap[ex.exerciseId] ?? null;
               const hasConflict = exDetailInjEval && exDetailInjEval.status !== 'allowed';
               return (
                 <div
@@ -6760,32 +6771,55 @@ export default function Fitness() {
                     </div>
                   </div>
                   {hasConflict && exDetailInjEval && (
-                    <div className="mt-2 flex items-start gap-2 flex-wrap">
-                      <span
-                        className={`text-[10px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded shrink-0 ${
-                          exDetailInjEval.status === 'blocked'
-                            ? 'bg-red-900/50 text-red-400 border border-red-700/50'
-                            : exDetailInjEval.status === 'modify'
-                            ? 'bg-yellow-900/40 text-yellow-400 border border-yellow-700/40'
-                            : 'bg-green-900/40 text-green-400 border border-green-700/40'
-                        }`}
-                        title={exDetailInjEval.reasons.join(' | ')}
-                      >
-                        {exDetailInjEval.status === 'blocked' ? '🔴 Blocked' : exDetailInjEval.status === 'modify' ? '🟡 Caution' : '🟢 Caution'}
-                      </span>
-                      <span className="text-[10px] text-zinc-400 italic leading-tight flex-1">{exDetailInjEval.reasons[0]}</span>
-                      {detailPlan && (
-                        <button
-                          onClick={() => {
-                            setDetailPlan(null);
-                            setDetailExercises([]);
-                            window.location.href = `/edit-plan/${detailPlan.id}`;
-                          }}
-                          className="text-[9px] font-black uppercase tracking-wider text-[#FDD000] underline underline-offset-2 hover:text-white shrink-0"
-                          title="Edit plan to swap or remove this exercise"
+                    <div className="mt-2 space-y-1">
+                      <div className="flex items-start gap-2 flex-wrap">
+                        <span
+                          className={`text-[10px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded shrink-0 ${
+                            exDetailInjEval.status === 'blocked'
+                              ? 'bg-red-900/50 text-red-400 border border-red-700/50'
+                              : exDetailInjEval.status === 'modify'
+                              ? 'bg-yellow-900/40 text-yellow-400 border border-yellow-700/40'
+                              : 'bg-green-900/40 text-green-400 border border-green-700/40'
+                          }`}
+                          title={exDetailInjEval.reasons.join(' | ')}
                         >
-                          Edit Plan
-                        </button>
+                          {exDetailInjEval.status === 'blocked' ? '🔴 Blocked' : exDetailInjEval.status === 'modify' ? '🟡 Caution' : '🟢 Caution'}
+                        </span>
+                        <span className="text-[10px] text-zinc-400 italic leading-tight flex-1">{exDetailInjEval.reasons[0]}</span>
+                      </div>
+                      {(exDetailInjEval.status === 'blocked' || exDetailInjEval.status === 'modify') && (
+                        <div className="flex gap-2 pt-0.5">
+                          <button
+                            onClick={async () => {
+                              try {
+                                await apiRequest('DELETE', `/api/fitness-plan-exercises/${ex.id}`);
+                                setDetailExercises(prev => prev.filter(e => e.id !== ex.id));
+                                if (detailPlan) {
+                                  queryClient.invalidateQueries({ queryKey: ['/api/fitness-plans'] });
+                                }
+                                toast({ title: `${ex.exerciseName} removed from plan` });
+                              } catch {
+                                toast({ title: 'Failed to remove exercise', variant: 'destructive' });
+                              }
+                            }}
+                            className="text-[9px] font-black uppercase tracking-wider text-red-400 border border-red-700/50 bg-red-900/30 px-2 py-0.5 rounded hover:bg-red-900/60"
+                          >
+                            Remove
+                          </button>
+                          {detailPlan && (
+                            <button
+                              onClick={() => {
+                                setDetailPlan(null);
+                                setDetailExercises([]);
+                                setDetailInjEvalMap({});
+                                window.location.href = `/edit-plan/${detailPlan.id}`;
+                              }}
+                              className="text-[9px] font-black uppercase tracking-wider text-[#FDD000] border border-[#FDD000]/40 bg-[#FDD000]/10 px-2 py-0.5 rounded hover:bg-[#FDD000]/20"
+                            >
+                              Swap in Plan
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   )}

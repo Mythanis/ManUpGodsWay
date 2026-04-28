@@ -22,7 +22,6 @@ import {
   Bell,
   Timer,
   ShieldAlert,
-  AlertTriangle,
   EyeOff
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -32,7 +31,7 @@ import { BackButton } from "@/components/BackButton";
 import { PushConsentDialog } from "@/components/push-consent-dialog";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { evaluateExerciseAgainstInjuries, type InjuryStatus } from "@shared/injuryFilter";
+import { evaluateExerciseAgainstInjuries } from "@shared/injuryFilter";
 
 interface Exercise {
   exerciseId: string;

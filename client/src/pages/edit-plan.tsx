@@ -23,7 +23,6 @@ import {
   Timer,
   Repeat,
   ShieldAlert,
-  AlertTriangle,
   EyeOff
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
