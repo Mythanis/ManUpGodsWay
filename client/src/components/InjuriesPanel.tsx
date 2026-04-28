@@ -109,6 +109,9 @@ export default function InjuriesPanel() {
 
   function handleSave() {
     if (!bodyArea || !injuryType) return;
+    // Recovery requires a start date so the Week N math is real (not a
+    // silent fallback to Week 1).
+    if (injuryType === "recovery" && !startedAt) return;
     addMutation.mutate({
       bodyArea,
       injuryType,
