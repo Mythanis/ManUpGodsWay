@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -69,19 +70,23 @@ export default function InjuriesPanel() {
 
   const effectiveAnswer = injuries.length > 0 ? true : hasInjuries;
 
+  const { toast } = useToast();
+
   const addMutation = useMutation({
     mutationFn: async (data: { bodyArea: string; injuryType: string; note?: string; startedAt?: string }) =>
       apiRequest("POST", "/api/user/injuries", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user/injuries"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/injuries/recommendations"] });
-      setDialogOpen(false);
-      setBodyArea("");
-      setInjuryType("");
-      setNote("");
-      setStartedAt("");
     },
   });
+
+  function resetInjuryForm() {
+    setBodyArea("");
+    setInjuryType("");
+    setNote("");
+    setStartedAt("");
+  }
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => apiRequest("DELETE", `/api/user/injuries/${id}`),
@@ -108,18 +113,38 @@ export default function InjuriesPanel() {
     setDialogOpen(true);
   }
 
-  function handleSave() {
+  function handleSave(keepOpen: boolean = false) {
     if (!bodyArea || !injuryType) return;
     // Recovery requires a start date so the Week N math is real (not a
     // silent fallback to Week 1).
     if (injuryType === "recovery" && !startedAt) return;
-    addMutation.mutate({
-      bodyArea,
-      injuryType,
-      note: note.trim() || undefined,
-      // Only send a start date when the injury is in recovery.
-      startedAt: injuryType === "recovery" && startedAt ? startedAt : undefined,
-    });
+    const savedBodyArea = bodyArea;
+    addMutation.mutate(
+      {
+        bodyArea,
+        injuryType,
+        note: note.trim() || undefined,
+        // Only send a start date when the injury is in recovery.
+        startedAt: injuryType === "recovery" && startedAt ? startedAt : undefined,
+      },
+      {
+        onSuccess: () => {
+          if (keepOpen) {
+            // Reset the form fields but keep the dialog open so the user
+            // can quickly add another injury without re-opening the dialog.
+            resetInjuryForm();
+            toast({
+              title: "Injury saved",
+              description: `${savedBodyArea} added. Add another injury below.`,
+            });
+          } else {
+            // Default behavior: close the dialog and reset.
+            setDialogOpen(false);
+            resetInjuryForm();
+          }
+        },
+      }
+    );
   }
 
   function handleYes() {
@@ -425,7 +450,7 @@ export default function InjuriesPanel() {
             </div>
           </div>
 
-          <DialogFooter className="gap-2">
+          <DialogFooter className="gap-2 flex-col sm:flex-row">
             <Button
               variant="ghost"
               onClick={() => setDialogOpen(false)}
@@ -434,7 +459,16 @@ export default function InjuriesPanel() {
               Cancel
             </Button>
             <Button
-              onClick={handleSave}
+              variant="outline"
+              onClick={() => handleSave(true)}
+              disabled={!bodyArea || !injuryType || addMutation.isPending}
+              className="border-[#FDD000] text-[#FDD000] hover:bg-[#FDD000]/10 font-black"
+              data-testid="save-and-add-another-injury-button"
+            >
+              {addMutation.isPending ? "Saving..." : "Save & Add Another"}
+            </Button>
+            <Button
+              onClick={() => handleSave(false)}
               disabled={!bodyArea || !injuryType || addMutation.isPending}
               className="bg-[#FDD000] text-black font-black hover:bg-[#FDD000]/90"
               data-testid="save-injury-button"
