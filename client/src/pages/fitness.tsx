@@ -91,6 +91,7 @@ import { Link } from "wouter";
 import seanMcManusPhoto from "@assets/531400631_10229732604879918_951068179454150284_n_1766855745199.jpeg";
 import { PushConsentDialog } from "@/components/push-consent-dialog";
 import InjuriesPanel from "@/components/InjuriesPanel";
+import { evaluateExerciseAgainstInjuries } from "@shared/injuryFilter";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { HealthMetric, HealthMetricType, HealthGoal } from "@shared/schema";
@@ -648,6 +649,12 @@ export default function Fitness() {
   // can manage / cancel their old Stripe subscription, but access
   // is no longer gated on it.
   const hasMembership = true;
+
+  // Fetch user injuries for exercise conflict badges
+  const { data: fitnessPageInjuries = [] } = useQuery<any[]>({
+    queryKey: ['/api/user/injuries'],
+    staleTime: 60000,
+  });
 
   // Fetch admin-created fitness plans
   const { data: adminPlans = [] } = useQuery<AdminFitnessPlan[]>({
@@ -3766,10 +3773,25 @@ export default function Fitness() {
                         <div className="space-y-1 mb-4 max-h-40 overflow-y-auto">
                           {exercises.map((ex, i) => {
                             const weekday = (ex.daysOfWeek && ex.daysOfWeek[0]) || getCurrentDayOfWeek();
+                            // Evaluate this plan exercise against user's recorded injuries
+                            const exInjuryEval = fitnessPageInjuries.length > 0
+                              ? evaluateExerciseAgainstInjuries(
+                                  { name: ex.exerciseName ?? '', bodyPart: ex.bodyPart ?? '', hiit: 'No', stretching: 'No', equipment: ex.equipment ?? '', level: '' },
+                                  fitnessPageInjuries
+                                )
+                              : null;
                             return (
                               <div key={ex.id} className="flex items-center gap-2 text-sm text-white/90">
                                 <span className="text-[#FDD000] font-black w-5">{i + 1}.</span>
                                 <span className="flex-1 truncate">{ex.exerciseName}</span>
+                                {exInjuryEval && exInjuryEval.status !== 'allowed' && (
+                                  <span
+                                    className={`text-[9px] font-black uppercase tracking-wider px-1 py-0.5 rounded-sm border ${exInjuryEval.status === 'blocked' ? 'bg-red-900/40 text-red-400 border-red-700/50' : 'bg-yellow-900/30 text-yellow-400 border-yellow-700/40'}`}
+                                    title={exInjuryEval.reasons[0] ?? 'Injury conflict'}
+                                  >
+                                    {exInjuryEval.status === 'blocked' ? '🔴' : '🟡'}
+                                  </span>
+                                )}
                                 <span
                                   className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm bg-[#FDD000]/15 text-[#FDD000] border border-[#FDD000]/40"
                                   data-testid={`badge-weekday-${ex.id}`}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -113,9 +113,12 @@ export default function EditPlan() {
 
   // Injury filtering state
   const [hideConflicting, setHideConflicting] = useState(false);
-  // Injury risk confirmation dialog state
+  // Injury risk confirmation dialog state (pre-add check)
   const [injuryDialogExercise, setInjuryDialogExercise] = useState<Exercise | null>(null);
   const [injuryDialogReasons, setInjuryDialogReasons] = useState<string[]>([]);
+  // Server-side 409 retry state
+  const forceInjuryOverride = useRef(false);
+  const [saveBlockedList, setSaveBlockedList] = useState<{exerciseName: string; reasons: string[]}[]>([]);
 
   // Selected exercises for the plan
   const [selectedExercises, setSelectedExercises] = useState<SelectedExercise[]>([]);
@@ -249,7 +252,7 @@ export default function EditPlan() {
 
   // Fetch user injuries for exercise filtering
   const { data: userInjuries = [] } = useQuery<any[]>({
-    queryKey: ['api', 'user', 'injuries'],
+    queryKey: ['/api/user/injuries'],
     queryFn: async () => {
       const res = await fetch('/api/user/injuries', { credentials: 'include' });
       if (!res.ok) return [];
@@ -354,9 +357,8 @@ export default function EditPlan() {
         }
       }
       
-      // Add updated exercises to the plan
-      for (let i = 0; i < selectedExercises.length; i++) {
-        const selectedExercise = selectedExercises[i];
+      // Build all exercise payloads, then send as a single bulk request
+      const exercisePayloads = selectedExercises.map((selectedExercise, i) => {
         const ex = selectedExercise.exercise as any;
         const exerciseData: any = {
           exerciseId: String(ex.exerciseId || ex.id || ''),
@@ -371,22 +373,25 @@ export default function EditPlan() {
           notes: selectedExercise.notes || '',
           orderIndex: i
         };
-
-        // Only include minutes if it's a valid number
         if (selectedExercise.minutes && typeof selectedExercise.minutes === 'number' && selectedExercise.minutes > 0) {
           exerciseData.minutes = selectedExercise.minutes;
         }
+        return exerciseData;
+      });
 
-        // If the exercise is injury-blocked the user acknowledged via the
-        // confirmation dialog before adding — pass the flag so the server
-        // guard allows the save.
-        const exKeyForGuard = getExKey(ex);
-        const evalForGuard = injuryEvalMap.get(exKeyForGuard);
-        if (evalForGuard?.status === 'blocked') {
-          (exerciseData as any).acknowledgeInjuryRisk = true;
-        }
-
-        await apiRequest('POST', `/api/fitness-plans/${planId}/exercises`, exerciseData);
+      if (exercisePayloads.length > 0) {
+        // Pre-check client-side for blocked exercises; also honour any
+        // server-side 409 retry triggered by forceInjuryOverride.
+        const hasBlockedExercises = selectedExercises.some(sel => {
+          const key = getExKey(sel.exercise as any);
+          const ev = injuryEvalMap.get(key);
+          return ev?.status === 'blocked';
+        });
+        await apiRequest('POST', `/api/fitness-plans/${planId}/exercises/bulk`, {
+          exercises: exercisePayloads,
+          ...(hasBlockedExercises || forceInjuryOverride.current ? { acknowledgeInjuryRisk: true } : {}),
+        });
+        forceInjuryOverride.current = false;
       }
 
       // Replace reminders: delete existing then add new
@@ -410,6 +415,19 @@ export default function EditPlan() {
       setLocation('/fitness');
     },
     onError: (error: any) => {
+      // Server returned 409 INJURY_RISK — show retry dialog
+      if (error?.response?.status === 409) {
+        try {
+          const body = error?.response?.data ?? {};
+          if (body?.code === 'INJURY_RISK' && Array.isArray(body?.blockedExercises)) {
+            setSaveBlockedList(body.blockedExercises.map((b: any) => ({
+              exerciseName: b.exerciseName ?? b.exerciseId ?? 'Unknown',
+              reasons: Array.isArray(b.reasons) ? b.reasons : [],
+            })));
+            return;
+          }
+        } catch (_) {}
+      }
       toast({
         title: "Error",
         description: error.message || "Failed to update plan",
@@ -1397,6 +1415,51 @@ export default function EditPlan() {
               className="flex-1"
             >
               I understand — Add anyway
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Server-side 409 INJURY_RISK retry dialog */}
+      <Dialog open={saveBlockedList.length > 0} onOpenChange={() => setSaveBlockedList([])}>
+        <DialogContent className="max-w-md bg-zinc-900 border-zinc-700 text-white">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-400">
+              <ShieldAlert className="w-5 h-5" />
+              Injury Conflict — Save Anyway?
+            </DialogTitle>
+            <DialogDescription className="text-zinc-300 mt-2">
+              The following exercises conflict with your recorded injuries:
+              <ul className="mt-2 space-y-1">
+                {saveBlockedList.map((item, i) => (
+                  <li key={i} className="text-sm">
+                    <span className="font-semibold text-red-400">{item.exerciseName}</span>
+                    {item.reasons.length > 0 && (
+                      <span className="text-zinc-400 ml-1">— {item.reasons[0]}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setSaveBlockedList([])}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                setSaveBlockedList([]);
+                forceInjuryOverride.current = true;
+                updatePlanMutation.mutate();
+              }}
+              className="flex-1"
+            >
+              I understand — Save anyway
             </Button>
           </DialogFooter>
         </DialogContent>

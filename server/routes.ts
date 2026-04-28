@@ -10234,6 +10234,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (payload.length === 0 && (equipment || level)) {
         console.warn('[/api/exercises] 0 results for query:', { equipment, level, bodyPart, hiit, stretching });
       }
+
+      // Optional: when injuriesAware=1 and the caller is authenticated with
+      // recorded injuries, annotate each exercise with { injuryStatus,
+      // injuryReasons, injuryHints } so clients can render badges without
+      // a separate evaluate-injuries call.
+      const injuriesAware = req.query.injuriesAware === '1' || req.query.injuriesAware === 'true';
+      if (injuriesAware && req.user?.claims?.sub) {
+        const injuries = await storage.getUserInjuries(req.user.claims.sub);
+        if (injuries && injuries.length > 0) {
+          const enriched = payload.map((ex: any) => {
+            const exForEval = {
+              name: ex.name ?? '',
+              bodyPart: ex.bodyPart ?? '',
+              hiit: ex.hiit ?? 'No',
+              stretching: ex.stretching ?? 'No',
+              equipment: ex.equipment ?? '',
+              level: ex.level ?? '',
+            };
+            const evaluation = evaluateExerciseAgainstInjuries(exForEval, injuries);
+            return {
+              ...ex,
+              injuryStatus: evaluation.status,
+              injuryReasons: evaluation.reasons,
+              injuryHints: evaluation.modificationHints,
+            };
+          });
+          return res.json(enriched);
+        }
+      }
+
       res.json(payload);
     } catch (error) {
       console.error('Error fetching exercises:', error);
