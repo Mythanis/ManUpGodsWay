@@ -21,6 +21,7 @@ import { warGroupsService } from "./warGroupsService";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { db } from "./db";
 import * as schema from "@shared/schema";
+import { evaluateExerciseAgainstInjuries } from "@shared/injuryFilter";
 import { eq, and, sql, desc, asc, gt, gte, ne, count, or, isNull, inArray, ilike, isNotNull } from "drizzle-orm";
 import { 
   insertStudySchema, 
@@ -10312,6 +10313,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Batch-evaluate exercises against the authenticated user's recorded injuries.
+  // Accepts a list of exercise identifiers (numeric id or name fallback) and
+  // returns a map of id → { status, reasons, modificationHints }.
+  app.post('/api/exercises/evaluate-injuries', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const items: Array<{ exerciseId?: string; exerciseName?: string; bodyPart?: string; equipment?: string }> =
+        Array.isArray(req.body?.exercises) ? req.body.exercises : [];
+      if (items.length === 0) return res.json({});
+
+      const injuries = await storage.getUserInjuries(userId);
+      if (!injuries || injuries.length === 0) return res.json({});
+
+      const numericIds = items.map(e => parseInt(e.exerciseId ?? '', 10)).filter(n => !isNaN(n));
+      const dbRows = numericIds.length > 0
+        ? await db.select({
+            id: schema.exercises.id,
+            name: schema.exercises.name,
+            bodyPart: schema.exercises.bodyPart,
+            hiit: schema.exercises.hiit,
+            stretching: schema.exercises.stretching,
+            equipment: schema.exercises.equipment,
+            level: schema.exercises.level,
+          }).from(schema.exercises).where(inArray(schema.exercises.id, numericIds))
+        : [];
+
+      const dbMap = new Map(dbRows.map(r => [r.id, r]));
+      const result: Record<string, any> = {};
+
+      for (const item of items) {
+        const key = item.exerciseId ?? item.exerciseName ?? '';
+        if (!key) continue;
+        const numId = parseInt(item.exerciseId ?? '', 10);
+        const dbRow = !isNaN(numId) ? dbMap.get(numId) : undefined;
+        const exerciseForEval = {
+          name: dbRow?.name ?? item.exerciseName ?? '',
+          bodyPart: dbRow?.bodyPart ?? item.bodyPart ?? '',
+          hiit: dbRow?.hiit ?? 'No',
+          stretching: dbRow?.stretching ?? 'No',
+          equipment: dbRow?.equipment ?? item.equipment ?? '',
+          level: dbRow?.level ?? '',
+        };
+        result[key] = evaluateExerciseAgainstInjuries(exerciseForEval, injuries);
+      }
+      res.json(result);
+    } catch (error) {
+      console.error('Error evaluating exercises against injuries:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   // ── Admin exercise management ─────────────────────────────────────────
 
   // Clear entire exercise database + all dependent user data
@@ -10924,6 +10976,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const parsedList = incoming.map((row: any) =>
         insertFitnessPlanExerciseSchema.parse({ ...row, planId: req.params.planId })
       );
+
+      // ── Injury risk guard ────────────────────────────────────────────────
+      // If the user has recorded injuries and has NOT explicitly acknowledged
+      // the risk, check every incoming exercise and return 409 for any that
+      // are blocked.  The client can retry with { acknowledgeInjuryRisk: true }
+      // after showing a confirmation dialog.
+      if (!req.body?.acknowledgeInjuryRisk) {
+        const injuries = await storage.getUserInjuries(user.id);
+        if (injuries && injuries.length > 0) {
+          const evalNumericIds = parsedList
+            .map(p => parseInt(p.exerciseId, 10))
+            .filter(n => !Number.isNaN(n));
+          const evalRows = evalNumericIds.length > 0
+            ? await db.select({
+                id: schema.exercises.id,
+                name: schema.exercises.name,
+                bodyPart: schema.exercises.bodyPart,
+                hiit: schema.exercises.hiit,
+                stretching: schema.exercises.stretching,
+                equipment: schema.exercises.equipment,
+                level: schema.exercises.level,
+              }).from(schema.exercises).where(inArray(schema.exercises.id, evalNumericIds))
+            : [];
+          const evalById = new Map(evalRows.map(r => [r.id, r]));
+
+          const blockedExercises: Array<{ exerciseId: string; exerciseName: string; reasons: string[] }> = [];
+          for (const p of parsedList) {
+            const numId = parseInt(p.exerciseId, 10);
+            const row = !Number.isNaN(numId) ? evalById.get(numId) : undefined;
+            const exForEval = {
+              name: row?.name ?? p.exerciseName ?? '',
+              bodyPart: row?.bodyPart ?? p.bodyPart ?? '',
+              hiit: row?.hiit ?? 'No',
+              stretching: row?.stretching ?? 'No',
+              equipment: row?.equipment ?? p.equipment ?? '',
+              level: row?.level ?? '',
+            };
+            const evaluation = evaluateExerciseAgainstInjuries(exForEval, injuries);
+            if (evaluation.status === 'blocked') {
+              blockedExercises.push({
+                exerciseId: p.exerciseId,
+                exerciseName: p.exerciseName ?? '',
+                reasons: evaluation.reasons,
+              });
+            }
+          }
+          if (blockedExercises.length > 0) {
+            return res.status(409).json({
+              code: 'INJURY_RISK',
+              message: 'Some exercises conflict with your recorded injuries.',
+              blockedExercises,
+            });
+          }
+        }
+      }
+      // ── End injury guard ─────────────────────────────────────────────────
 
       // Resolve sidedness for all exercises in one query, keyed by numeric id
       // when the exerciseId parses as an int, otherwise by lowercased name.

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,14 +21,19 @@ import {
   Calendar,
   Bell,
   Timer,
-  Repeat
+  Repeat,
+  ShieldAlert,
+  AlertTriangle,
+  EyeOff
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { useLocation, Link } from "wouter";
 import { BackButton } from "@/components/BackButton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { PushConsentDialog } from "@/components/push-consent-dialog";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
+import { evaluateExerciseAgainstInjuries } from "@shared/injuryFilter";
 
 interface Exercise {
   exerciseId: string;
@@ -105,6 +110,12 @@ export default function EditPlan() {
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 25;
   const offset = (currentPage - 1) * limit;
+
+  // Injury filtering state
+  const [hideConflicting, setHideConflicting] = useState(false);
+  // Injury risk confirmation dialog state
+  const [injuryDialogExercise, setInjuryDialogExercise] = useState<Exercise | null>(null);
+  const [injuryDialogReasons, setInjuryDialogReasons] = useState<string[]>([]);
 
   // Selected exercises for the plan
   const [selectedExercises, setSelectedExercises] = useState<SelectedExercise[]>([]);
@@ -235,6 +246,24 @@ export default function EditPlan() {
       return response.json();
     },
   });
+
+  // Fetch user injuries for exercise filtering
+  const { data: userInjuries = [] } = useQuery<any[]>({
+    queryKey: ['api', 'user', 'injuries'],
+    queryFn: async () => {
+      const res = await fetch('/api/user/injuries', { credentials: 'include' });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    staleTime: 60000,
+  });
+
+  // Default hideConflicting ON when user has a current injury (run once on load)
+  useEffect(() => {
+    if (userInjuries.some((inj: any) => inj.injuryType === 'currently_injured')) {
+      setHideConflicting(true);
+    }
+  }, [userInjuries.length]);
 
   // Fetch body parts for filtering
   const { data: bodyParts = [] } = useQuery({
@@ -380,15 +409,27 @@ export default function EditPlan() {
     },
   });
 
-  // Handle adding exercise to plan
-  const handleAddExercise = (exercise: Exercise) => {
+  // Opens the exercise config modal — called after any injury-check pass
+  const openExerciseConfig = (exercise: Exercise) => {
     setCurrentExercise(exercise);
     setTempSets(3);
-    setTempReps('10');
+    setTempReps((exercise as any).sidedness === 'unilateral' || (exercise as any).sidedness === 'alternating' ? '10 per side' : '10');
     setTempMinutes(undefined);
     setTempDaysOfWeek([]);
     setTempNotes('');
     setShowExerciseConfig(true);
+  };
+
+  // Handle adding exercise to plan (with injury gate)
+  const handleAddExercise = (exercise: Exercise) => {
+    const exKey = getExKey(exercise as any);
+    const ev = injuryEvalMap.get(exKey);
+    if (ev?.status === 'blocked') {
+      setInjuryDialogExercise(exercise);
+      setInjuryDialogReasons(ev.reasons);
+      return;
+    }
+    openExerciseConfig(exercise);
   };
 
   // Save exercise configuration
@@ -521,6 +562,53 @@ export default function EditPlan() {
   // If we got a full page, there may be more; hasMore enables the Next button
   const hasMoreExercises = exercises.length >= limit;
   const totalPages = currentPage + (hasMoreExercises ? 1 : 0);
+
+  // Helper: get the stable exercise key (DB id preferred)
+  const getExKey = (ex: any): string => String(ex.id ?? ex.exerciseId ?? ex.name ?? '');
+
+  // Compute injury evaluations for current browser exercises
+  const injuryEvalMap = useMemo(() => {
+    if (!userInjuries.length) return new Map<string, ReturnType<typeof evaluateExerciseAgainstInjuries>>();
+    const map = new Map<string, ReturnType<typeof evaluateExerciseAgainstInjuries>>();
+    for (const ex of exercises) {
+      const key = getExKey(ex);
+      if (!key) continue;
+      map.set(key, evaluateExerciseAgainstInjuries(
+        {
+          name: ex.name ?? '',
+          bodyPart: ex.bodyPart || ex.bodyParts?.[0] || '',
+          hiit: ex.hiit || 'No',
+          stretching: ex.stretching || 'No',
+          equipment: ex.equipment || ex.equipments?.[0] || '',
+          level: ex.level || '',
+        },
+        userInjuries,
+      ));
+    }
+    return map;
+  }, [exercises, userInjuries]);
+
+  // Compute injury evaluations for the currently-selected plan exercises
+  // (plan exercise rows lack hiit/stretching; use name heuristics only)
+  const selectedEvalMap = useMemo(() => {
+    if (!userInjuries.length) return new Map<number, ReturnType<typeof evaluateExerciseAgainstInjuries>>();
+    const map = new Map<number, ReturnType<typeof evaluateExerciseAgainstInjuries>>();
+    selectedExercises.forEach((sel, idx) => {
+      const ex = sel.exercise as any;
+      map.set(idx, evaluateExerciseAgainstInjuries(
+        {
+          name: ex.name ?? '',
+          bodyPart: ex.bodyPart || ex.bodyParts?.[0] || '',
+          hiit: 'No',
+          stretching: 'No',
+          equipment: ex.equipment || ex.equipments?.[0] || '',
+          level: '',
+        },
+        userInjuries,
+      ));
+    });
+    return map;
+  }, [selectedExercises, userInjuries]);
 
   // Get filter options (body-parts and equipment-types return string arrays)
   const uniqueBodyParts = (Array.isArray(bodyParts) ? bodyParts : []).map((bp: any) => typeof bp === 'string' ? bp : bp.name).filter(Boolean).sort();
@@ -683,12 +771,34 @@ export default function EditPlan() {
                 selectedExercises
                   .map((selected, index) => ({ ...selected, originalIndex: index }))
                   .filter((selected) => getExerciseWeek(selectedExercises, selected.originalIndex) === getCurrentWeek(selectedExercises))
-                  .map((selected) => (
-                  <div key={selected.originalIndex} className="p-4 border border-black/20 rounded-lg">
+                  .map((selected) => {
+                    const selEval = selectedEvalMap.get(selected.originalIndex);
+                    return (
+                  <div
+                    key={selected.originalIndex}
+                    className={`p-4 border rounded-lg ${
+                      selEval?.status === 'blocked'
+                        ? 'border-red-400 bg-red-50'
+                        : selEval?.status === 'modify'
+                        ? 'border-yellow-400 bg-yellow-50/50'
+                        : 'border-black/20'
+                    }`}
+                  >
                     <div className="flex items-start justify-between mb-2 gap-2">
-                      <h4 className="font-medium text-lg capitalize">
-                        {selected.exercise.name.replace(/_/g, ' ')}
-                      </h4>
+                      <div>
+                        <h4 className="font-medium text-lg capitalize">
+                          {selected.exercise.name.replace(/_/g, ' ')}
+                        </h4>
+                        {selEval && selEval.status !== 'allowed' && selEval.reasons.length > 0 && (
+                          <div className="flex items-start gap-1 mt-1">
+                            {selEval.status === 'blocked'
+                              ? <span className="text-xs font-semibold bg-red-600 text-white px-1.5 py-0.5 rounded shrink-0">🔴 Blocked</span>
+                              : <span className="text-xs font-semibold bg-yellow-500 text-black px-1.5 py-0.5 rounded shrink-0">🟡 Caution</span>
+                            }
+                            <span className="text-xs text-black/70 italic">{selEval.reasons[0]}</span>
+                          </div>
+                        )}
+                      </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <Button
                           size="sm"
@@ -731,7 +841,8 @@ export default function EditPlan() {
                       <p className="text-sm text-black italic">{selected.notes}</p>
                     )}
                   </div>
-                ))
+                    );
+                  })
               )}
             </CardContent>
           </Card>
@@ -855,18 +966,51 @@ export default function EditPlan() {
                 </div>
               </div>
 
+              {/* Injury filter toggle (show only when user has injuries) */}
+              {userInjuries.length > 0 && (
+                <div className="flex items-center gap-2 pb-1">
+                  <Switch
+                    id="hide-conflicting-edit"
+                    checked={hideConflicting}
+                    onCheckedChange={setHideConflicting}
+                    data-testid="toggle-hide-conflicting"
+                  />
+                  <label htmlFor="hide-conflicting-edit" className="text-sm font-medium text-black flex items-center gap-1 cursor-pointer">
+                    <EyeOff className="h-4 w-4" />
+                    Hide exercises that conflict with my injuries
+                  </label>
+                </div>
+              )}
+
               {/* Exercise Results */}
               {isLoadingExercises ? (
                 <div className="text-center py-8">Loading exercises...</div>
               ) : (
                 <div className="space-y-4">
-                  {exercises.map((exercise: any) => {
-                    const exId = exercise.exerciseId || String(exercise.id || '');
-                    const bodyParts: string[] = exercise.bodyParts || (exercise.bodyPart ? [exercise.bodyPart] : []);
-                    const equipments: string[] = exercise.equipments || (exercise.equipment ? [exercise.equipment] : []);
+                  {exercises
+                    .filter((exercise: any) => {
+                      if (!hideConflicting || !userInjuries.length) return true;
+                      const ev = injuryEvalMap.get(getExKey(exercise));
+                      return ev?.status !== 'blocked';
+                    })
+                    .map((exercise: any) => {
+                    const exId = getExKey(exercise);
+                    const bodyPartsList: string[] = exercise.bodyParts || (exercise.bodyPart ? [exercise.bodyPart] : []);
+                    const equipmentsList: string[] = exercise.equipments || (exercise.equipment ? [exercise.equipment] : []);
                     const mediaUrl = exercise.gifUrl || exercise.mediaFile || '';
+                    const injuryEval = injuryEvalMap.get(exId);
+                    const injStatus = injuryEval?.status;
                     return (
-                    <div key={exId} className="p-4 border border-black/20 rounded-lg flex items-start justify-between">
+                    <div
+                      key={exId}
+                      className={`p-4 border rounded-lg flex items-start justify-between ${
+                        injStatus === 'blocked'
+                          ? 'border-red-400/60 opacity-80'
+                          : injStatus === 'modify'
+                          ? 'border-yellow-400/60'
+                          : 'border-black/20'
+                      }`}
+                    >
                       <div className="flex items-start gap-4 flex-1">
                         {mediaUrl && (
                           /\.(mp4|webm|mov)(\?|$)/i.test(mediaUrl) ? (
@@ -887,20 +1031,35 @@ export default function EditPlan() {
                           )
                         )}
                         <div className="flex-1">
-                          <h4 className="font-medium capitalize mb-1">
-                            {exercise.name.replace(/_/g, ' ')}
-                          </h4>
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <h4 className="font-medium capitalize">
+                              {exercise.name.replace(/_/g, ' ')}
+                            </h4>
+                            {injStatus === 'blocked' && (
+                              <span className="text-xs font-semibold bg-red-600 text-white px-1.5 py-0.5 rounded" title={injuryEval?.reasons.join(' | ')}>
+                                🔴 Blocked
+                              </span>
+                            )}
+                            {injStatus === 'modify' && (
+                              <span className="text-xs font-semibold bg-yellow-500 text-black px-1.5 py-0.5 rounded" title={injuryEval?.reasons.join(' | ')}>
+                                🟡 Caution
+                              </span>
+                            )}
+                          </div>
+                          {injuryEval && injStatus !== 'allowed' && injuryEval.reasons.length > 0 && (
+                            <p className="text-xs text-black/70 italic mb-1">{injuryEval.reasons[0]}</p>
+                          )}
                           <div className="flex flex-wrap gap-1 text-xs">
-                            {bodyParts.map((part: string) => (
+                            {bodyPartsList.map((part: string) => (
                               <Badge key={part} variant="secondary">{part}</Badge>
                             ))}
-                            {equipments.map((eq: string) => (
+                            {equipmentsList.map((eq: string) => (
                               <Badge key={eq} variant="outline" className="bg-black text-white border-black">{eq}</Badge>
                             ))}
                           </div>
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-col items-end">
                         {isFavorite(exId) && (
                           <Badge className="bg-ministry-gold text-black">
                             <Heart className="w-3 h-3 mr-1 fill-current" />
@@ -910,11 +1069,11 @@ export default function EditPlan() {
                         <Button
                           size="sm"
                           onClick={() => handleAddExercise(exercise)}
-                          className="bg-ministry-gold hover:bg-ministry-gold/90 text-black"
+                          className={`${injStatus === 'blocked' ? 'bg-red-700 hover:bg-red-800' : 'bg-ministry-gold hover:bg-ministry-gold/90'} text-${injStatus === 'blocked' ? 'white' : 'black'}`}
                           data-testid={`button-add-exercise-${exId}`}
                         >
-                          <Plus className="w-4 h-4 mr-1" />
-                          Add
+                          {injStatus === 'blocked' ? <ShieldAlert className="w-4 h-4 mr-1" /> : <Plus className="w-4 h-4 mr-1" />}
+                          {injStatus === 'blocked' ? 'Add (risk)' : 'Add'}
                         </Button>
                       </div>
                     </div>
@@ -1184,6 +1343,55 @@ export default function EditPlan() {
           setReminders(prev => [...prev, { dayOfWeek: 'monday', time: '09:00' }]);
         }}
       />
+
+      {/* Injury risk confirmation dialog */}
+      <Dialog
+        open={!!injuryDialogExercise}
+        onOpenChange={(open) => { if (!open) setInjuryDialogExercise(null); }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <ShieldAlert className="h-5 w-5" />
+              Exercise Conflicts With Your Injury
+            </DialogTitle>
+            <DialogDescription asChild>
+              <div className="space-y-2 text-sm text-left">
+                <p className="font-medium text-foreground">
+                  "{injuryDialogExercise?.name}" may aggravate your recorded injury:
+                </p>
+                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                  {injuryDialogReasons.map((reason, i) => (
+                    <li key={i}>{reason}</li>
+                  ))}
+                </ul>
+                <p className="text-muted-foreground pt-1">
+                  Adding this exercise is not recommended. If you choose to proceed, consult your physician or physiotherapist first.
+                </p>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setInjuryDialogExercise(null)}
+              className="flex-1"
+            >
+              Cancel — Skip this exercise
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (injuryDialogExercise) openExerciseConfig(injuryDialogExercise);
+                setInjuryDialogExercise(null);
+              }}
+              className="flex-1"
+            >
+              I understand — Add anyway
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       </div>
     </div>
   );

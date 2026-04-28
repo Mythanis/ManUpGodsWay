@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,13 +20,19 @@ import {
   CheckSquare,
   Calendar,
   Bell,
-  Timer
+  Timer,
+  ShieldAlert,
+  AlertTriangle,
+  EyeOff
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { useLocation, Link } from "wouter";
 import { BackButton } from "@/components/BackButton";
 import { PushConsentDialog } from "@/components/push-consent-dialog";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { evaluateExerciseAgainstInjuries, type InjuryStatus } from "@shared/injuryFilter";
 
 interface Exercise {
   exerciseId: string;
@@ -105,6 +111,12 @@ export default function CreatePlan() {
   const limit = 25;
   const offset = (currentPage - 1) * limit;
 
+  // Injury filtering state
+  const [hideConflicting, setHideConflicting] = useState(false);
+  // Injury risk confirmation dialog state
+  const [injuryDialogExercise, setInjuryDialogExercise] = useState<Exercise | null>(null);
+  const [injuryDialogReasons, setInjuryDialogReasons] = useState<string[]>([]);
+
   // Selected exercises for the plan
   const [selectedExercises, setSelectedExercises] = useState<SelectedExercise[]>([]);
   
@@ -129,6 +141,24 @@ export default function CreatePlan() {
       return response.json();
     },
   });
+
+  // Fetch user injuries for exercise filtering
+  const { data: userInjuries = [] } = useQuery<any[]>({
+    queryKey: ['api', 'user', 'injuries'],
+    queryFn: async () => {
+      const res = await fetch('/api/user/injuries', { credentials: 'include' });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    staleTime: 60000,
+  });
+
+  // Default hideConflicting ON when user has a current injury (run once on load)
+  useEffect(() => {
+    if (userInjuries.some((inj: any) => inj.injuryType === 'currently_injured')) {
+      setHideConflicting(true);
+    }
+  }, [userInjuries.length]);
 
   // Fetch body parts for filtering
   const { data: bodyParts = [] } = useQuery({
@@ -211,12 +241,50 @@ export default function CreatePlan() {
   const totalExercises = exercises.length;
   const totalPages = Math.ceil(totalExercises / limit);
 
-  // Filter exercises to show only favorites if selected
-  const filteredExercises = showFavoritesOnly 
-    ? exercises.filter((exercise: Exercise) => 
-        favoriteExercises.some((fav: FavoriteExercise) => fav.exerciseId === exercise.exerciseId)
-      )
-    : exercises;
+  // Compute injury evaluations for the current page of exercises (memoized)
+  const injuryEvalMap = useMemo(() => {
+    if (!userInjuries.length) return new Map<string, ReturnType<typeof evaluateExerciseAgainstInjuries>>();
+    const map = new Map<string, ReturnType<typeof evaluateExerciseAgainstInjuries>>();
+    for (const ex of exercises) {
+      const key = String((ex as any).id ?? ex.exerciseId ?? ex.name ?? '');
+      if (!key) continue;
+      const evaluation = evaluateExerciseAgainstInjuries(
+        {
+          name: ex.name ?? '',
+          bodyPart: (ex as any).bodyPart || ex.bodyParts?.[0] || '',
+          hiit: (ex as any).hiit || 'No',
+          stretching: (ex as any).stretching || 'No',
+          equipment: (ex as any).equipment || ex.equipments?.[0] || '',
+          level: (ex as any).level || '',
+        },
+        userInjuries,
+      );
+      map.set(key, evaluation);
+    }
+    return map;
+  }, [exercises, userInjuries]);
+
+  // Helper: get the stable exercise key (DB id preferred)
+  const getExKey = (ex: any): string => String(ex.id ?? ex.exerciseId ?? ex.name ?? '');
+
+  // Filter exercises to show only favorites if selected, plus optionally hide conflicting
+  const filteredExercises = exercises.filter((exercise: any) => {
+    if (showFavoritesOnly) {
+      const exKey = getExKey(exercise);
+      const matchesFav = favoriteExercises.some(
+        (fav: FavoriteExercise) =>
+          fav.exerciseId === exKey ||
+          fav.exerciseId === exercise.exerciseId ||
+          fav.exerciseName === exercise.name,
+      );
+      if (!matchesFav) return false;
+    }
+    if (hideConflicting && userInjuries.length > 0) {
+      const ev = injuryEvalMap.get(getExKey(exercise));
+      if (ev?.status === 'blocked') return false;
+    }
+    return true;
+  });
 
   // Helper functions
   const isFavorite = (exerciseId: string) => {
@@ -227,23 +295,38 @@ export default function CreatePlan() {
     return selectedExercises.some(selected => selected.exercise.exerciseId === exerciseId);
   };
 
+  // Opens the config modal (called after any injury-check pass)
+  const openExerciseConfig = (exercise: Exercise) => {
+    setCurrentExercise(exercise);
+    setTempSets(3);
+    setTempReps((exercise as any).sidedness === 'unilateral' || (exercise as any).sidedness === 'alternating' ? '10 per side' : '10');
+    setTempMinutes(undefined);
+    setTempDaysOfWeek([]);
+    setTempNotes('');
+    setShowExerciseConfig(true);
+  };
+
   // Exercise configuration handlers
   const handleExerciseSelect = (exercise: Exercise) => {
-    if (isExerciseSelected(exercise.exerciseId)) {
+    const exKey = getExKey(exercise as any);
+    if (isExerciseSelected(exKey) || isExerciseSelected(exercise.exerciseId)) {
       // Remove from selected exercises
       setSelectedExercises(prev => 
-        prev.filter(selected => selected.exercise.exerciseId !== exercise.exerciseId)
+        prev.filter(selected =>
+          getExKey(selected.exercise as any) !== exKey &&
+          selected.exercise.exerciseId !== exercise.exerciseId
+        )
       );
-    } else {
-      // Open configuration modal
-      setCurrentExercise(exercise);
-      setTempSets(3);
-      setTempReps(exercise.sidedness === 'unilateral' || exercise.sidedness === 'alternating' ? '10 per side' : '10');
-      setTempMinutes(undefined);
-      setTempDaysOfWeek([]);
-      setTempNotes('');
-      setShowExerciseConfig(true);
+      return;
     }
+    // Check injury status before opening config modal
+    const ev = injuryEvalMap.get(exKey);
+    if (ev?.status === 'blocked') {
+      setInjuryDialogExercise(exercise);
+      setInjuryDialogReasons(ev.reasons);
+      return;
+    }
+    openExerciseConfig(exercise);
   };
 
   const handleSaveExerciseConfig = () => {
@@ -656,16 +739,32 @@ export default function CreatePlan() {
                 </div>
 
                 {/* Favorites Only checkbox */}
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="favorites"
-                    checked={showFavoritesOnly}
-                    onCheckedChange={(checked) => setShowFavoritesOnly(checked === true)}
-                    data-testid="checkbox-favorites-only"
-                  />
-                  <label htmlFor="favorites" className="text-sm font-medium text-white">
-                    Favorites Only
-                  </label>
+                <div className="flex items-center gap-6 flex-wrap">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="favorites"
+                      checked={showFavoritesOnly}
+                      onCheckedChange={(checked) => setShowFavoritesOnly(checked === true)}
+                      data-testid="checkbox-favorites-only"
+                    />
+                    <label htmlFor="favorites" className="text-sm font-medium text-white">
+                      Favorites Only
+                    </label>
+                  </div>
+                  {userInjuries.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        id="hide-conflicting"
+                        checked={hideConflicting}
+                        onCheckedChange={setHideConflicting}
+                        data-testid="toggle-hide-conflicting"
+                      />
+                      <label htmlFor="hide-conflicting" className="text-sm font-medium text-white flex items-center gap-1 cursor-pointer">
+                        <EyeOff className="h-4 w-4" />
+                        Hide exercises that conflict with my injuries
+                      </label>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -676,6 +775,11 @@ export default function CreatePlan() {
             <CardHeader>
               <CardTitle>
                 Exercise Results ({filteredExercises.length} shown)
+                {userInjuries.length > 0 && hideConflicting && (
+                  <span className="ml-2 text-sm font-normal text-black/60">
+                    (conflict-blocked exercises hidden)
+                  </span>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -687,34 +791,60 @@ export default function CreatePlan() {
                 </div>
               ) : (
                 <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {filteredExercises.map((exercise: Exercise) => {
-                    const isSelected = isExerciseSelected(exercise.exerciseId);
-                    const isFav = isFavorite(exercise.exerciseId);
+                  {filteredExercises.map((exercise: any) => {
+                    const exKey = getExKey(exercise);
+                    const isSelected = isExerciseSelected(exKey) || isExerciseSelected(exercise.exerciseId);
+                    const isFav = isFavorite(exercise.exerciseId) || isFavorite(exKey);
+                    const injuryEval = injuryEvalMap.get(exKey);
+                    const injStatus = injuryEval?.status;
                     
                     return (
                       <div
-                        key={exercise.exerciseId}
+                        key={exKey || exercise.name}
                         className={`border rounded-lg p-3 cursor-pointer transition-colors ${
                           isSelected 
-                            ? 'border-ministry-gold bg-ministry-gold/10' 
+                            ? 'border-ministry-gold bg-ministry-gold/10'
+                            : injStatus === 'blocked'
+                            ? 'border-red-400/60 opacity-75 hover:opacity-100 hover:border-red-500'
+                            : injStatus === 'modify'
+                            ? 'border-yellow-400/60 hover:border-yellow-500'
                             : 'hover:border-ministry-steel'
                         }`}
                         onClick={() => handleExerciseSelect(exercise)}
-                        data-testid={`exercise-card-${exercise.exerciseId}`}
+                        data-testid={`exercise-card-${exKey}`}
                       >
                         <div className="flex justify-between items-start mb-2">
                           <h4 className="font-medium">{exercise.name}</h4>
-                          <div className="flex gap-1">
+                          <div className="flex gap-1 items-center shrink-0">
+                            {injStatus === 'blocked' && (
+                              <span className="text-xs font-semibold bg-red-600 text-white px-1.5 py-0.5 rounded" title={injuryEval?.reasons.join(' | ')}>
+                                🔴 Blocked
+                              </span>
+                            )}
+                            {injStatus === 'modify' && (
+                              <span className="text-xs font-semibold bg-yellow-500 text-black px-1.5 py-0.5 rounded" title={injuryEval?.reasons.join(' | ')}>
+                                🟡 Caution
+                              </span>
+                            )}
                             {isFav && <Heart className="h-4 w-4 text-red-500 fill-red-500" />}
                             {isSelected && <CheckSquare className="h-4 w-4 text-ministry-gold" />}
                           </div>
                         </div>
+                        {injuryEval && injStatus !== 'allowed' && injuryEval.reasons.length > 0 && (
+                          <p className="text-xs text-black/70 mb-1 italic">{injuryEval.reasons[0]}</p>
+                        )}
                         
                         <div className="flex flex-wrap gap-1 text-xs">
-                          {exercise.bodyParts?.map((part: string) => (
+                          {(exercise.bodyPart
+                            ? [exercise.bodyPart]
+                            : (exercise.bodyParts ?? [])
+                          ).map((part: string) => (
                             <Badge key={part} variant="secondary">{part}</Badge>
                           ))}
-                          {exercise.equipments?.map((eq: string) => (
+                          {(exercise.equipment
+                            ? [exercise.equipment]
+                            : (exercise.equipments ?? [])
+                          ).map((eq: string) => (
                             <Badge key={eq} variant="outline" className="bg-black text-white border-black">{eq}</Badge>
                           ))}
                         </div>
@@ -876,6 +1006,57 @@ export default function CreatePlan() {
           setReminders(prev => [...prev, { dayOfWeek: 'monday', time: '09:00' }]);
         }}
       />
+
+      {/* Injury risk confirmation dialog */}
+      <Dialog
+        open={!!injuryDialogExercise}
+        onOpenChange={(open) => { if (!open) setInjuryDialogExercise(null); }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <ShieldAlert className="h-5 w-5" />
+              Exercise Conflicts With Your Injury
+            </DialogTitle>
+            <DialogDescription asChild>
+              <div className="space-y-2 text-sm text-left">
+                <p className="font-medium text-foreground">
+                  "{injuryDialogExercise?.name}" may aggravate your recorded injury:
+                </p>
+                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                  {injuryDialogReasons.map((reason, i) => (
+                    <li key={i}>{reason}</li>
+                  ))}
+                </ul>
+                <p className="text-muted-foreground pt-1">
+                  Adding this exercise is not recommended. If you choose to proceed, consult your physician or physiotherapist first.
+                </p>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setInjuryDialogExercise(null)}
+              className="flex-1"
+            >
+              Cancel — Skip this exercise
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (injuryDialogExercise) {
+                  openExerciseConfig(injuryDialogExercise);
+                }
+                setInjuryDialogExercise(null);
+              }}
+              className="flex-1"
+            >
+              I understand — Add anyway
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

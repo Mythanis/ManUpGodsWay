@@ -239,3 +239,23 @@ npx tsx scripts/audit-exercise-instructions.ts --confirm
 ```
 
 Requires `ANTHROPIC_API_KEY` (already configured as a Replit secret).
+
+## Injury-Aware Exercise Filtering (Task #155)
+
+**Files:**
+- `shared/injuryFilter.ts` — evaluation engine (shared between client/server)
+- `server/routes.ts` — `POST /api/exercises/evaluate-injuries` endpoint; injury guard on bulk add
+
+**Logic:**
+`evaluateExerciseAgainstInjuries(exercise, injuries)` returns `{ status: "allowed"|"modify"|"blocked", reasons, modificationHints }`.
+Uses a body-part affinity map to find which exercises involve an injured area, then applies 3-state rules based on injury type (currently_injured → blocked, recovery → blocked/modify, long_term → modify/allowed).
+
+**Frontend (create-plan.tsx & edit-plan.tsx):**
+- Exercise browser cards show 🔴 Blocked / 🟡 Caution badges when user has recorded injuries
+- Toggle "Hide exercises that conflict with my injuries" (auto-ON when any current injury)
+- Confirmation dialog when clicking a blocked exercise — user must acknowledge before adding
+- Existing selected exercises in edit-plan show ⚠️ warning pills
+
+**Server guard:**
+`POST /api/fitness-plans/:planId/exercises/bulk` returns 409 `{ code: "INJURY_RISK", blockedExercises }` if any exercise is blocked and `acknowledgeInjuryRisk` is not true.
+
