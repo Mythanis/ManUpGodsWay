@@ -2,7 +2,6 @@ import {
   evaluateExerciseAgainstInjuries,
   getInjuryRecommendations,
   getInjuryStretchPolicy,
-  computeRecoveryWeek,
 } from '../shared/injuryFilter';
 
 let passed = 0;
@@ -10,108 +9,283 @@ let failed = 0;
 
 function assert(label: string, condition: boolean, detail?: string) {
   if (condition) {
-    console.log(`  ✓ ${label}`);
+    console.log(`  \u2713 ${label}`);
     passed++;
   } else {
-    console.error(`  ✗ ${label}${detail ? ` — ${detail}` : ''}`);
+    console.error(`  \u2717 ${label}${detail ? ` \u2014 ${detail}` : ''}`);
     failed++;
   }
 }
 
-// Helper to get a date N weeks ago
 function weeksAgo(n: number): string {
   const d = new Date();
   d.setDate(d.getDate() - n * 7);
   return d.toISOString();
 }
 
-// ─── ORIGINAL 21 TESTS (abbreviated checks — confirm they still work) ─────
-console.log('\n=== Original engine tests ===');
-
-// Currently injured — block direct body part
+// ─── KNEES ────────────────────────────────────────────────────────────────
+console.log('\n=== KNEES pack ===');
 {
   const r = evaluateExerciseAgainstInjuries(
     { name: 'Squat', bodyPart: 'Knees', stretching: 'No' },
     [{ bodyArea: 'Knees', injuryType: 'currently_injured' }],
   );
-  assert('Squat blocked for current Knee injury', r.status === 'blocked');
+  assert('Squat blocked (currently_injured)', r.status === 'blocked');
 }
-
-// Allow pattern override
 {
   const r = evaluateExerciseAgainstInjuries(
     { name: 'Stationary bike', bodyPart: 'Knees', stretching: 'No' },
     [{ bodyArea: 'Knees', injuryType: 'currently_injured' }],
   );
-  assert('Stationary bike allowed despite Knee injury', r.status === 'allowed');
+  assert('Stationary bike allowed (allowPatterns)', r.status === 'allowed');
 }
-
-// Recovery week 2 — goblet squat not yet unlocked for Knees (unlocks week 3)
 {
   const r = evaluateExerciseAgainstInjuries(
     { name: 'Goblet squat', bodyPart: 'Knees', stretching: 'No' },
     [{ bodyArea: 'Knees', injuryType: 'recovery', startedAt: weeksAgo(1) }],
   );
-  assert('Goblet squat blocked at Knee recovery Week 2 (unlocks Week 3)', r.status === 'blocked');
+  assert('Goblet squat blocked at Week 2 (unlocks Week 3)', r.status === 'blocked');
 }
-
-// Recovery week 3 — goblet squat now allowed
 {
   const r = evaluateExerciseAgainstInjuries(
     { name: 'Goblet squat', bodyPart: 'Knees', stretching: 'No' },
     [{ bodyArea: 'Knees', injuryType: 'recovery', startedAt: weeksAgo(3) }],
   );
-  assert('Goblet squat modify at Knee recovery Week 3', r.status === 'modify');
+  assert('Goblet squat modify at Week 3', r.status === 'modify');
 }
-
-// Long-term limitation — deep squat blocked
 {
   const r = evaluateExerciseAgainstInjuries(
     { name: 'Deep squat', bodyPart: 'Knees', stretching: 'No' },
     [{ bodyArea: 'Knees', injuryType: 'long_term_limitation' }],
   );
-  assert('Deep squat blocked for long-term Knee limitation', r.status === 'blocked');
+  assert('Deep squat blocked (longTermAvoidPatterns)', r.status === 'blocked');
 }
-
-// Lower back — McGill alwaysInclude
-{
-  const recs = getInjuryRecommendations([
-    { bodyArea: 'Lower Back', injuryType: 'currently_injured' },
-  ]);
-  assert('Lower back recs include Bird Dog', recs.some(r => r.recommendations.some(x => x.name === 'Bird Dog')));
-}
-
-// Shoulder — stretchBlockPattern
 {
   const r = evaluateExerciseAgainstInjuries(
-    { name: 'Behind the back shoulder stretch', bodyPart: 'Shoulders', stretching: 'Yes' },
-    [{ bodyArea: 'Shoulders', injuryType: 'currently_injured' }],
+    { name: 'Cycling', bodyPart: 'Knees', stretching: 'No' },
+    [{ bodyArea: 'Knees', injuryType: 'long_term_limitation' }],
   );
-  assert('Behind-back stretch blocked for current Shoulder injury', r.status === 'blocked');
+  assert('Cycling allowed (longTermPreferPatterns)', r.status === 'allowed');
 }
-
-// ─── NEW TESTS: State-driven area-stretch rules ────────────────────────────
-console.log('\n=== New stretch-state tests ===');
-
-// Pigeon stretch with current Knee injury → blocked (existing stretchBlockPatterns)
 {
   const r = evaluateExerciseAgainstInjuries(
     { name: 'Pigeon stretch', bodyPart: 'Hip Flexors', stretching: 'Yes' },
     [{ bodyArea: 'Knees', injuryType: 'currently_injured' }],
   );
-  assert('Pigeon stretch blocked for current Knees injury (stretchBlockPatterns)', r.status === 'blocked');
+  assert('Pigeon stretch blocked (stretchBlockPatterns)', r.status === 'blocked');
 }
-
-// Calf stretch with current Ankle injury → blocked via stretchAreaPatterns
 {
   const r = evaluateExerciseAgainstInjuries(
-    { name: 'Standing calf stretch', bodyPart: 'Calves', stretching: 'Yes' },
-    [{ bodyArea: 'Ankles', injuryType: 'currently_injured' }],
+    { name: 'Seated hamstring stretch', bodyPart: 'Hamstrings', stretching: 'Yes' },
+    [{ bodyArea: 'Knees', injuryType: 'currently_injured' }],
   );
-  assert('Standing calf stretch blocked (stretchBlockPatterns) for current Ankle injury', r.status === 'blocked');
+  assert('Seated hamstring stretch allowed (stretchAllowPatterns)', r.status === 'allowed');
 }
 
-// Hamstring stretch with Lower-Back recovery at Week 3 → blocked "unlocks Week 6"
+// ─── LOWER BACK ───────────────────────────────────────────────────────────
+console.log('\n=== LOWER_BACK pack ===');
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Deadlift', bodyPart: 'Lower Back', stretching: 'No' },
+    [{ bodyArea: 'Lower Back', injuryType: 'currently_injured' }],
+  );
+  assert('Deadlift blocked (currently_injured)', r.status === 'blocked');
+}
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Glute bridge', bodyPart: 'Glutes', stretching: 'No' },
+    [{ bodyArea: 'Lower Back', injuryType: 'currently_injured' }],
+  );
+  assert('Glute bridge allowed (allowPatterns)', r.status === 'allowed');
+}
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Trap bar deadlift', bodyPart: 'Lower Back', stretching: 'No' },
+    [{ bodyArea: 'Lower Back', injuryType: 'long_term_limitation' }],
+  );
+  assert('Trap bar allowed (longTermPreferPatterns)', r.status === 'allowed');
+}
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Sit-up', bodyPart: 'Abs', stretching: 'No' },
+    [{ bodyArea: 'Lower Back', injuryType: 'long_term_limitation' }],
+  );
+  assert('Sit-up blocked (longTermAvoidPatterns)', r.status === 'blocked');
+}
+{
+  const recs = getInjuryRecommendations([
+    { bodyArea: 'Lower Back', injuryType: 'currently_injured' },
+  ]);
+  const pack = recs.find(r => r.bodyArea === 'Lower Back');
+  assert('Lower back recs include Bird Dog', !!pack?.recommendations.some(x => x.name === 'Bird Dog'));
+  assert('Lower back recs include Side Plank', !!pack?.recommendations.some(x => x.name === 'Side Plank'));
+}
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Knee to chest stretch', bodyPart: 'Lower Back', stretching: 'Yes' },
+    [{ bodyArea: 'Lower Back', injuryType: 'currently_injured' }],
+  );
+  assert('Knee-to-chest stretch allowed (stretchAllowPatterns)', r.status === 'allowed');
+}
+
+// ─── SHOULDERS ────────────────────────────────────────────────────────────
+console.log('\n=== SHOULDERS pack ===');
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Overhead press', bodyPart: 'Shoulders', stretching: 'No' },
+    [{ bodyArea: 'Shoulders', injuryType: 'currently_injured' }],
+  );
+  assert('Overhead press blocked (currently_injured)', r.status === 'blocked');
+}
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Squat', bodyPart: 'Quads', stretching: 'No' },
+    [{ bodyArea: 'Shoulders', injuryType: 'currently_injured' }],
+  );
+  assert('Squat allowed despite Shoulder injury (allowPatterns)', r.status === 'allowed');
+}
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Behind the back shoulder stretch', bodyPart: 'Shoulders', stretching: 'Yes' },
+    [{ bodyArea: 'Shoulders', injuryType: 'currently_injured' }],
+  );
+  assert('Behind-back stretch blocked (stretchBlockPatterns)', r.status === 'blocked');
+}
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Cross-body stretch', bodyPart: 'Shoulders', stretching: 'Yes' },
+    [{ bodyArea: 'Shoulders', injuryType: 'currently_injured' }],
+  );
+  assert('Cross-body stretch allowed (stretchAllowPatterns)', r.status === 'allowed');
+}
+{
+  const recs = getInjuryRecommendations([
+    { bodyArea: 'Shoulders', injuryType: 'long_term_limitation' },
+  ]);
+  const pack = recs.find(r => r.bodyArea === 'Shoulders');
+  assert('Shoulder recs include External rotation band', !!pack?.recommendations.some(x => x.name.includes('External rotation')));
+}
+
+// ─── HIPS ────────────────────────────────────────────────────────────────
+console.log('\n=== HIPS pack ===');
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Hip thrust', bodyPart: 'Glutes', stretching: 'No' },
+    [{ bodyArea: 'Hips', injuryType: 'currently_injured' }],
+  );
+  assert('Hip thrust blocked (currently_injured)', r.status === 'blocked');
+}
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Pigeon stretch', bodyPart: 'Hip Flexors', stretching: 'Yes' },
+    [{ bodyArea: 'Hips', injuryType: 'currently_injured' }],
+  );
+  assert('Pigeon stretch blocked (stretchBlockPatterns)', r.status === 'blocked');
+}
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Supine figure four stretch', bodyPart: 'Hip Flexors', stretching: 'Yes' },
+    [{ bodyArea: 'Hips', injuryType: 'currently_injured' }],
+  );
+  assert('Supine figure four allowed (stretchAllowPatterns)', r.status === 'allowed');
+}
+
+// ─── UPPER BACK / NECK ────────────────────────────────────────────────────
+console.log('\n=== UPPER_BACK_NECK pack ===');
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Pull-up', bodyPart: 'Upper Back', stretching: 'No' },
+    [{ bodyArea: 'Upper Back', injuryType: 'currently_injured' }],
+  );
+  assert('Pull-up blocked (currently_injured)', r.status === 'blocked');
+}
+{
+  // Goblet squat unlocks at Week 6 for Upper Back / Neck recovery.
+  // Use bodyPart 'Lats' which is in the pack's affinity list.
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Goblet squat', bodyPart: 'Lats', stretching: 'No' },
+    [{ bodyArea: 'Neck', injuryType: 'recovery', startedAt: weeksAgo(6) }],
+  );
+  assert('Goblet squat modify at Neck recovery Week 6+ (unlocks Week 6)', r.status === 'modify');
+}
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Chin tuck', bodyPart: 'Neck', stretching: 'Yes' },
+    [{ bodyArea: 'Neck', injuryType: 'currently_injured' }],
+  );
+  assert('Chin tuck allowed (stretchAllowPatterns)', r.status === 'allowed');
+}
+
+// ─── WRISTS / FOREARMS ───────────────────────────────────────────────────
+console.log('\n=== WRISTS_FOREARMS pack ===');
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Barbell bench press', bodyPart: 'Chest', stretching: 'No' },
+    [{ bodyArea: 'Wrists', injuryType: 'currently_injured' }],
+  );
+  assert('Barbell bench blocked (blockPatterns)', r.status === 'blocked');
+}
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Machine chest press', bodyPart: 'Chest', stretching: 'No' },
+    [{ bodyArea: 'Wrists', injuryType: 'currently_injured' }],
+  );
+  assert('Machine chest press allowed (allowPatterns)', r.status === 'allowed');
+}
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Wrist curl', bodyPart: 'Forearms', stretching: 'No' },
+    [{ bodyArea: 'Wrists', injuryType: 'long_term_limitation' }],
+  );
+  assert('Wrist curl blocked (longTermAvoidPatterns)', r.status === 'blocked');
+}
+
+// ─── ANKLES / CALVES ─────────────────────────────────────────────────────
+console.log('\n=== ANKLES_CALVES pack ===');
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Calf raise', bodyPart: 'Calves', stretching: 'No' },
+    [{ bodyArea: 'Ankles', injuryType: 'currently_injured' }],
+  );
+  assert('Calf raise blocked (currently_injured)', r.status === 'blocked');
+}
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Seated calf raise', bodyPart: 'Calves', stretching: 'No' },
+    [{ bodyArea: 'Ankles', injuryType: 'recovery', startedAt: weeksAgo(1) }],
+  );
+  assert('Seated calf raise modify at Week 2 (unlocks Week 1)', r.status === 'modify');
+}
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Seated ankle circle', bodyPart: 'Calves', stretching: 'Yes' },
+    [{ bodyArea: 'Ankles', injuryType: 'currently_injured' }],
+  );
+  assert('Seated ankle circle allowed (stretchAllowPatterns)', r.status === 'allowed');
+}
+
+// ─── Multiple injuries + no injuries ─────────────────────────────────────
+console.log('\n=== Edge cases ===');
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Deadlift', bodyPart: 'Lower Back', stretching: 'No' },
+    [
+      { bodyArea: 'Knees', injuryType: 'long_term_limitation' },
+      { bodyArea: 'Lower Back', injuryType: 'currently_injured' },
+    ],
+  );
+  assert('Multiple injuries: blocked by worst state', r.status === 'blocked');
+}
+{
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Deadlift', bodyPart: 'Lower Back', stretching: 'No' },
+    [],
+  );
+  assert('No injuries: allowed', r.status === 'allowed');
+}
+
+// ─── NEW TESTS: State-driven area-stretch rules ────────────────────────────
+console.log('\n=== New stretch-state tests (name pattern matching) ===');
 {
   const r = evaluateExerciseAgainstInjuries(
     { name: 'Hamstring stretch', bodyPart: 'Hamstrings', stretching: 'Yes' },
@@ -120,8 +294,6 @@ console.log('\n=== New stretch-state tests ===');
   assert('Hamstring stretch blocked at Lower Back recovery Week 3 (unlocks Week 6)', r.status === 'blocked');
   assert('Reason mentions Week 6', r.reasons.some(r => r.includes('Week 6')));
 }
-
-// Hamstring stretch with Lower-Back recovery at Week 8 → modify "50% hold time"
 {
   const r = evaluateExerciseAgainstInjuries(
     { name: 'Hamstring stretch', bodyPart: 'Hamstrings', stretching: 'Yes' },
@@ -130,27 +302,21 @@ console.log('\n=== New stretch-state tests ===');
   assert('Hamstring stretch modify at Lower Back recovery Week 8', r.status === 'modify');
   assert('Reason mentions 50% hold time', r.reasons.some(r => r.includes('50%')));
 }
-
-// Lower back stretch with current Lower Back injury → blocked via stretchAreaPatterns
 {
   const r = evaluateExerciseAgainstInjuries(
     { name: 'Lower back stretch', bodyPart: 'Lower Back', stretching: 'Yes' },
     [{ bodyArea: 'Lower Back', injuryType: 'currently_injured' }],
   );
   assert('Lower back stretch blocked for current Lower Back injury (area patterns)', r.status === 'blocked');
-  assert('Reason mentions seated/lying + 20-second holds', r.reasons.some(r => r.includes('20-second')));
+  assert('Reason mentions 20-second holds', r.reasons.some(r => r.includes('20-second')));
 }
-
-// Shoulder stretch with long-term Shoulder limitation → allowed (coaching only)
 {
   const r = evaluateExerciseAgainstInjuries(
     { name: 'Shoulder stretch', bodyPart: 'Shoulders', stretching: 'Yes' },
     [{ bodyArea: 'Shoulders', injuryType: 'long_term_limitation' }],
   );
-  assert('Shoulder stretch allowed for long-term Shoulder limitation (coaching only)', r.status === 'allowed');
+  assert('Shoulder stretch allowed for long-term limitation (coaching only)', r.status === 'allowed');
 }
-
-// Pec stretch (matches stretchAreaPatterns) with long-term Shoulder → allowed
 {
   const r = evaluateExerciseAgainstInjuries(
     { name: 'Doorframe pec stretch', bodyPart: 'Chest', stretching: 'Yes' },
@@ -159,90 +325,8 @@ console.log('\n=== New stretch-state tests ===');
   assert('Pec stretch allowed for long-term Shoulder (coaching via rec card)', r.status === 'allowed');
 }
 
-// ─── Stretch policy helper ─────────────────────────────────────────────────
-console.log('\n=== getInjuryStretchPolicy tests ===');
-
-{
-  const policy = getInjuryStretchPolicy([
-    { bodyArea: 'Lower Back', injuryType: 'currently_injured' },
-  ]);
-  assert('Lower Back current injury → policy mentions max 20-second holds', policy['Lower Back']?.includes('20-second'));
-}
-
-{
-  const policy = getInjuryStretchPolicy([
-    { bodyArea: 'Lower Back', injuryType: 'recovery', startedAt: weeksAgo(3) },
-  ]);
-  assert('Lower Back recovery Week 3 → policy mentions Week 6', policy['Lower Back']?.includes('Week 6'));
-}
-
-{
-  const policy = getInjuryStretchPolicy([
-    { bodyArea: 'Lower Back', injuryType: 'recovery', startedAt: weeksAgo(8) },
-  ]);
-  assert('Lower Back recovery Week 8 → policy mentions 50%', policy['Lower Back']?.includes('50%'));
-}
-
-{
-  const policy = getInjuryStretchPolicy([
-    { bodyArea: 'Shoulders', injuryType: 'long_term_limitation' },
-  ]);
-  assert('Shoulder long-term → policy mentions dynamic/static', policy['Shoulders']?.includes('Dynamic'));
-}
-
-// Worst-state wins
-{
-  const policy = getInjuryStretchPolicy([
-    { bodyArea: 'Lower Back', injuryType: 'long_term_limitation' },
-    { bodyArea: 'Lower Back', injuryType: 'currently_injured' },
-  ]);
-  assert('Worst state (current) wins over long-term for same area', policy['Lower Back']?.includes('20-second'));
-}
-
-// ─── Compensation lists ────────────────────────────────────────────────────
-console.log('\n=== Compensation list tests ===');
-
-{
-  const recs = getInjuryRecommendations([
-    { bodyArea: 'Shoulders', injuryType: 'long_term_limitation' },
-  ]);
-  const rec = recs.find(r => r.bodyArea === 'Shoulders');
-  assert('Shoulder compensation stretch includes pec minor', rec?.compensationStretch.some(x => x.name.toLowerCase().includes('pec')));
-  assert('Shoulder compensation strengthen includes rotator cuff', rec?.compensationStrengthen.some(x => x.name.toLowerCase().includes('rotator')));
-}
-
-{
-  const recs = getInjuryRecommendations([
-    { bodyArea: 'Knees', injuryType: 'currently_injured' },
-  ]);
-  const rec = recs.find(r => r.bodyArea === 'Knees');
-  assert('Knee compensation stretch includes hip flexors', rec?.compensationStretch.some(x => x.name.toLowerCase().includes('hip flexor')));
-  assert('Knee compensation strengthen includes glutes', rec?.compensationStrengthen.some(x => x.name.toLowerCase().includes('glute')));
-}
-
-{
-  const recs = getInjuryRecommendations([
-    { bodyArea: 'Lower Back', injuryType: 'recovery', startedAt: weeksAgo(4) },
-  ]);
-  const rec = recs.find(r => r.bodyArea === 'Lower Back');
-  assert('Lower Back rec has stretch policy set', !!rec?.stretchPolicy);
-  assert('Lower Back comp stretch includes hip flexors', rec?.compensationStretch.some(x => x.name.toLowerCase().includes('hip flexor')));
-  assert('Lower Back comp strengthen includes glutes', rec?.compensationStrengthen.some(x => x.name.toLowerCase().includes('glute')));
-}
-
-{
-  const recs = getInjuryRecommendations([
-    { bodyArea: 'Ankles', injuryType: 'currently_injured' },
-  ]);
-  const rec = recs.find(r => r.bodyArea === 'Ankles / Calves');
-  assert('Ankle rec has calf compensation stretch', rec?.compensationStretch.some(x => x.name.toLowerCase().includes('calf')));
-  assert('Ankle rec has tibialis strengthen', rec?.compensationStrengthen.some(x => x.name.toLowerCase().includes('tibialis')));
-}
-
-// ─── Direct-body-part stretches (not pattern-matched) ─────────────────────
+// ─── Direct-body-part stretches (not name-pattern matched) ────────────────
 console.log('\n=== Direct body-part stretch (no name-pattern match) ===');
-
-// "Deltoid stretch" — bodyPart Shoulders (direct) but NOT in stretchAreaPatterns
 {
   const r = evaluateExerciseAgainstInjuries(
     { name: 'Deltoid stretch', bodyPart: 'Shoulders', stretching: 'Yes' },
@@ -251,8 +335,6 @@ console.log('\n=== Direct body-part stretch (no name-pattern match) ===');
   assert('Deltoid stretch (direct, non-pattern) blocked for current Shoulder injury', r.status === 'blocked');
   assert('Reason mentions 20-second holds', r.reasons.some(r => r.includes('20-second')));
 }
-
-// "Knee mobility stretch" — bodyPart Knees (direct) but "knee mobility stretch" doesn't match stretchAreaPatterns
 {
   const r = evaluateExerciseAgainstInjuries(
     { name: 'Knee mobility stretch', bodyPart: 'Knees', stretching: 'Yes' },
@@ -261,8 +343,6 @@ console.log('\n=== Direct body-part stretch (no name-pattern match) ===');
   assert('Knee mobility stretch (direct, non-pattern) blocked for Knee recovery Week 3 (<6)', r.status === 'blocked');
   assert('Reason mentions Week 6', r.reasons.some(r => r.includes('Week 6')));
 }
-
-// "Knee mobility stretch" — recovery Week 8 → modify with hold-time hint
 {
   const r = evaluateExerciseAgainstInjuries(
     { name: 'Knee mobility stretch', bodyPart: 'Knees', stretching: 'Yes' },
@@ -271,8 +351,6 @@ console.log('\n=== Direct body-part stretch (no name-pattern match) ===');
   assert('Knee mobility stretch (direct, non-pattern) modify at Knee recovery Week 8', r.status === 'modify');
   assert('Reason mentions 50% hold time', r.reasons.some(r => r.includes('50%')));
 }
-
-// "Deltoid stretch" — long-term limitation → allowed (coaching only)
 {
   const r = evaluateExerciseAgainstInjuries(
     { name: 'Deltoid stretch', bodyPart: 'Shoulders', stretching: 'Yes' },
@@ -280,29 +358,115 @@ console.log('\n=== Direct body-part stretch (no name-pattern match) ===');
   );
   assert('Deltoid stretch (direct, non-pattern) allowed for long-term Shoulder limitation', r.status === 'allowed');
 }
-
-// Affinity-only stretch with currently_injured — should still get modify/caution from
-// fallthrough (not blocked by state-driven rule, since it's neither direct nor pattern-matched)
 {
+  // Hamstrings is affinity-only for KNEES (not direct). 'lying hamstring' IS in stretchAllowPatterns.
   const r = evaluateExerciseAgainstInjuries(
-    // Hamstrings is in KNEES affinity but not a direct body part
     { name: 'Lying hamstring stretch', bodyPart: 'Hamstrings', stretching: 'Yes' },
     [{ bodyArea: 'Knees', injuryType: 'currently_injured' }],
   );
-  // stretchAllowPatterns for KNEES includes 'lying hamstring' → should be allowed
   assert('Lying hamstring stretch allowed for current Knee injury via stretchAllowPatterns', r.status === 'allowed');
 }
 
-// ─── stretchAllowPatterns still override state logic ──────────────────────
-console.log('\n=== stretchAllowPatterns precedence ===');
+// ─── Overlap precedence: stretchAllow vs stretchBlock ────────────────────
+// A pattern that appears in both lists — stretchAllowPatterns wins first.
+console.log('\n=== stretchAllow/stretchBlock precedence ===');
 {
-  // Seated hamstring stretch is in stretchAllowPatterns for KNEES
-  // → should be allowed even though "hamstring stretch" matches stretchAreaPatterns
+  // stretchAllowPatterns for KNEES includes 'seated hamstring'
+  // stretchAreaPatterns doesn't include it; direct=No (bodyPart=Hamstrings)
+  // → allowed (stretchAllow fires before state-driven logic)
   const r = evaluateExerciseAgainstInjuries(
     { name: 'Seated hamstring stretch', bodyPart: 'Hamstrings', stretching: 'Yes' },
     [{ bodyArea: 'Knees', injuryType: 'currently_injured' }],
   );
-  assert('Seated hamstring stretch allowed for current Knee injury (stretchAllowPatterns wins)', r.status === 'allowed');
+  assert('Seated hamstring stretch allowed (stretchAllowPatterns wins over state logic)', r.status === 'allowed');
+}
+{
+  // stretchAllowPatterns for LOWER_BACK includes "cat cow" / "cat-cow"
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Cat-cow stretch', bodyPart: 'Lower Back', stretching: 'Yes' },
+    [{ bodyArea: 'Lower Back', injuryType: 'currently_injured' }],
+  );
+  assert('Cat-cow allowed (stretchAllowPatterns wins for current Lower Back injury)', r.status === 'allowed');
+}
+{
+  // stretchBlockPatterns for ANKLES includes 'standing calf stretch'
+  // Even if it's direct, block-patterns fire before state-driven when
+  // they're listed in stretchBlockPatterns explicitly.
+  const r = evaluateExerciseAgainstInjuries(
+    { name: 'Standing calf stretch', bodyPart: 'Calves', stretching: 'Yes' },
+    [{ bodyArea: 'Ankles', injuryType: 'currently_injured' }],
+  );
+  assert('Standing calf stretch blocked (stretchBlockPatterns for Ankle injury)', r.status === 'blocked');
+}
+
+// ─── getInjuryStretchPolicy tests ─────────────────────────────────────────
+console.log('\n=== getInjuryStretchPolicy ===');
+{
+  const policy = getInjuryStretchPolicy([
+    { bodyArea: 'Lower Back', injuryType: 'currently_injured' },
+  ]);
+  assert('Lower Back current → policy mentions 20-second holds', !!policy['Lower Back']?.includes('20-second'));
+}
+{
+  const policy = getInjuryStretchPolicy([
+    { bodyArea: 'Lower Back', injuryType: 'recovery', startedAt: weeksAgo(3) },
+  ]);
+  assert('Lower Back recovery Week 3 → policy mentions Week 6', !!policy['Lower Back']?.includes('Week 6'));
+}
+{
+  const policy = getInjuryStretchPolicy([
+    { bodyArea: 'Lower Back', injuryType: 'recovery', startedAt: weeksAgo(8) },
+  ]);
+  assert('Lower Back recovery Week 8 → policy mentions 50%', !!policy['Lower Back']?.includes('50%'));
+}
+{
+  const policy = getInjuryStretchPolicy([
+    { bodyArea: 'Shoulders', injuryType: 'long_term_limitation' },
+  ]);
+  assert('Shoulder long-term → policy mentions Dynamic', !!policy['Shoulders']?.includes('Dynamic'));
+}
+{
+  const policy = getInjuryStretchPolicy([
+    { bodyArea: 'Lower Back', injuryType: 'long_term_limitation' },
+    { bodyArea: 'Lower Back', injuryType: 'currently_injured' },
+  ]);
+  assert('Worst state (current) wins over long-term', !!policy['Lower Back']?.includes('20-second'));
+}
+
+// ─── Compensation list tests ───────────────────────────────────────────────
+console.log('\n=== Compensation lists ===');
+{
+  const recs = getInjuryRecommendations([
+    { bodyArea: 'Shoulders', injuryType: 'long_term_limitation' },
+  ]);
+  const rec = recs.find(r => r.bodyArea === 'Shoulders');
+  assert('Shoulder compensation stretch includes pec minor', !!rec?.compensationStretch.some(x => x.name.toLowerCase().includes('pec')));
+  assert('Shoulder compensation strengthen includes rotator cuff', !!rec?.compensationStrengthen.some(x => x.name.toLowerCase().includes('rotator')));
+  assert('Shoulder stretchPolicy set', !!rec?.stretchPolicy);
+}
+{
+  const recs = getInjuryRecommendations([
+    { bodyArea: 'Knees', injuryType: 'currently_injured' },
+  ]);
+  const rec = recs.find(r => r.bodyArea === 'Knees');
+  assert('Knee compensation stretch includes hip flexors', !!rec?.compensationStretch.some(x => x.name.toLowerCase().includes('hip flexor')));
+  assert('Knee compensation strengthen includes glute', !!rec?.compensationStrengthen.some(x => x.name.toLowerCase().includes('glute')));
+}
+{
+  const recs = getInjuryRecommendations([
+    { bodyArea: 'Lower Back', injuryType: 'recovery', startedAt: weeksAgo(4) },
+  ]);
+  const rec = recs.find(r => r.bodyArea === 'Lower Back');
+  assert('Lower Back comp stretch includes hip flexors', !!rec?.compensationStretch.some(x => x.name.toLowerCase().includes('hip flexor')));
+  assert('Lower Back comp strengthen includes glutes', !!rec?.compensationStrengthen.some(x => x.name.toLowerCase().includes('glute')));
+}
+{
+  const recs = getInjuryRecommendations([
+    { bodyArea: 'Ankles', injuryType: 'currently_injured' },
+  ]);
+  const rec = recs.find(r => r.bodyArea === 'Ankles / Calves');
+  assert('Ankle comp stretch includes calf', !!rec?.compensationStretch.some(x => x.name.toLowerCase().includes('calf')));
+  assert('Ankle comp strengthen includes tibialis', !!rec?.compensationStrengthen.some(x => x.name.toLowerCase().includes('tibialis')));
 }
 
 // ─── Summary ─────────────────────────────────────────────────────────────
