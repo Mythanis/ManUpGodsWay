@@ -248,14 +248,23 @@ Requires `ANTHROPIC_API_KEY` (already configured as a Replit secret).
 - `server/routes.ts` — `POST /api/exercises/evaluate-injuries`, `GET /api/user/injuries/recommendations`; injury guard on bulk add
 - `client/src/components/InjuriesPanel.tsx` — date input on Recovery, "Week N" badge, recommendations card
 
-**Rule packs (Task #159):** seven body-part-specific packs — KNEES, LOWER_BACK, SHOULDERS, HIPS, UPPER_BACK_NECK, WRISTS_FOREARMS, ANKLES_CALVES. Each defines `blockPatterns`, `allowPatterns`, `stretchBlock/Allow`, `longTermAvoid/Prefer`, `reintroduceByWeek` (recovery unlock timeline), and `alwaysInclude` (always-recommend exercises with rationale).
+**Rule packs (Tasks #159 + #162):** seven body-part-specific packs — KNEES, LOWER_BACK, SHOULDERS, HIPS, UPPER_BACK_NECK, WRISTS_FOREARMS, ANKLES_CALVES. Each defines `blockPatterns`, `allowPatterns`, `stretchBlock/Allow`, `stretchAreaPatterns`, `longTermAvoid/Prefer`, `reintroduceByWeek`, `alwaysInclude`, `compensationStretch`, `compensationStrengthen`.
 
 **Logic:**
 `evaluateExerciseAgainstInjuries(exercise, injuries)` returns `{ status: "allowed"|"modify"|"blocked", reasons, modificationHints }`.
 - Resolves each injury's body area to a RulePack via `RULE_PACK_BY_AREA` (umbrella terms Hips/Wrists/Ankles map to their pack).
 - `currently_injured` → blocks pattern matches with named reasons; `recovery` → uses `computeRecoveryWeek(startedAt)` to allow exercises by week milestone, blocks with "unlocks Week N"; `long_term_limitation` → silently swaps to PREFER substitutes, blocks AVOID patterns.
 
-**Recommendations:** `getInjuryRecommendations(injuries)` returns `[{ bodyArea, recommendations: [{name, why}] }]` from each pack's `alwaysInclude` list (e.g., McGill Big Three for Lower Back; rotator cuff & face pulls for Shoulders).
+**State-driven stretch rules (Task #162):** When a stretch exercise matches a pack's `stretchAreaPatterns` (i.e. it targets that injury area specifically):
+- `currently_injured` → blocked with message "stretches must avoid the injured area, max 20-second holds"
+- `recovery` Week < 6 → blocked "Stretching the {area} is reintroduced at Week 6"
+- `recovery` Week ≥ 6 → modify with "Use ~50% of your normal hold time; +5 seconds per pain-free week"
+- `long_term_limitation` → allowed; coaching only via recommendations card
+`stretchAllowPatterns` always take precedence over the new state logic (blessed gentle stretches remain allowed).
+
+**Stretch policy helper:** `getInjuryStretchPolicy(injuries)` returns one coaching string per area based on the worst injury state. Worst-state wins: currently_injured > recovery > long_term_limitation.
+
+**Recommendations:** `getInjuryRecommendations(injuries)` returns `[{ bodyArea, recommendations, compensationStretch, compensationStrengthen, stretchPolicy }]` from each pack. InjuriesPanel renders three subsections: Always Include, Stretch every session (blue), Strengthen every session (yellow).
 
 **Frontend (create-plan.tsx & edit-plan.tsx):**
 - Exercise browser cards show 🔴 Blocked / 🟡 Caution badges when user has recorded injuries

@@ -26,6 +26,7 @@ import {
   UMBRELLA_BODY_AREAS,
   type InjuryRecommendation,
 } from "@shared/injuryFilter";
+import { Dumbbell, Zap } from "lucide-react";
 
 const INJURY_TYPE_LABELS: Record<string, string> = {
   currently_injured: "Currently Injured",
@@ -249,19 +250,65 @@ export default function InjuriesPanel() {
               {recommendations.map((rec) => (
                 <div
                   key={rec.bodyArea}
-                  className="px-3 py-2 rounded-sm border border-[#FDD000]/40 bg-zinc-900/60"
+                  className="px-3 py-2 rounded-sm border border-[#FDD000]/40 bg-zinc-900/60 space-y-3"
                 >
-                  <p className="text-xs font-black uppercase tracking-wider text-[#FDD000] mb-1">
+                  <p className="text-xs font-black uppercase tracking-wider text-[#FDD000]">
                     {rec.bodyArea}
                   </p>
-                  <ul className="space-y-1">
-                    {rec.recommendations.map((r) => (
-                      <li key={r.name} className="text-xs">
-                        <span className="font-black text-white">{r.name}</span>
-                        <span className="text-zinc-400"> — {r.why}</span>
-                      </li>
-                    ))}
-                  </ul>
+
+                  {rec.stretchPolicy && (
+                    <p className="text-[11px] leading-snug text-zinc-300 italic border-l-2 border-[#FDD000]/60 pl-2">
+                      {rec.stretchPolicy}
+                    </p>
+                  )}
+
+                  {rec.recommendations.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1 flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" /> Always include
+                      </p>
+                      <ul className="space-y-1">
+                        {rec.recommendations.map((r) => (
+                          <li key={r.name} className="text-xs">
+                            <span className="font-black text-white">{r.name}</span>
+                            <span className="text-zinc-400"> — {r.why}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {rec.compensationStretch.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1 flex items-center gap-1">
+                        <Zap className="w-3 h-3 text-blue-400" /> Stretch every session
+                      </p>
+                      <ul className="space-y-1">
+                        {rec.compensationStretch.map((r) => (
+                          <li key={r.name} className="text-xs">
+                            <span className="font-black text-blue-300">{r.name}</span>
+                            <span className="text-zinc-400"> — {r.why}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {rec.compensationStrengthen.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1 flex items-center gap-1">
+                        <Dumbbell className="w-3 h-3 text-[#FDD000]" /> Strengthen every session
+                      </p>
+                      <ul className="space-y-1">
+                        {rec.compensationStrengthen.map((r) => (
+                          <li key={r.name} className="text-xs">
+                            <span className="font-black text-[#FDD000]">{r.name}</span>
+                            <span className="text-zinc-400"> — {r.why}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

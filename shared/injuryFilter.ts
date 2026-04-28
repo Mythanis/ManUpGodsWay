@@ -26,6 +26,9 @@ export interface InjuryForEval {
 export interface InjuryRecommendation {
   bodyArea: string;
   recommendations: { name: string; why: string }[];
+  compensationStretch: { name: string; why: string }[];
+  compensationStrengthen: { name: string; why: string }[];
+  stretchPolicy: string;
 }
 
 // ─── Rule pack definition ─────────────────────────────────────────────────
@@ -44,6 +47,9 @@ interface RulePack {
   stretchBlockPatterns: string[];
   // Stretches explicitly allowed.
   stretchAllowPatterns: string[];
+  // Keywords that identify a stretch as TARGETING this body area.
+  // Used for state-driven hold-time and reintroduction enforcement.
+  stretchAreaPatterns: string[];
   // Permanently avoid for long-term limitation (always block).
   longTermAvoidPatterns: string[];
   // Recommended substitutes for long-term limitation (allowed, no warning).
@@ -58,6 +64,10 @@ interface RulePack {
   // ALWAYS INCLUDE recommendations surfaced to the user (e.g., McGill Big
   // Three for lower back, rotator-cuff maintenance for shoulders).
   alwaysInclude: { name: string; why: string }[];
+  // Surrounding muscles to stretch every session alongside the injury area.
+  compensationStretch: { name: string; why: string }[];
+  // Surrounding muscles to strengthen every session alongside the injury area.
+  compensationStrengthen: { name: string; why: string }[];
 }
 
 // ─── Per-body-part rule packs ─────────────────────────────────────────────
@@ -80,6 +90,10 @@ const KNEES: RulePack = {
   stretchAllowPatterns: [
     'seated hamstring', 'supine quad', 'standing quad', 'seated calf',
     'wall hamstring', 'lying hamstring',
+  ],
+  stretchAreaPatterns: [
+    'quad stretch', 'hamstring stretch', 'calf stretch', 'it band stretch',
+    'knee stretch', 'iliotibial stretch', 'vastus stretch',
   ],
   longTermAvoidPatterns: [
     'deep squat', 'pistol squat', 'jump squat', 'box jump', 'plyometric',
@@ -107,6 +121,17 @@ const KNEES: RulePack = {
     { week: 6, allowed: ['lunge'] },
   ],
   alwaysInclude: [],
+  compensationStretch: [
+    { name: 'Standing hip flexor stretch', why: 'Tight hip flexors shift load onto the knee joint.' },
+    { name: 'Supine hamstring stretch', why: 'Hamstring tightness increases compressive force on the knee.' },
+    { name: 'Standing calf / Achilles stretch', why: 'Limited ankle dorsiflexion forces the knee into poor mechanics.' },
+    { name: 'IT band foam roll', why: 'Releases lateral tension that pulls the kneecap out of alignment.' },
+  ],
+  compensationStrengthen: [
+    { name: 'Glute medius (clamshells, side-lying abduction)', why: 'Weak hips cause inward knee collapse under load.' },
+    { name: 'VMO / inner quad (terminal knee extension)', why: 'Closes the last 15° of extension — the most knee-protective range.' },
+    { name: 'Hamstring curls (seated or lying)', why: 'Balanced hamstring strength protects the ACL and reduces shear.' },
+  ],
 };
 
 const LOWER_BACK: RulePack = {
@@ -134,6 +159,11 @@ const LOWER_BACK: RulePack = {
   stretchAllowPatterns: [
     'knee to chest', 'lying crossover', 'crossover stretch',
     'child pose', "child's pose", 'cat cow', 'cat-cow',
+  ],
+  stretchAreaPatterns: [
+    'lower back stretch', 'lumbar stretch', 'back extension stretch',
+    'spine stretch', 'spinal stretch', 'erector stretch',
+    'hamstring stretch', 'hip flexor stretch',
   ],
   longTermAvoidPatterns: [
     'good morning',
@@ -174,6 +204,16 @@ const LOWER_BACK: RulePack = {
     { name: 'Side Plank', why: 'McGill Big Three — quadratus lumborum and oblique stability.' },
     { name: 'Hip flexor stretch', why: 'Tight hip flexors pull on the lumbar spine.' },
   ],
+  compensationStretch: [
+    { name: 'Kneeling hip flexor stretch', why: 'Tight hip flexors anteriorly tilt the pelvis and compress the lumbar discs.' },
+    { name: 'Supine hamstring stretch', why: 'Tight hamstrings posteriorly tilt the pelvis and reduce lumbar curve.' },
+    { name: 'Piriformis / figure-four stretch', why: 'Piriformis tightness can refer pain into the lower back via the SI joint.' },
+  ],
+  compensationStrengthen: [
+    { name: 'Glute strengthening (bridges, hip thrusts)', why: 'Weak glutes force the erectors to overwork — the #1 driver of low-back fatigue.' },
+    { name: 'Deep core activation (dead bug, hollow hold)', why: 'Transverse abdominis bracing reduces spinal compressive load by up to 40%.' },
+    { name: 'Quadratus lumborum (side plank variations)', why: 'QL weakness causes lateral instability and micro-shear on lumbar vertebrae.' },
+  ],
 };
 
 const SHOULDERS: RulePack = {
@@ -199,6 +239,11 @@ const SHOULDERS: RulePack = {
   ],
   stretchBlockPatterns: ['behind back', 'behind the back', 'overhead reach'],
   stretchAllowPatterns: ['cross body', 'cross-body', 'pendulum'],
+  stretchAreaPatterns: [
+    'shoulder stretch', 'pec stretch', 'chest stretch', 'pectoral stretch',
+    'posterior capsule', 'internal rotation stretch', 'external rotation stretch',
+    'anterior shoulder stretch', 'doorframe stretch',
+  ],
   longTermAvoidPatterns: [
     'behind the neck', 'behind-the-neck',
     'upright row',
@@ -235,6 +280,16 @@ const SHOULDERS: RulePack = {
     { name: 'Face pulls', why: 'Strengthens posterior rotator cuff — protective.' },
     { name: 'Band pull-aparts', why: 'Scapular stability and posterior chain balance.' },
   ],
+  compensationStretch: [
+    { name: 'Doorframe pec minor stretch', why: 'Tight pec minor impinges the subacromial space and compresses the shoulder joint.' },
+    { name: 'Thoracic spine extension (foam roll)', why: 'Restricted T-spine forces the shoulder to overcompensate at end-range.' },
+    { name: 'Cross-body posterior capsule stretch', why: 'Posterior capsule tightness is the primary driver of shoulder impingement.' },
+  ],
+  compensationStrengthen: [
+    { name: 'Rotator cuff external rotation (band)', why: 'Balances the dominant internal rotators and stabilises the humeral head.' },
+    { name: 'Lower / mid trapezius (face pulls, Y-raises)', why: 'Weak lower trap allows scapular winging and impingement.' },
+    { name: 'Serratus anterior (wall slides, push-up plus)', why: 'Serratus keeps the scapula flat against the rib cage during overhead movement.' },
+  ],
 };
 
 const HIPS: RulePack = {
@@ -258,6 +313,10 @@ const HIPS: RulePack = {
     'deep hip flexor', 'kneeling hip flexor',
   ],
   stretchAllowPatterns: ['supine figure', 'figure four', 'supine figure four'],
+  stretchAreaPatterns: [
+    'hip stretch', 'hip flexor stretch', 'glute stretch', 'adductor stretch',
+    'groin stretch', 'psoas stretch', 'iliacus stretch', 'hip rotator stretch',
+  ],
   longTermAvoidPatterns: [
     'deep squat', 'pistol squat',
     'plyo', 'plyometric',
@@ -289,6 +348,16 @@ const HIPS: RulePack = {
     { name: 'Hip flexor stretch', why: 'Tightness is a major driver of hip pain.' },
     { name: 'Glute strengthening (clamshells, bridges)', why: 'Weak glutes overload the hip joint.' },
   ],
+  compensationStretch: [
+    { name: 'Standing hip flexor (lunge stretch)', why: 'Hip flexor tightness is the most common contributor to hip joint impingement.' },
+    { name: 'IT band foam roll', why: 'IT band tension creates lateral hip pain and affects gait mechanics.' },
+    { name: 'Supine glute stretch (figure four)', why: 'Releases the piriformis and short hip rotators without stressing the joint capsule.' },
+  ],
+  compensationStrengthen: [
+    { name: 'Hip abductors (clamshells, side-lying raises)', why: 'Abductor weakness is the primary cause of hip drop and joint overload.' },
+    { name: 'Glute medius (single-leg balance, lateral band walk)', why: 'Controls frontal-plane pelvic stability through every step.' },
+    { name: 'Transverse abdominis (dead bug, hollow hold)', why: 'Core co-contraction reduces hip joint contact force by up to 30%.' },
+  ],
 };
 
 const UPPER_BACK_NECK: RulePack = {
@@ -311,6 +380,11 @@ const UPPER_BACK_NECK: RulePack = {
   ],
   stretchBlockPatterns: ['loaded neck', 'weighted neck'],
   stretchAllowPatterns: ['chin tuck', 'neck side tilt', 'side tilt'],
+  stretchAreaPatterns: [
+    'neck stretch', 'upper trap stretch', 'cervical stretch', 'upper back stretch',
+    'thoracic stretch', 'levator stretch', 'trapezius stretch',
+    'suboccipital stretch', 'scalene stretch',
+  ],
   longTermAvoidPatterns: [],
   longTermPreferPatterns: [
     'safety bar squat', 'goblet squat',
@@ -340,6 +414,16 @@ const UPPER_BACK_NECK: RulePack = {
     { name: 'Upper trap stretch', why: 'Releases chronic tension.' },
     { name: 'Thoracic mobility (cat-cow, foam roll)', why: 'Restores upper-back rotation.' },
   ],
+  compensationStretch: [
+    { name: 'Upper trapezius stretch (ear to shoulder, no force)', why: 'Upper trap is chronically overloaded by forward-head posture and stress.' },
+    { name: 'Levator scapulae stretch (chin down and across)', why: 'Levator tightness creates the "stiff neck" sensation and restricts rotation.' },
+    { name: 'Thoracic extension over a foam roller', why: 'Stiff T-spine transfers movement demand onto the cervical joints.' },
+  ],
+  compensationStrengthen: [
+    { name: 'Deep neck flexors (chin tucks, gentle resistance)', why: 'Deep flexors support the cervical curve — their weakness drives forward head posture.' },
+    { name: 'Rhomboids (band rows, face pulls)', why: 'Scapular retraction reduces the pull on the cervical extensors.' },
+    { name: 'Lower trapezius (Y-raises, prone T)', why: 'Lower trap prevents scapular elevation that compresses the upper neck.' },
+  ],
 };
 
 const WRISTS_FOREARMS: RulePack = {
@@ -358,6 +442,10 @@ const WRISTS_FOREARMS: RulePack = {
   ],
   stretchBlockPatterns: ['weighted wrist'],
   stretchAllowPatterns: ['wrist circle', 'wrist mobility', 'finger'],
+  stretchAreaPatterns: [
+    'wrist stretch', 'forearm stretch', 'wrist flexor stretch', 'wrist extensor stretch',
+    'finger stretch', 'carpal stretch',
+  ],
   longTermAvoidPatterns: ['wrist curl', 'heavy wrist'],
   longTermPreferPatterns: [
     'neutral grip', 'hammer grip',
@@ -375,6 +463,16 @@ const WRISTS_FOREARMS: RulePack = {
   ],
   reintroduceByWeek: [],
   alwaysInclude: [],
+  compensationStretch: [
+    { name: 'Wrist flexor stretch (arm extended, palm up)', why: 'Flexor tightness is the leading cause of medial wrist and carpal tunnel pain.' },
+    { name: 'Wrist extensor stretch (arm extended, palm down)', why: 'Extensor overuse from keyboard work or gripping compounds tendinopathy.' },
+    { name: 'Finger flexor stretch (prayer position)', why: 'Releases cumulative tension from gripping exercises and daily tasks.' },
+  ],
+  compensationStrengthen: [
+    { name: 'Wrist extensor resistance (light dumbbell, low rep)', why: 'Extensor weakness is the root cause of most lateral wrist tendinopathy.' },
+    { name: 'Pronation / supination (light dumbbell or band)', why: 'Balanced rotation prevents torque build-up at the radio-ulnar joint.' },
+    { name: 'Grip strengthening (stress ball, towel twists)', why: 'Controlled grip strength reduces injury risk on all pulling and pressing movements.' },
+  ],
 };
 
 const ANKLES_CALVES: RulePack = {
@@ -395,6 +493,10 @@ const ANKLES_CALVES: RulePack = {
   ],
   stretchBlockPatterns: ['standing calf stretch'],
   stretchAllowPatterns: ['seated ankle', 'ankle circle', 'seated calf stretch'],
+  stretchAreaPatterns: [
+    'calf stretch', 'ankle stretch', 'achilles stretch', 'soleus stretch',
+    'plantar stretch', 'gastrocnemius stretch', 'dorsiflexion stretch',
+  ],
   longTermAvoidPatterns: [],
   longTermPreferPatterns: [
     'seated calf', 'machine calf',
@@ -415,11 +517,21 @@ const ANKLES_CALVES: RulePack = {
     { week: 10, allowed: ['plyo', 'jump', 'box jump', 'plyometric'] },
   ],
   alwaysInclude: [],
+  compensationStretch: [
+    { name: 'Gastroc / soleus calf stretch (wall or step)', why: 'Calf tightness reduces ankle dorsiflexion and shifts load onto the ankle and knee.' },
+    { name: 'Plantar fascia stretch (toe extension or rolling)', why: 'The plantar fascia is continuous with the Achilles — stretching both reduces overall tension.' },
+    { name: 'Ankle alphabet / circles (non-weight-bearing)', why: 'Maintains proprioception and full joint range without stressing the healing tissue.' },
+  ],
+  compensationStrengthen: [
+    { name: 'Tibialis anterior (seated toe raises)', why: 'Tibialis weakness causes excessive ankle pronation and stress fracture risk.' },
+    { name: 'Peroneals (resistance band eversion)', why: 'Peroneal weakness is the primary risk factor for lateral ankle sprain recurrence.' },
+    { name: 'Intrinsic foot muscles (towel scrunches, toe spreads)', why: 'Foot intrinsics provide the dynamic arch support the ankle depends on during loading.' },
+  ],
 };
 
 // ─── Body area normalization ──────────────────────────────────────────────
 // Map the user-selected body area (case-insensitive) to its rule pack.
-// Umbrella terms (Hips, Wrists, Ankles, Upper Back / Neck) and the related
+// Umbrella terms (Hips, Wrists, Ankles) and the related
 // specific body parts (Hip Flexors, Forearms, Calves, Neck, etc.) all
 // resolve to the same pack so the spec's per-area rules apply.
 const RULE_PACK_BY_AREA: Record<string, RulePack> = {
@@ -678,6 +790,13 @@ function evaluateAgainstPack(
   // 2. Stretch-specific rules — only check when the exercise is tagged as a
   //    stretch; an unmatched stretch falls through to the type-based rules.
   if (isStretch) {
+    // 2a. Spec-approved gentle stretches take precedence over the new
+    //     state-based area logic — these are explicitly safe for the injury.
+    if (matchesAny(exercise.name, pack.stretchAllowPatterns)) {
+      return;
+    }
+
+    // 2b. Spec-blocked stretches — always blocked regardless of state.
     const blockedStretch = matchesAny(exercise.name, pack.stretchBlockPatterns);
     if (blockedStretch) {
       acc.status = worsenStatus(acc.status, 'blocked');
@@ -686,9 +805,43 @@ function evaluateAgainstPack(
       );
       return;
     }
-    if (matchesAny(exercise.name, pack.stretchAllowPatterns)) {
-      // Spec-approved gentle stretch — allowed, no warning.
-      return;
+
+    // 2c. State-driven area-stretch rules (new).
+    //     Only applies when the stretch name matches stretchAreaPatterns —
+    //     i.e. the stretch targets this injury area specifically.
+    const matchesArea = matchesAny(exercise.name, pack.stretchAreaPatterns);
+    if (matchesArea) {
+      const exName = exerciseDisplay(exercise.name);
+
+      if (injury.injuryType === 'currently_injured') {
+        acc.status = worsenStatus(acc.status, 'blocked');
+        acc.reasons.push(
+          `${exName} targets your current ${pack.label} injury — stretches must avoid the injured area. Only seated / lying stretches with max 20-second holds.`,
+        );
+        return;
+      }
+
+      if (injury.injuryType === 'recovery') {
+        const week = computeRecoveryWeek(injury.startedAt);
+        if (week < 6) {
+          acc.status = worsenStatus(acc.status, 'blocked');
+          acc.reasons.push(
+            `Stretching the ${pack.label} is reintroduced at Week 6 of recovery (currently Week ${week}) — let the tissue heal before loading it under tension.`,
+          );
+          return;
+        }
+        // Week 6+ — allow but flag with hold-time coaching.
+        acc.status = worsenStatus(acc.status, 'modify');
+        acc.reasons.push(
+          `${exName} — use ~50% of your normal hold time and never stretch into pain. Add 5 seconds per pain-free week.`,
+        );
+        return;
+      }
+
+      // long_term_limitation — area stretches are encouraged; no blocking.
+      // Coaching delivered via recommendations card. Return early so the
+      // exercise doesn't fall through to the direct-load caution rule below.
+      if (injury.injuryType === 'long_term_limitation') return;
     }
     // Unmatched stretch on the affected area — fall through to type rules.
   }
@@ -874,19 +1027,81 @@ function injuryTypeLabel(t: InjuryForEval['injuryType']): string {
   }
 }
 
+// ─── Stretch policy coaching text ─────────────────────────────────────────
+// Returns a per-area coaching string based on the worst-state injury for
+// that area (current > recovery > long-term).
+export function getInjuryStretchPolicy(injuries: InjuryForEval[]): Record<string, string> {
+  if (!injuries || injuries.length === 0) return {};
+
+  const stateRank: Record<InjuryForEval['injuryType'], number> = {
+    currently_injured: 2,
+    recovery: 1,
+    long_term_limitation: 0,
+  };
+
+  const worstByPack = new Map<string, { rank: number; injury: InjuryForEval }>();
+
+  for (const injury of injuries) {
+    const pack = getRulePack(injury.bodyArea);
+    if (!pack) continue;
+    const rank = stateRank[injury.injuryType];
+    const existing = worstByPack.get(pack.label);
+    if (!existing || rank > existing.rank) {
+      worstByPack.set(pack.label, { rank, injury });
+    }
+  }
+
+  const result: Record<string, string> = {};
+
+  for (const [label, { injury }] of worstByPack.entries()) {
+    if (injury.injuryType === 'currently_injured') {
+      result[label] =
+        'While currently injured: only seated / lying stretches, max 20-second holds, never load the injured area.';
+    } else if (injury.injuryType === 'recovery') {
+      const week = computeRecoveryWeek(injury.startedAt);
+      if (week < 6) {
+        result[label] =
+          `Avoid stretching the ${label} area until Week 6 of recovery (currently Week ${week}). Focus on compensation muscles only.`;
+      } else {
+        result[label] =
+          `Stretching reintroduced. Use ~50% of your normal hold time — add 5 seconds per pain-free week. Stop at any tension beyond mild.`;
+      }
+    } else {
+      result[label] =
+        'Dynamic stretches in warm-up, static in cooldown — never force end range. Include compensation stretches every session.';
+    }
+  }
+
+  return result;
+}
+
 // ─── ALWAYS INCLUDE recommendations ───────────────────────────────────────
-// Returns one entry per unique rule pack covered by the user's injuries that
-// has at least one always-include suggestion.
+// Returns one entry per unique rule pack covered by the user's injuries,
+// including always-include, compensation, and stretch-policy data.
 export function getInjuryRecommendations(injuries: InjuryForEval[]): InjuryRecommendation[] {
   if (!injuries || injuries.length === 0) return [];
+  const stretchPolicies = getInjuryStretchPolicy(injuries);
   const seen = new Set<string>();
   const result: InjuryRecommendation[] = [];
   for (const injury of injuries) {
     const pack = getRulePack(injury.bodyArea);
-    if (!pack || pack.alwaysInclude.length === 0) continue;
+    if (!pack) continue;
     if (seen.has(pack.label)) continue;
+    // Only surface entries where there is at least one always-include OR
+    // compensation item — packs with no recommendations are skipped.
+    const hasContent =
+      pack.alwaysInclude.length > 0 ||
+      pack.compensationStretch.length > 0 ||
+      pack.compensationStrengthen.length > 0;
+    if (!hasContent) continue;
     seen.add(pack.label);
-    result.push({ bodyArea: pack.label, recommendations: pack.alwaysInclude });
+    result.push({
+      bodyArea: pack.label,
+      recommendations: pack.alwaysInclude,
+      compensationStretch: pack.compensationStretch,
+      compensationStrengthen: pack.compensationStrengthen,
+      stretchPolicy: stretchPolicies[pack.label] ?? '',
+    });
   }
   return result;
 }
