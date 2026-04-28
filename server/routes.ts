@@ -12723,6 +12723,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ALWAYS-INCLUDE recommendations for the user's injuries (e.g., McGill Big
+  // Three for lower back, rotator-cuff maintenance for shoulders). Returned
+  // in the form expected by InjuriesPanel — see shared/injuryFilter.ts for
+  // the per-body-part rule packs.
+  app.get('/api/user/injuries/recommendations', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const injuries = await storage.getUserInjuries(userId);
+      const { getInjuryRecommendations } = await import('@shared/injuryFilter');
+      const recs = getInjuryRecommendations(injuries.map(i => ({
+        bodyArea: i.bodyArea,
+        injuryType: i.injuryType,
+        startedAt: i.startedAt,
+      })));
+      res.json(recs);
+    } catch (error) {
+      console.error('Error fetching injury recommendations:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   // ─── Meal Reminders ─────────────────────────────────────────────────────────
 
   app.get('/api/meal-reminders', isAuthenticated, async (req: any, res) => {

@@ -18,66 +18,522 @@ export interface ExerciseForEval {
 export interface InjuryForEval {
   bodyArea: string;
   injuryType: 'currently_injured' | 'recovery' | 'long_term_limitation';
+  // Recovery start date — used to compute current recovery week.
+  // ISO string, Date, or null/undefined → treat as week 1.
+  startedAt?: string | Date | null;
 }
 
-const BODY_PART_AFFINITY: Record<string, string[]> = {
-  'Knees':        ['Knees', 'Quads', 'Hamstrings', 'Calves', 'Adductors', 'Hip Flexors', 'Legs', 'Full Body'],
-  'Lower Back':   ['Lower Back', 'Hamstrings', 'Glutes', 'Core', 'Abs', 'Obliques', 'Back', 'Lats', 'Upper Back', 'Full Body'],
-  'Upper Back':   ['Upper Back', 'Back', 'Lats', 'Shoulders', 'Full Body'],
-  'Back':         ['Back', 'Lower Back', 'Upper Back', 'Lats', 'Core', 'Hamstrings', 'Full Body'],
-  'Shoulders':    ['Shoulders', 'Chest', 'Triceps', 'Lats', 'Upper Back', 'Back', 'Full Body'],
-  'Hip Flexors':  ['Hip Flexors', 'Quads', 'Glutes', 'Hamstrings', 'Adductors', 'Legs', 'Full Body'],
+export interface InjuryRecommendation {
+  bodyArea: string;
+  recommendations: { name: string; why: string }[];
+}
+
+// ─── Rule pack definition ─────────────────────────────────────────────────
+interface RulePack {
+  label: string;
+  // Exercise body_part values that count as a DIRECT hit on this injury area.
+  bodyParts: string[];
+  // Exercise body_part values that count as AFFECTED (uses the area as
+  // stabilizer / secondary mover). Direct ⊆ affected logically.
+  affinity: string[];
+  // Exercise-name keyword matches blocked when currently injured / unrecovered.
+  blockPatterns: string[];
+  // Explicit allow exemptions — match these and the injury is ignored.
+  allowPatterns: string[];
+  // Stretches blocked (only checked when stretching === 'Yes').
+  stretchBlockPatterns: string[];
+  // Stretches explicitly allowed.
+  stretchAllowPatterns: string[];
+  // Permanently avoid for long-term limitation (always block).
+  longTermAvoidPatterns: string[];
+  // Recommended substitutes for long-term limitation (allowed, no warning).
+  longTermPreferPatterns: string[];
+  // Hints to surface when long-term limitation hits a direct (uncovered) area.
+  preferHints: string[];
+  // Generic body-part-specific hints attached to modify-status results.
+  modifyHints: string[];
+  // Recovery week-by-week reintroduction order. `allowed` is a list of
+  // exercise-name keywords that unlock at that week (cumulative).
+  reintroduceByWeek: { week: number; allowed: string[] }[];
+  // ALWAYS INCLUDE recommendations surfaced to the user (e.g., McGill Big
+  // Three for lower back, rotator-cuff maintenance for shoulders).
+  alwaysInclude: { name: string; why: string }[];
+}
+
+// ─── Per-body-part rule packs ─────────────────────────────────────────────
+const KNEES: RulePack = {
+  label: 'Knees',
+  bodyParts: ['Knees'],
+  affinity: ['Quads', 'Hamstrings', 'Calves', 'Hip Flexors', 'Adductors', 'Glutes', 'Legs', 'IT Band', 'Full Body'],
+  blockPatterns: [
+    'squat', 'lunge', 'leg press', 'leg extension',
+    'box jump', 'jump squat', 'plyo', 'plyometric',
+    'running', 'jogging', 'jog ', 'high knee', 'butt kick', 'sprint',
+    'kneeling', 'knee tuck', 'pistol',
+  ],
+  allowPatterns: [
+    'swim', 'stationary bike', 'recumbent bike', 'exercise bike',
+    'ankle circle', 'toe raise',
+    'seated chest', 'seated shoulder', 'seated row', 'seated curl', 'seated tricep',
+  ],
+  stretchBlockPatterns: ['pigeon', 'kneeling hip flexor', 'deep knee', 'cossack'],
+  stretchAllowPatterns: [
+    'seated hamstring', 'supine quad', 'standing quad', 'seated calf',
+    'wall hamstring', 'lying hamstring',
+  ],
+  longTermAvoidPatterns: [
+    'deep squat', 'pistol squat', 'jump squat', 'box jump', 'plyometric',
+    'kneeling',
+  ],
+  longTermPreferPatterns: [
+    'leg press', 'hack squat', 'step-up', 'step up',
+    'leg curl', 'cycling', 'elliptical',
+  ],
+  preferHints: [
+    'Prefer leg press / hack squat over barbell squat.',
+    'Prefer step-ups over lunges.',
+    'Prefer cycling / elliptical over running.',
+  ],
+  modifyHints: [
+    'Avoid deep knee flexion under load (stay above 90°).',
+    'No kneeling on hard surfaces — pad the knee.',
+  ],
+  reintroduceByWeek: [
+    { week: 1, allowed: ['glute bridge', 'leg curl'] },
+    { week: 2, allowed: ['step-up', 'step up', 'leg press'] },
+    { week: 3, allowed: ['goblet squat'] },
+    { week: 4, allowed: ['bodyweight squat', 'air squat'] },
+    { week: 5, allowed: ['squat'] },
+    { week: 6, allowed: ['lunge'] },
+  ],
+  alwaysInclude: [],
+};
+
+const LOWER_BACK: RulePack = {
+  label: 'Lower Back',
+  bodyParts: ['Lower Back'],
+  affinity: ['Hamstrings', 'Glutes', 'Core', 'Abs', 'Obliques', 'Back', 'Lats', 'Upper Back', 'Full Body'],
+  blockPatterns: [
+    'deadlift', 'romanian deadlift', 'rdl',
+    'barbell squat', 'back squat', 'front squat',
+    'good morning',
+    'bent over row', 'bent-over row', 'barbell row',
+    'sit-up', 'sit up', 'situp', 'crunch',
+    'overhead press', 'standing press', 'military press',
+    'standing shoulder press',
+    'running', 'jogging', 'sprint',
+    'snatch', 'clean and', 'clean & ', 'jerk',
+  ],
+  allowPatterns: [
+    'seated chest press', 'seated shoulder press', 'seated curl', 'seated tricep',
+    'lying chest', 'lying tricep', 'lying curl',
+    'glute bridge', 'bird dog', 'bird-dog',
+    'walking', 'swim',
+  ],
+  stretchBlockPatterns: ['weighted', 'loaded twist', 'hyperextension'],
+  stretchAllowPatterns: [
+    'knee to chest', 'lying crossover', 'crossover stretch',
+    'child pose', "child's pose", 'cat cow', 'cat-cow',
+  ],
+  longTermAvoidPatterns: [
+    'good morning',
+    'sit-up', 'sit up', 'situp', 'crunch',
+    'barbell back squat', 'back squat',
+    'standing overhead', 'standing shoulder press', 'standing military',
+    'hyperextension',
+  ],
+  longTermPreferPatterns: [
+    'trap bar', 'trap-bar',
+    'leg press',
+    'seated row', 'cable row',
+    'plank',
+  ],
+  preferHints: [
+    'Prefer trap bar over conventional deadlift.',
+    'Prefer leg press over barbell squat.',
+    'Prefer seated cable rows over bent-over barbell rows.',
+    'Prefer planks over crunches.',
+  ],
+  modifyHints: [
+    'Hinge from the hip with a neutral spine — never round the lower back under load.',
+  ],
+  reintroduceByWeek: [
+    { week: 1, allowed: ['dead bug', 'bird dog', 'bird-dog', 'glute bridge'] },
+    { week: 2, allowed: ['dead bug', 'bird dog', 'bird-dog', 'glute bridge'] },
+    { week: 3, allowed: ['romanian deadlift', 'rdl'] },
+    { week: 4, allowed: ['romanian deadlift', 'rdl'] },
+    { week: 5, allowed: ['goblet squat', 'dumbbell row', 'supported row'] },
+    { week: 6, allowed: ['goblet squat', 'dumbbell row', 'supported row'] },
+    { week: 7, allowed: ['barbell row', 'trap bar', 'trap-bar'] },
+    { week: 8, allowed: ['barbell row', 'trap bar', 'trap-bar'] },
+    { week: 9, allowed: ['deadlift', 'barbell squat', 'back squat'] },
+  ],
+  alwaysInclude: [
+    { name: 'Bird Dog', why: 'McGill Big Three — evidence-based lumbar stability.' },
+    { name: 'Modified Curl-up', why: 'McGill Big Three — abdominal endurance without spine flexion under load.' },
+    { name: 'Side Plank', why: 'McGill Big Three — quadratus lumborum and oblique stability.' },
+    { name: 'Hip flexor stretch', why: 'Tight hip flexors pull on the lumbar spine.' },
+  ],
+};
+
+const SHOULDERS: RulePack = {
+  label: 'Shoulders',
+  bodyParts: ['Shoulders'],
+  affinity: ['Chest', 'Triceps', 'Lats', 'Upper Back', 'Back', 'Full Body'],
+  blockPatterns: [
+    'overhead press', 'shoulder press', 'military press',
+    'upright row',
+    'behind the neck', 'behind-the-neck',
+    'lateral raise',
+    'pull-up', 'pullup', 'pull up', 'chin-up', 'chinup', 'chin up',
+    'bench press',
+    'dip ', 'dips ',
+    'throw', 'throwing',
+    'snatch', 'jerk', 'clean and', 'clean & ',
+  ],
+  allowPatterns: [
+    'squat', 'deadlift', 'lunge', 'leg press',
+    'plank', 'dead bug', 'hollow hold',
+    'wrist', 'forearm',
+    'walking', 'cycling',
+  ],
+  stretchBlockPatterns: ['behind back', 'behind the back', 'overhead reach'],
+  stretchAllowPatterns: ['cross body', 'cross-body', 'pendulum'],
+  longTermAvoidPatterns: [
+    'behind the neck', 'behind-the-neck',
+    'upright row',
+    'barbell overhead', 'standing barbell press',
+  ],
+  longTermPreferPatterns: [
+    'dumbbell press', 'incline', 'neutral grip',
+    'machine shoulder', 'cable lateral',
+    'face pull',
+  ],
+  preferHints: [
+    'Prefer dumbbell press over barbell (natural rotation).',
+    'Prefer incline over flat bench (less anterior impingement).',
+    'Add face pulls every upper-body session.',
+  ],
+  modifyHints: [
+    'Stay below shoulder height under load until cleared.',
+  ],
+  reintroduceByWeek: [
+    { week: 1, allowed: ['internal rotation', 'external rotation', 'band rotation'] },
+    { week: 2, allowed: ['internal rotation', 'external rotation', 'band rotation'] },
+    { week: 3, allowed: ['shrug', 'scapular', 'wall slide', 'retraction'] },
+    { week: 4, allowed: ['shrug', 'scapular', 'wall slide', 'retraction'] },
+    { week: 5, allowed: ['dumbbell row', 'face pull'] },
+    { week: 6, allowed: ['dumbbell row', 'face pull'] },
+    { week: 7, allowed: ['incline dumbbell press', 'incline press'] },
+    { week: 8, allowed: ['incline dumbbell press', 'incline press'] },
+    { week: 9, allowed: ['flat press', 'lateral raise', 'bench press'] },
+    { week: 10, allowed: ['flat press', 'lateral raise', 'bench press'] },
+    { week: 11, allowed: ['overhead press', 'shoulder press'] },
+  ],
+  alwaysInclude: [
+    { name: 'External rotation (band)', why: 'Rotator cuff maintenance — 3 × 15 light, every upper-body session.' },
+    { name: 'Face pulls', why: 'Strengthens posterior rotator cuff — protective.' },
+    { name: 'Band pull-aparts', why: 'Scapular stability and posterior chain balance.' },
+  ],
+};
+
+const HIPS: RulePack = {
+  label: 'Hips',
+  bodyParts: ['Hip Flexors', 'Glutes', 'Adductors'],
+  affinity: ['Quads', 'Hamstrings', 'Lower Back', 'Knees', 'Legs', 'Full Body', 'IT Band'],
+  blockPatterns: [
+    'squat', 'deadlift', 'hip thrust', 'glute bridge',
+    'lunge', 'step-up', 'step up', 'leg press',
+    'plyo', 'plyometric', 'box jump', 'jump squat',
+    'hip abductor', 'hip adductor',
+    'running', 'jogging', 'sprint', 'cycling',
+  ],
+  allowPatterns: [
+    'seated chest', 'seated shoulder', 'seated row', 'seated curl', 'seated tricep',
+    'lying chest', 'lying tricep', 'lying curl',
+    'flutter kick', 'hollow hold',
+  ],
+  stretchBlockPatterns: [
+    'pigeon', 'cossack', 'butterfly',
+    'deep hip flexor', 'kneeling hip flexor',
+  ],
+  stretchAllowPatterns: ['supine figure', 'figure four', 'supine figure four'],
+  longTermAvoidPatterns: [
+    'deep squat', 'pistol squat',
+    'plyo', 'plyometric',
+  ],
+  longTermPreferPatterns: [
+    'hip thrust', 'step-up', 'step up',
+    'sumo', 'leg press',
+  ],
+  preferHints: [
+    'Prefer hip thrust over barbell squat for glute development.',
+    'Prefer step-ups over lunges.',
+    'Prefer sumo stance for deadlifts.',
+  ],
+  modifyHints: [
+    'Stop immediately on any clicking, pinching, or sharp hip pain.',
+  ],
+  reintroduceByWeek: [
+    { week: 1, allowed: ['clamshell', 'side-lying hip', 'side lying hip'] },
+    { week: 2, allowed: ['clamshell', 'side-lying hip', 'side lying hip', 'supine figure'] },
+    { week: 3, allowed: ['glute bridge'] },
+    { week: 4, allowed: ['glute bridge', 'kneeling hip flexor'] },
+    { week: 5, allowed: ['bodyweight squat', 'air squat', 'step-up', 'step up'] },
+    { week: 6, allowed: ['bodyweight squat', 'air squat', 'step-up', 'step up', 'pigeon'] },
+    { week: 7, allowed: ['hip thrust', 'romanian deadlift', 'rdl'] },
+    { week: 8, allowed: ['hip thrust', 'romanian deadlift', 'rdl'] },
+    { week: 9, allowed: ['squat', 'deadlift'] },
+  ],
+  alwaysInclude: [
+    { name: 'Hip flexor stretch', why: 'Tightness is a major driver of hip pain.' },
+    { name: 'Glute strengthening (clamshells, bridges)', why: 'Weak glutes overload the hip joint.' },
+  ],
+};
+
+const UPPER_BACK_NECK: RulePack = {
+  label: 'Upper Back / Neck',
+  bodyParts: ['Upper Back', 'Neck'],
+  affinity: ['Lats', 'Back', 'Shoulders', 'Full Body'],
+  blockPatterns: [
+    'overhead press', 'shoulder press', 'military press',
+    'pull-up', 'pullup', 'pull up', 'chin-up', 'chinup', 'chin up',
+    'shrug',
+    'upright row',
+    'behind the neck', 'behind-the-neck',
+    'barbell back squat', 'back squat',
+    'deadlift',
+  ],
+  allowPatterns: [
+    'leg press', 'leg extension', 'leg curl',
+    'seated chest', 'seated bicep', 'seated tricep',
+    'lying tricep', 'lying curl',
+  ],
+  stretchBlockPatterns: ['loaded neck', 'weighted neck'],
+  stretchAllowPatterns: ['chin tuck', 'neck side tilt', 'side tilt'],
+  longTermAvoidPatterns: [],
+  longTermPreferPatterns: [
+    'safety bar squat', 'goblet squat',
+    'trap bar', 'trap-bar',
+    'seated cable row', 'seated row',
+    'dumbbell',
+  ],
+  preferHints: [
+    'Prefer safety bar / goblet squat over barbell back squat.',
+    'Prefer trap bar over conventional deadlift.',
+    'Prefer seated cable row over bent-over row.',
+    'Prefer dumbbells over barbells (less cervical stabilization).',
+  ],
+  modifyHints: [
+    'Avoid bracing through the neck — keep the chin tucked, eyes forward.',
+  ],
+  reintroduceByWeek: [
+    { week: 1, allowed: ['chin tuck', 'neck side tilt'] },
+    { week: 2, allowed: ['chin tuck', 'neck side tilt', 'scapular'] },
+    { week: 3, allowed: ['shrug', 'cable row'] },
+    { week: 4, allowed: ['shrug', 'cable row', 'dumbbell row'] },
+    { week: 5, allowed: ['lat pulldown', 'seated row'] },
+    { week: 6, allowed: ['goblet squat', 'trap bar', 'trap-bar'] },
+  ],
+  alwaysInclude: [
+    { name: 'Chin tucks', why: 'Corrects forward head posture — common driver of neck pain.' },
+    { name: 'Upper trap stretch', why: 'Releases chronic tension.' },
+    { name: 'Thoracic mobility (cat-cow, foam roll)', why: 'Restores upper-back rotation.' },
+  ],
+};
+
+const WRISTS_FOREARMS: RulePack = {
+  label: 'Wrists / Forearms',
+  bodyParts: ['Forearms'],
+  affinity: ['Biceps', 'Triceps', 'Chest', 'Shoulders', 'Back', 'Lats'],
+  blockPatterns: [
+    'barbell press', 'barbell bench', 'barbell row',
+    'push-up', 'push up', 'pushup',
+    'wrist curl', 'wrist extension',
+  ],
+  allowPatterns: [
+    'forearm plank', 'elbow plank',
+    'lunge', 'squat', 'deadlift', 'leg press', 'leg curl', 'leg extension',
+    'machine chest', 'machine row', 'machine shoulder',
+  ],
+  stretchBlockPatterns: ['weighted wrist'],
+  stretchAllowPatterns: ['wrist circle', 'wrist mobility', 'finger'],
+  longTermAvoidPatterns: ['wrist curl', 'heavy wrist'],
+  longTermPreferPatterns: [
+    'neutral grip', 'hammer grip',
+    'ez bar', 'ez-bar',
+    'machine',
+  ],
+  preferHints: [
+    'Prefer neutral / hammer grip for pressing.',
+    'Prefer EZ bar over straight bar for curls.',
+    'Use wrist wraps for any heavy pressing.',
+    'Use straps to reduce grip demand on heavy back work.',
+  ],
+  modifyHints: [
+    'Use wrist wraps; switch hand-plank variations to forearm plank.',
+  ],
+  reintroduceByWeek: [],
+  alwaysInclude: [],
+};
+
+const ANKLES_CALVES: RulePack = {
+  label: 'Ankles / Calves',
+  bodyParts: ['Calves'],
+  affinity: ['Hamstrings', 'Quads', 'Knees', 'Hip Flexors', 'Glutes', 'Adductors', 'Legs', 'Full Body'],
+  blockPatterns: [
+    'squat', 'lunge', 'deadlift',
+    'calf raise',
+    'running', 'jogging', 'sprint', 'jumping', 'jump squat', 'box jump', 'plyo', 'plyometric',
+    'step-up', 'step up',
+    'standing balance',
+  ],
+  allowPatterns: [
+    'seated chest', 'seated shoulder', 'seated row', 'seated curl', 'seated tricep',
+    'lying chest', 'lying tricep', 'lying curl',
+    'seated leg curl', 'seated leg extension',
+  ],
+  stretchBlockPatterns: ['standing calf stretch'],
+  stretchAllowPatterns: ['seated ankle', 'ankle circle', 'seated calf stretch'],
+  longTermAvoidPatterns: [],
+  longTermPreferPatterns: [
+    'seated calf', 'machine calf',
+  ],
+  preferHints: [
+    'Prefer seated / machine calf raises over standing.',
+    'Avoid plyometrics until full recovery.',
+  ],
+  modifyHints: [],
+  reintroduceByWeek: [
+    { week: 1, allowed: ['seated calf'] },
+    { week: 2, allowed: ['seated calf'] },
+    { week: 3, allowed: ['standing calf', 'calf raise'] },
+    { week: 4, allowed: ['standing calf', 'calf raise'] },
+    { week: 5, allowed: ['bodyweight squat', 'air squat'] },
+    { week: 6, allowed: ['bodyweight squat', 'air squat'] },
+    { week: 7, allowed: ['squat', 'lunge', 'deadlift'] },
+    { week: 10, allowed: ['plyo', 'jump', 'box jump', 'plyometric'] },
+  ],
+  alwaysInclude: [],
+};
+
+// ─── Body area normalization ──────────────────────────────────────────────
+// Map the user-selected body area (case-insensitive) to its rule pack.
+// Umbrella terms (Hips, Wrists, Ankles, Upper Back / Neck) and the related
+// specific body parts (Hip Flexors, Forearms, Calves, Neck, etc.) all
+// resolve to the same pack so the spec's per-area rules apply.
+const RULE_PACK_BY_AREA: Record<string, RulePack> = {
+  'knees':                KNEES,
+  'lower back':           LOWER_BACK,
+  'shoulders':            SHOULDERS,
+  'hips':                 HIPS,
+  'hip flexors':          HIPS,
+  'glutes':               HIPS,
+  'adductors':            HIPS,
+  'upper back':           UPPER_BACK_NECK,
+  'neck':                 UPPER_BACK_NECK,
+  'upper back / neck':    UPPER_BACK_NECK,
+  'wrists':               WRISTS_FOREARMS,
+  'forearms':             WRISTS_FOREARMS,
+  'wrists / forearms':    WRISTS_FOREARMS,
+  'ankles':               ANKLES_CALVES,
+  'calves':               ANKLES_CALVES,
+  'ankles / calves':      ANKLES_CALVES,
+};
+
+// Body areas that should appear in the "Add Injury" dropdown alongside the
+// 23 exercise body parts — the umbrellas the spec references.
+export const UMBRELLA_BODY_AREAS = ['Hips', 'Wrists', 'Ankles'];
+
+function getRulePack(bodyArea: string): RulePack | null {
+  return RULE_PACK_BY_AREA[bodyArea.trim().toLowerCase()] ?? null;
+}
+
+// ─── Generic affinity (fallback for areas without a dedicated pack) ───────
+// Kept for body parts like Biceps, Triceps, Chest, IT Band, etc. that the
+// spec doesn't enumerate specifically.
+const GENERIC_AFFINITY: Record<string, string[]> = {
   'Biceps':       ['Biceps', 'Forearms', 'Back', 'Lats'],
   'Triceps':      ['Triceps', 'Chest', 'Shoulders'],
   'Chest':        ['Chest', 'Shoulders', 'Triceps', 'Full Body'],
-  'Calves':       ['Calves', 'Hamstrings', 'Knees'],
   'Hamstrings':   ['Hamstrings', 'Glutes', 'Lower Back', 'Knees'],
-  'Adductors':    ['Adductors', 'Quads', 'Hamstrings', 'Glutes', 'Legs'],
-  'Glutes':       ['Glutes', 'Hamstrings', 'Quads', 'Lower Back'],
+  'Quads':        ['Quads', 'Knees', 'Legs', 'Full Body'],
   'Abs':          ['Abs', 'Core', 'Obliques'],
   'Core':         ['Core', 'Abs', 'Obliques', 'Lower Back'],
   'Obliques':     ['Obliques', 'Core', 'Abs'],
-  'Forearms':     ['Forearms', 'Biceps'],
-  'Neck':         ['Neck', 'Shoulders'],
   'Lats':         ['Lats', 'Back', 'Biceps', 'Shoulders'],
-  'Quads':        ['Quads', 'Knees', 'Legs', 'Full Body'],
+  'Back':         ['Back', 'Lower Back', 'Upper Back', 'Lats', 'Core', 'Hamstrings', 'Full Body'],
   'Legs':         ['Legs', 'Quads', 'Hamstrings', 'Calves', 'Adductors', 'Glutes', 'Full Body'],
-  'Full Body':    ['Full Body', 'Abs', 'Back', 'Biceps', 'Calves', 'Chest', 'Core', 'Forearms', 'Glutes', 'Hamstrings', 'Hip Flexors', 'IT Band', 'Knees', 'Lats', 'Legs', 'Lower Back', 'Neck', 'Obliques', 'Quads', 'Shoulders', 'Triceps', 'Upper Back', 'Adductors'],
   'IT Band':      ['IT Band', 'Quads', 'Hamstrings', 'Knees', 'Legs'],
+  'Full Body':    ['Full Body'],
 };
 
-const HEAVY_COMPOUND_KEYWORDS = [
+const GENERIC_HEAVY_COMPOUND = [
   'deadlift', 'squat', 'snatch', 'clean and', 'clean &', 'jerk', 'overhead press',
   'barbell press', 'military press', 'good morning', 'romanian deadlift', 'rdl',
   'pull-up', 'pullup', 'chin-up', 'chinup', 'lunge', 'thruster', 'barbell row',
   'bent over row', 'hip thrust', 'sumo', 'power clean',
 ];
 
-const BALLISTIC_KEYWORDS = [
+const GENERIC_BALLISTIC = [
   'jump', 'plyometric', 'plyo', 'explosive', 'sprint', 'burpee', 'hop ', 'bounding',
   'box jump', 'tuck jump', 'bound', 'kipping', 'kip', 'slam', 'throw', 'velocity',
   'rapid fire', 'running', 'agility', 'skip', 'skater',
 ];
 
-function matchesKeyword(name: string, keywords: string[]): boolean {
-  const lower = name.toLowerCase();
-  return keywords.some(k => lower.includes(k));
+// ─── Helpers ──────────────────────────────────────────────────────────────
+function lower(s: string): string {
+  return (s || '').toLowerCase();
 }
 
-function isDirectMatch(injuredArea: string, exerciseBodyPart: string): boolean {
-  return injuredArea.toLowerCase() === exerciseBodyPart.toLowerCase();
-}
-
-function isInAffinity(injuredArea: string, exerciseBodyPart: string): boolean {
-  const affinity = BODY_PART_AFFINITY[injuredArea];
-  if (!affinity) {
-    const lower = injuredArea.toLowerCase();
-    return lower === exerciseBodyPart.toLowerCase();
+function matchesAny(name: string, patterns: string[]): string | null {
+  const n = lower(name);
+  for (const p of patterns) {
+    if (n.includes(p)) return p;
   }
-  return affinity.some(p => p.toLowerCase() === exerciseBodyPart.toLowerCase());
+  return null;
 }
 
-// Status severity order: blocked > modify > caution > allowed
+function isMachineEquipment(equipment: string | undefined): boolean {
+  return /machine|cable|smith/i.test(equipment || '');
+}
+
+// Compute the current recovery week (1-indexed) from the start date.
+// Null/undefined → week 1.
+export function computeRecoveryWeek(startedAt: string | Date | null | undefined): number {
+  if (!startedAt) return 1;
+  const start = startedAt instanceof Date ? startedAt : new Date(startedAt);
+  if (isNaN(start.getTime())) return 1;
+  const now = Date.now();
+  const days = Math.max(0, (now - start.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.floor(days / 7) + 1;
+}
+
+// Patterns unlocked at or before the current week (cumulative).
+function allowedUpToWeek(reintroduce: { week: number; allowed: string[] }[], currentWeek: number): string[] {
+  const set = new Set<string>();
+  for (const entry of reintroduce) {
+    if (entry.week <= currentWeek) {
+      for (const p of entry.allowed) set.add(p);
+    }
+  }
+  return Array.from(set);
+}
+
+// First week at which an exercise-name keyword unlocks. Null if it never
+// appears in the reintroduce schedule.
+function firstUnlockWeek(name: string, reintroduce: { week: number; allowed: string[] }[]): number | null {
+  const n = lower(name);
+  let earliest: number | null = null;
+  for (const entry of reintroduce) {
+    if (entry.allowed.some(p => n.includes(p))) {
+      if (earliest === null || entry.week < earliest) earliest = entry.week;
+    }
+  }
+  return earliest;
+}
+
+// ─── Status severity ──────────────────────────────────────────────────────
 const STATUS_RANK: Record<InjuryStatus, number> = {
   blocked: 3,
   modify: 2,
@@ -89,6 +545,87 @@ function worsenStatus(current: InjuryStatus, incoming: InjuryStatus): InjuryStat
   return STATUS_RANK[incoming] > STATUS_RANK[current] ? incoming : current;
 }
 
+// ─── Generic fallback evaluator (no rule pack) ────────────────────────────
+// Mirrors the original heuristic logic for body areas not covered by a pack.
+function evaluateGeneric(
+  exercise: ExerciseForEval,
+  injury: InjuryForEval,
+  acc: { status: InjuryStatus; reasons: string[]; hints: string[] },
+): void {
+  const bodyArea = injury.bodyArea;
+  const direct = lower(bodyArea) === lower(exercise.bodyPart);
+  const affinity = GENERIC_AFFINITY[bodyArea] ?? [bodyArea];
+  const affected = direct || affinity.some(p => lower(p) === lower(exercise.bodyPart));
+  if (!direct && !affected) return;
+
+  const isStretch = exercise.stretching === 'Yes';
+  const isHIIT = exercise.hiit === 'Yes';
+  const isBallistic = isHIIT || matchesAny(exercise.name, GENERIC_BALLISTIC) !== null;
+  const isHeavyCompound = matchesAny(exercise.name, GENERIC_HEAVY_COMPOUND) !== null;
+  const isMachine = isMachineEquipment(exercise.equipment);
+
+  if (injury.injuryType === 'currently_injured') {
+    if (direct) {
+      acc.status = worsenStatus(acc.status, 'blocked');
+      acc.reasons.push(`Directly loads your ${bodyArea} injury — no direct work allowed.`);
+    } else if (isBallistic) {
+      acc.status = worsenStatus(acc.status, 'blocked');
+      acc.reasons.push(`High-impact movement stresses your ${bodyArea} injury.`);
+    } else if (isStretch) {
+      acc.status = worsenStatus(acc.status, 'blocked');
+      acc.reasons.push(`Deep stretching can aggravate your ${bodyArea} injury.`);
+    } else if (isHeavyCompound) {
+      acc.status = worsenStatus(acc.status, 'blocked');
+      acc.reasons.push(`Heavy compound requires ${bodyArea} to stabilize under full load.`);
+    } else {
+      acc.status = worsenStatus(acc.status, 'modify');
+      acc.reasons.push(`Uses ${bodyArea} as a stabilizer — reduce load and range of motion.`);
+      acc.hints.push('Use bodyweight or minimal load only.');
+    }
+  } else if (injury.injuryType === 'recovery') {
+    if (direct) {
+      if (isBallistic || isStretch || isHeavyCompound) {
+        acc.status = worsenStatus(acc.status, 'blocked');
+        acc.reasons.push(`Too aggressive for recovering ${bodyArea} — wait until pain-free at full range.`);
+      } else {
+        acc.status = worsenStatus(acc.status, 'modify');
+        acc.reasons.push(`${bodyArea} is recovering — light load and reduced range of motion.`);
+        acc.hints.push('Use the lightest weight; stop at any pain.');
+      }
+    } else if (isBallistic) {
+      acc.status = worsenStatus(acc.status, 'blocked');
+      acc.reasons.push(`High-impact stresses the recovering ${bodyArea} area.`);
+    } else if (isHeavyCompound) {
+      acc.status = worsenStatus(acc.status, 'modify');
+      acc.reasons.push(`Heavy compound involves recovering ${bodyArea} — reduce load.`);
+    }
+  } else if (injury.injuryType === 'long_term_limitation') {
+    if (direct) {
+      if (isBallistic) {
+        acc.status = worsenStatus(acc.status, 'blocked');
+        acc.reasons.push(`High-impact directly stresses your ${bodyArea} long-term limitation.`);
+      } else if (isHeavyCompound && !isMachine) {
+        acc.status = worsenStatus(acc.status, 'blocked');
+        acc.reasons.push(`Heavy free-weight compound directly loads your ${bodyArea} limitation.`);
+        acc.hints.push('Use machine or cable alternatives for better joint stability.');
+      } else if (isStretch) {
+        acc.status = worsenStatus(acc.status, 'modify');
+        acc.reasons.push(`Monitor stretch intensity — ${bodyArea} limitation limits end-range stretch.`);
+      } else {
+        acc.status = worsenStatus(acc.status, 'caution');
+        acc.reasons.push(`Involves your ${bodyArea} limitation — use moderate weight only.`);
+      }
+    } else if (isBallistic) {
+      acc.status = worsenStatus(acc.status, 'modify');
+      acc.reasons.push(`High-impact stresses your ${bodyArea} long-term limitation area.`);
+    } else if (isHeavyCompound && !isMachine) {
+      acc.status = worsenStatus(acc.status, 'caution');
+      acc.reasons.push(`Heavy compound loads your ${bodyArea} limitation area.`);
+    }
+  }
+}
+
+// ─── Main evaluator ───────────────────────────────────────────────────────
 export function evaluateExerciseAgainstInjuries(
   exercise: ExerciseForEval,
   injuries: InjuryForEval[],
@@ -97,134 +634,206 @@ export function evaluateExerciseAgainstInjuries(
     return { status: 'allowed', reasons: [], modificationHints: [] };
   }
 
-  let status: InjuryStatus = 'allowed';
-  const reasons: string[] = [];
-  const hints: string[] = [];
-
-  const isHIIT = exercise.hiit === 'Yes';
-  const isStretch = exercise.stretching === 'Yes';
-  const isBallistic = isHIIT || matchesKeyword(exercise.name, BALLISTIC_KEYWORDS);
-  const isHeavyCompound = matchesKeyword(exercise.name, HEAVY_COMPOUND_KEYWORDS);
-  const equipmentStr = exercise.equipment || '';
-  const isMachine = /machine|cable|smith/i.test(equipmentStr);
+  const acc = {
+    status: 'allowed' as InjuryStatus,
+    reasons: [] as string[],
+    hints: [] as string[],
+  };
 
   for (const injury of injuries) {
-    const { bodyArea, injuryType } = injury;
-    const direct = isDirectMatch(bodyArea, exercise.bodyPart);
-    const affected = isInAffinity(bodyArea, exercise.bodyPart);
-
-    if (!direct && !affected) continue;
-
-    if (injuryType === 'currently_injured') {
-      // ── Currently injured: maximum protection ──────────────────────────
-      if (direct) {
-        status = worsenStatus(status, 'blocked');
-        reasons.push(`Directly loads your ${bodyArea} injury — no direct work allowed.`);
-      } else if (isBallistic) {
-        status = worsenStatus(status, 'blocked');
-        reasons.push(`High-impact movement stresses your ${bodyArea} injury.`);
-      } else if (isStretch) {
-        status = worsenStatus(status, 'blocked');
-        reasons.push(`Deep stretching can aggravate your ${bodyArea} injury.`);
-      } else if (isHeavyCompound) {
-        status = worsenStatus(status, 'blocked');
-        reasons.push(`Heavy compound requires ${bodyArea} to stabilize under full load.`);
-      } else {
-        status = worsenStatus(status, 'modify');
-        reasons.push(`Uses ${bodyArea} as a stabilizer — reduce load and range of motion.`);
-        hints.push('Use bodyweight or minimal load only.');
-        hints.push('Reduce range of motion; avoid end-range positions.');
-      }
-
-    } else if (injuryType === 'recovery') {
-      // ── Recovery: block aggravators, caution otherwise ─────────────────
-      if (direct) {
-        if (isBallistic) {
-          status = worsenStatus(status, 'blocked');
-          reasons.push(`Ballistic / high-impact too aggressive for recovering ${bodyArea}.`);
-        } else if (isStretch) {
-          // End-range loaded stretching risks re-injury even at any level during recovery
-          status = worsenStatus(status, 'blocked');
-          reasons.push(`End-range loaded stretching could re-injure recovering ${bodyArea}.`);
-        } else if (isHeavyCompound) {
-          // Heavy compounds are unsafe on recovering tissue regardless of level
-          status = worsenStatus(status, 'blocked');
-          reasons.push(`Heavy load on ${bodyArea} too soon — wait until pain-free at full range.`);
-        } else {
-          status = worsenStatus(status, 'modify');
-          reasons.push(`${bodyArea} is recovering — use minimum weight and 50% range of motion.`);
-          hints.push('Start at 50% normal range of motion.');
-          hints.push('Use the lightest available weight.');
-          hints.push('Stop immediately if pain occurs — treat as current injury.');
-        }
-      } else {
-        // Affected (not direct) during recovery
-        if (isBallistic) {
-          status = worsenStatus(status, 'blocked');
-          reasons.push(`High-impact stresses the recovering ${bodyArea} area.`);
-        } else if (isHeavyCompound) {
-          status = worsenStatus(status, 'modify');
-          reasons.push(`Heavy compound involves recovering ${bodyArea} — reduce load.`);
-          hints.push('Use lighter weight and controlled tempo.');
-        } else {
-          status = worsenStatus(status, 'modify');
-          reasons.push(`Involves recovering ${bodyArea} area — keep load light.`);
-          hints.push('Monitor for any pain or discomfort.');
-        }
-      }
-
-    } else if (injuryType === 'long_term_limitation') {
-      // ── Long-term limitation: block known aggravators, caution otherwise ─
-      if (direct) {
-        if (isBallistic) {
-          // High-impact directly on the limitation area — block as aggravator
-          status = worsenStatus(status, 'blocked');
-          reasons.push(`High-impact directly stresses your ${bodyArea} long-term limitation.`);
-          hints.push('Substitute with a low-impact alternative.');
-        } else if (isHeavyCompound && !isMachine) {
-          // Heavy free-weight compounds directly on limitation — block
-          status = worsenStatus(status, 'blocked');
-          reasons.push(`Heavy free-weight compound directly loads your ${bodyArea} limitation.`);
-          hints.push('Use machine or cable alternatives for better joint stability.');
-          hints.push('Never go to maximum effort on the affected area.');
-        } else if (isStretch) {
-          status = worsenStatus(status, 'modify');
-          reasons.push(`Monitor stretch intensity — ${bodyArea} limitation limits end-range stretch.`);
-          hints.push('Stay within comfortable range; avoid end-range positions.');
-        } else {
-          // All other direct exercises: show a green caution
-          status = worsenStatus(status, 'caution');
-          reasons.push(`Involves your ${bodyArea} limitation — use moderate weight only.`);
-          hints.push('Never max-effort the affected area.');
-          hints.push('Stop if you feel any pain beyond normal exertion.');
-        }
-      } else {
-        // Affected (not direct) for long-term limitation
-        if (isBallistic) {
-          status = worsenStatus(status, 'modify');
-          reasons.push(`High-impact stresses your ${bodyArea} long-term limitation area.`);
-          hints.push('Substitute with a low-impact alternative if possible.');
-        } else if (isHeavyCompound && !isMachine) {
-          status = worsenStatus(status, 'caution');
-          reasons.push(`Heavy compound loads your ${bodyArea} limitation area.`);
-          hints.push('Use machine alternatives for better joint stability.');
-        } else if (isStretch) {
-          status = worsenStatus(status, 'caution');
-          reasons.push(`Stretching near your ${bodyArea} limitation — keep within comfortable range.`);
-          hints.push('Avoid end-range positions on the affected area.');
-        }
-        // Non-aggravating exercises near a long-term limitation are allowed with no badge
-      }
+    const pack = getRulePack(injury.bodyArea);
+    if (!pack) {
+      evaluateGeneric(exercise, injury, acc);
+      continue;
     }
+    evaluateAgainstPack(exercise, injury, pack, acc);
   }
 
   return {
-    status,
-    reasons: Array.from(new Set(reasons)),
-    modificationHints: Array.from(new Set(hints)),
+    status: acc.status,
+    reasons: Array.from(new Set(acc.reasons)),
+    modificationHints: Array.from(new Set(acc.hints)),
   };
 }
 
+function evaluateAgainstPack(
+  exercise: ExerciseForEval,
+  injury: InjuryForEval,
+  pack: RulePack,
+  acc: { status: InjuryStatus; reasons: string[]; hints: string[] },
+): void {
+  const direct = pack.bodyParts.some(p => lower(p) === lower(exercise.bodyPart));
+  const affected = direct || pack.affinity.some(p => lower(p) === lower(exercise.bodyPart));
+  if (!affected) return;
+
+  // 1. Explicit allow override — covers exercises like "stationary bike" for
+  //    knee injuries or "seated chest press" for lower-back injuries that the
+  //    spec lists under ALLOW.
+  if (matchesAny(exercise.name, pack.allowPatterns)) return;
+
+  const isStretch = exercise.stretching === 'Yes';
+
+  // 2. Stretch-specific rules — only check when the exercise is tagged as a
+  //    stretch; an unmatched stretch falls through to the type-based rules.
+  if (isStretch) {
+    const blockedStretch = matchesAny(exercise.name, pack.stretchBlockPatterns);
+    if (blockedStretch) {
+      acc.status = worsenStatus(acc.status, 'blocked');
+      acc.reasons.push(
+        `${formatExerciseRef(blockedStretch)} stretch is too aggressive for your ${pack.label} ${injuryTypeLabel(injury.injuryType)}.`,
+      );
+      return;
+    }
+    if (matchesAny(exercise.name, pack.stretchAllowPatterns)) {
+      // Spec-approved gentle stretch — allowed, no warning.
+      return;
+    }
+    // Unmatched stretch on the affected area — fall through to type rules.
+  }
+
+  // 3. Long-term limitation
+  if (injury.injuryType === 'long_term_limitation') {
+    const avoid = matchesAny(exercise.name, pack.longTermAvoidPatterns);
+    if (avoid) {
+      acc.status = worsenStatus(acc.status, 'blocked');
+      acc.reasons.push(
+        `${formatExerciseRef(avoid)} is on the permanent avoid list for your ${pack.label} limitation.`,
+      );
+      return;
+    }
+    if (matchesAny(exercise.name, pack.longTermPreferPatterns)) {
+      // Recommended substitute — allowed silently (no warning badge).
+      return;
+    }
+    const block = matchesAny(exercise.name, pack.blockPatterns);
+    if (block && direct) {
+      acc.status = worsenStatus(acc.status, 'blocked');
+      acc.reasons.push(
+        `${formatExerciseRef(block)} aggravates your ${pack.label} limitation.`,
+      );
+      return;
+    }
+    if (direct) {
+      acc.status = worsenStatus(acc.status, 'caution');
+      acc.reasons.push(
+        `Involves your ${pack.label} limitation — use moderate weight only.`,
+      );
+      pack.preferHints.forEach(h => acc.hints.push(h));
+      return;
+    }
+    // Affected only, no specific match → no warning.
+    return;
+  }
+
+  // 4. Recovery
+  if (injury.injuryType === 'recovery') {
+    const week = computeRecoveryWeek(injury.startedAt);
+    const allowedThisWeek = allowedUpToWeek(pack.reintroduceByWeek, week);
+    const matchedAllowedNow = allowedThisWeek.find(p => lower(exercise.name).includes(p));
+    if (matchedAllowedNow) {
+      acc.status = worsenStatus(acc.status, 'modify');
+      acc.reasons.push(
+        `${formatExerciseRef(matchedAllowedNow)} is reintroduced at Week ${week} of your ${pack.label} recovery — light load only.`,
+      );
+      pack.modifyHints.forEach(h => acc.hints.push(h));
+      acc.hints.push('Use the lightest weight and stop at any pain.');
+      return;
+    }
+    const unlockWeek = firstUnlockWeek(exercise.name, pack.reintroduceByWeek);
+    if (unlockWeek !== null && unlockWeek > week) {
+      acc.status = worsenStatus(acc.status, 'blocked');
+      acc.reasons.push(
+        `Unlocks at Week ${unlockWeek} of ${pack.label} recovery (currently Week ${week}).`,
+      );
+      return;
+    }
+    const block = matchesAny(exercise.name, pack.blockPatterns);
+    if (block) {
+      acc.status = worsenStatus(acc.status, 'blocked');
+      acc.reasons.push(
+        `${formatExerciseRef(block)} stays blocked until your ${pack.label} recovery is complete (currently Week ${week}).`,
+      );
+      return;
+    }
+    if (direct) {
+      acc.status = worsenStatus(acc.status, 'blocked');
+      acc.reasons.push(
+        `Direct work on your recovering ${pack.label} not yet reintroduced (currently Week ${week}).`,
+      );
+      return;
+    }
+    // Affected only, no specific match → light caution.
+    acc.status = worsenStatus(acc.status, 'modify');
+    acc.reasons.push(
+      `Involves the recovering ${pack.label} area — keep load light (Week ${week}).`,
+    );
+    return;
+  }
+
+  // 5. Currently injured
+  if (injury.injuryType === 'currently_injured') {
+    const block = matchesAny(exercise.name, pack.blockPatterns);
+    if (block) {
+      acc.status = worsenStatus(acc.status, 'blocked');
+      acc.reasons.push(
+        `${formatExerciseRef(block)} is blocked for your current ${pack.label} injury.`,
+      );
+      return;
+    }
+    if (direct) {
+      acc.status = worsenStatus(acc.status, 'blocked');
+      acc.reasons.push(
+        `Directly loads your current ${pack.label} injury — no direct work allowed.`,
+      );
+      return;
+    }
+    // Affected only → modify with stabilizer warning.
+    acc.status = worsenStatus(acc.status, 'modify');
+    acc.reasons.push(
+      `Uses your ${pack.label} as a stabilizer — reduce load and range of motion.`,
+    );
+    pack.modifyHints.forEach(h => acc.hints.push(h));
+    return;
+  }
+}
+
+// Capitalize and clean up a matched pattern for human-readable reasons.
+// E.g. "leg press" → "Leg press", "rdl" → "RDL", "bent-over row" → "Bent-over row".
+function formatExerciseRef(pattern: string): string {
+  const trimmed = pattern.trim();
+  if (!trimmed) return trimmed;
+  // Common acronyms stay uppercased.
+  const upper = trimmed.toUpperCase();
+  if (['RDL', 'EZ BAR', 'EZ-BAR'].includes(upper)) return upper;
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+}
+
+function injuryTypeLabel(t: InjuryForEval['injuryType']): string {
+  switch (t) {
+    case 'currently_injured':    return 'current injury';
+    case 'recovery':             return 'recovery';
+    case 'long_term_limitation': return 'long-term limitation';
+  }
+}
+
+// ─── ALWAYS INCLUDE recommendations ───────────────────────────────────────
+// Returns one entry per unique rule pack covered by the user's injuries that
+// has at least one always-include suggestion.
+export function getInjuryRecommendations(injuries: InjuryForEval[]): InjuryRecommendation[] {
+  if (!injuries || injuries.length === 0) return [];
+  const seen = new Set<string>();
+  const result: InjuryRecommendation[] = [];
+  for (const injury of injuries) {
+    const pack = getRulePack(injury.bodyArea);
+    if (!pack || pack.alwaysInclude.length === 0) continue;
+    if (seen.has(pack.label)) continue;
+    seen.add(pack.label);
+    result.push({ bodyArea: pack.label, recommendations: pack.alwaysInclude });
+  }
+  return result;
+}
+
+// ─── Status presentation helpers (used by UI) ─────────────────────────────
 export function getInjuryStatusLabel(status: InjuryStatus): string {
   switch (status) {
     case 'blocked': return '🔴 Blocked';

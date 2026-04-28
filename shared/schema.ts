@@ -3114,6 +3114,10 @@ export const userInjuries = pgTable("user_injuries", {
   bodyArea: varchar("body_area").notNull(),
   injuryType: varchar("injury_type").notNull().$type<'currently_injured' | 'long_term_limitation' | 'recovery'>(),
   note: text("note"),
+  // For recovery injuries: when the recovery period began. Used to compute
+  // the current recovery week and unlock exercises per the reintroduction
+  // schedule in shared/injuryFilter.ts. Nullable so existing rows remain valid.
+  startedAt: timestamp("started_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -3122,6 +3126,8 @@ export const insertUserInjurySchema = createInsertSchema(userInjuries).omit({
   createdAt: true,
 }).extend({
   injuryType: z.enum(['currently_injured', 'long_term_limitation', 'recovery']),
+  // Accept ISO string from the client; Drizzle will coerce on insert.
+  startedAt: z.coerce.date().nullable().optional(),
 });
 
 export type UserInjury = typeof userInjuries.$inferSelect;

@@ -240,15 +240,22 @@ npx tsx scripts/audit-exercise-instructions.ts --confirm
 
 Requires `ANTHROPIC_API_KEY` (already configured as a Replit secret).
 
-## Injury-Aware Exercise Filtering (Task #155)
+## Injury-Aware Exercise Filtering (Tasks #155 & #159)
 
 **Files:**
-- `shared/injuryFilter.ts` — evaluation engine (shared between client/server)
-- `server/routes.ts` — `POST /api/exercises/evaluate-injuries` endpoint; injury guard on bulk add
+- `shared/injuryFilter.ts` — RulePack-based evaluation engine (shared between client/server)
+- `shared/schema.ts` — `user_injuries.started_at` (nullable timestamp) for recovery week math
+- `server/routes.ts` — `POST /api/exercises/evaluate-injuries`, `GET /api/user/injuries/recommendations`; injury guard on bulk add
+- `client/src/components/InjuriesPanel.tsx` — date input on Recovery, "Week N" badge, recommendations card
+
+**Rule packs (Task #159):** seven body-part-specific packs — KNEES, LOWER_BACK, SHOULDERS, HIPS, UPPER_BACK_NECK, WRISTS_FOREARMS, ANKLES_CALVES. Each defines `blockPatterns`, `allowPatterns`, `stretchBlock/Allow`, `longTermAvoid/Prefer`, `reintroduceByWeek` (recovery unlock timeline), and `alwaysInclude` (always-recommend exercises with rationale).
 
 **Logic:**
 `evaluateExerciseAgainstInjuries(exercise, injuries)` returns `{ status: "allowed"|"modify"|"blocked", reasons, modificationHints }`.
-Uses a body-part affinity map to find which exercises involve an injured area, then applies 3-state rules based on injury type (currently_injured → blocked, recovery → blocked/modify, long_term → modify/allowed).
+- Resolves each injury's body area to a RulePack via `RULE_PACK_BY_AREA` (umbrella terms Hips/Wrists/Ankles map to their pack).
+- `currently_injured` → blocks pattern matches with named reasons; `recovery` → uses `computeRecoveryWeek(startedAt)` to allow exercises by week milestone, blocks with "unlocks Week N"; `long_term_limitation` → silently swaps to PREFER substitutes, blocks AVOID patterns.
+
+**Recommendations:** `getInjuryRecommendations(injuries)` returns `[{ bodyArea, recommendations: [{name, why}] }]` from each pack's `alwaysInclude` list (e.g., McGill Big Three for Lower Back; rotator cuff & face pulls for Shoulders).
 
 **Frontend (create-plan.tsx & edit-plan.tsx):**
 - Exercise browser cards show 🔴 Blocked / 🟡 Caution badges when user has recorded injuries
