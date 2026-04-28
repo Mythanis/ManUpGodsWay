@@ -137,7 +137,7 @@ export default function InjuriesPanel() {
         </div>
       )}
 
-      {!injuriesLoading && injuries.length === 0 && effectiveAnswer !== false && (
+      {!injuriesLoading && injuries.length === 0 && (
         <p className="text-xs text-zinc-500 italic">No injuries recorded — tap Yes to add.</p>
       )}
 

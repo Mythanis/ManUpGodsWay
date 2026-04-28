@@ -3120,6 +3120,8 @@ export const userInjuries = pgTable("user_injuries", {
 export const insertUserInjurySchema = createInsertSchema(userInjuries).omit({
   id: true,
   createdAt: true,
+}).extend({
+  injuryType: z.enum(['currently_injured', 'long_term_limitation', 'recovery']),
 });
 
 export type UserInjury = typeof userInjuries.$inferSelect;
