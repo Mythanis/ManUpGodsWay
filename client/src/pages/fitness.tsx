@@ -2149,6 +2149,9 @@ export default function Fitness() {
     // (level, exercise-type) rest table for standard work, the HIIT
     // rest interval for HIIT/Tabata, or 10s transition for stretches.
     restSec?: number;
+    // True for exercises injected as injury compensation / alwaysInclude rehab.
+    // Used to annotate exercise notes when persisting to the database.
+    isRehab?: boolean;
   }
 
   // Classify a standard exercise as compound / isolation / bodyweight /
@@ -2758,6 +2761,7 @@ export default function Fitness() {
           dayExercises.push({
             exercise: ps, sets: 1, reps: null,
             durationSec: OPENING_STRETCH_HOLD, restSec: OPENING_TRANSITION,
+            isRehab: true,
           });
           added++;
         }
@@ -2829,6 +2833,7 @@ export default function Fitness() {
           dayExercises.push({
             exercise: ps, sets: 1, reps: null,
             durationSec: COOLDOWN_HOLD, restSec: COOLDOWN_TRANSITION,
+            isRehab: true,
           });
           added++;
         }
@@ -2906,6 +2911,7 @@ export default function Fitness() {
                 sets: 2,
                 reps: 15,
                 restSec: 30,
+                isRehab: true,
               });
               // Prevent main-block picker from re-selecting these exercises
               usedExercisesThisWeek.add(ex.id);
@@ -3310,6 +3316,9 @@ export default function Fitness() {
             gifUrl: planExercise.exercise.gifUrl,
             weekNumber: weekIndex + 1,
             assignedDay,
+            // Tag injury-compensation exercises so the saved plan
+            // exercise rows carry an identifiable note in the day view.
+            notes: planExercise.isRehab ? 'Injury compensation rehab' : undefined,
           });
         });
       });
@@ -3337,10 +3346,14 @@ export default function Fitness() {
   // Create plan from pre-built template
   const createPrebuiltPlanMutation = useMutation({
     mutationFn: async (preBuiltPlan: PreBuiltPlan) => {
-      // First create the plan
+      // First create the plan. Append injury guidance to the description so
+      // it is persisted in the DB and visible in the saved-plan list/detail view.
+      const planDescription = preBuiltPlan.stretchPolicy
+        ? `${preBuiltPlan.description}\n\nInjury Guidance: ${preBuiltPlan.stretchPolicy}`
+        : preBuiltPlan.description;
       const planResponse = await apiRequest('POST', '/api/fitness-plans', {
         name: preBuiltPlan.name,
-        description: preBuiltPlan.description,
+        description: planDescription,
         isPublic: false
       });
 
@@ -3374,7 +3387,9 @@ export default function Fitness() {
             const parsed = Number.parseInt(String(exercise.rest ?? '60').replace(/[^0-9]/g, ''), 10);
             return Number.isNaN(parsed) ? 60 : parsed;
           })(),
-          notes: `${exercise.rest} rest - Training Day: ${exercise.day}`,
+          notes: exercise.notes
+            ? `${exercise.notes} | ${exercise.rest} rest - Training Day: ${exercise.day}`
+            : `${exercise.rest} rest - Training Day: ${exercise.day}`,
           daysOfWeek: [trainingDay],
           weekNumber: exercise.weekNumber || 1,
           orderIndex: i,
@@ -4713,9 +4728,23 @@ export default function Fitness() {
                           <Badge className="text-[10px] bg-[#FDD000]/20 text-[#FDD000] font-bold rounded-sm border border-[#FDD000]/40 flex-shrink-0">Public</Badge>
                         )}
                       </div>
-                      {plan.description && (
-                        <p className="text-white/55 text-sm mb-3 leading-snug">{plan.description}</p>
-                      )}
+                      {plan.description && (() => {
+                        const injuryMarker = '\n\nInjury Guidance: ';
+                        const injuryIdx = plan.description.indexOf(injuryMarker);
+                        const baseDesc = injuryIdx >= 0 ? plan.description.slice(0, injuryIdx) : plan.description;
+                        const injuryNote = injuryIdx >= 0 ? plan.description.slice(injuryIdx + injuryMarker.length) : null;
+                        return (
+                          <>
+                            <p className="text-white/55 text-sm mb-2 leading-snug">{baseDesc}</p>
+                            {injuryNote && (
+                              <div className="flex items-start gap-1.5 bg-yellow-900/30 border border-yellow-600/30 rounded-sm px-2 py-1 mb-3">
+                                <span className="text-yellow-400 text-[10px] font-black uppercase tracking-wide flex-shrink-0 mt-px">Injury Guidance</span>
+                                <p className="text-yellow-300/80 text-[11px] leading-snug">{injuryNote}</p>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
                       <div className="flex items-center gap-4 text-xs font-semibold text-white/40">
                         <span className="flex items-center gap-1.5">
                           <List className="w-3.5 h-3.5 text-[#FDD000]/60" />
