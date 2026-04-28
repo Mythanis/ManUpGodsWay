@@ -90,6 +90,7 @@ import {
 import { Link } from "wouter";
 import seanMcManusPhoto from "@assets/531400631_10229732604879918_951068179454150284_n_1766855745199.jpeg";
 import { PushConsentDialog } from "@/components/push-consent-dialog";
+import InjuriesPanel from "@/components/InjuriesPanel";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { HealthMetric, HealthMetricType, HealthGoal } from "@shared/schema";
@@ -4107,6 +4108,9 @@ export default function Fitness() {
               </div>
 
               <div className="bg-zinc-900 divide-y divide-zinc-700">
+
+                {/* 0. Injuries */}
+                <InjuriesPanel />
 
                 {/* 1. Workout Style */}
                 <div className="px-4 py-4">

@@ -3106,6 +3106,25 @@ export const insertHealthGoalSchema = createInsertSchema(healthGoals).omit({
 export type HealthGoal = typeof healthGoals.$inferSelect;
 export type InsertHealthGoal = z.infer<typeof insertHealthGoalSchema>;
 
+// ─── User Injuries ────────────────────────────────────────────────────────────
+
+export const userInjuries = pgTable("user_injuries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  bodyArea: varchar("body_area").notNull(),
+  injuryType: varchar("injury_type").notNull().$type<'currently_injured' | 'long_term_limitation' | 'recovery'>(),
+  note: text("note"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertUserInjurySchema = createInsertSchema(userInjuries).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type UserInjury = typeof userInjuries.$inferSelect;
+export type InsertUserInjury = z.infer<typeof insertUserInjurySchema>;
+
 // ─── Stripe Test Subscription (Owner testing tool) ────────────────────────────
 
 export const stripeTestSubscriptions = pgTable("stripe_test_subscriptions", {

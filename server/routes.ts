@@ -54,6 +54,7 @@ import {
   insertExerciseSchema,
   insertHealthMetricSchema,
   type HealthMetricType,
+  insertUserInjurySchema,
 } from "@shared/schema";
 import { z, ZodError } from "zod";
 import { devotionalNotificationService } from "./devotionalNotificationService";
@@ -12493,6 +12494,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(goal);
     } catch (error) {
       console.error('Error upserting health goal:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // ─── User Injuries ───────────────────────────────────────────────────────────
+
+  app.get('/api/user/injuries', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const injuries = await storage.getUserInjuries(userId);
+      res.json(injuries);
+    } catch (error) {
+      console.error('Error fetching user injuries:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.post('/api/user/injuries', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const parsed = insertUserInjurySchema.safeParse({ ...req.body, userId });
+      if (!parsed.success) {
+        return res.status(400).json({ message: 'Invalid injury data', errors: parsed.error.errors });
+      }
+      const injury = await storage.createUserInjury(parsed.data);
+      res.status(201).json(injury);
+    } catch (error) {
+      console.error('Error creating user injury:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.delete('/api/user/injuries/clear', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      await storage.clearUserInjuries(userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error clearing user injuries:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.delete('/api/user/injuries/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const deleted = await storage.deleteUserInjury(req.params.id, userId);
+      if (!deleted) return res.status(404).json({ message: 'Injury not found' });
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting user injury:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });

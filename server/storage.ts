@@ -226,6 +226,9 @@ import {
   type HealthGoal,
   type InsertHealthGoal,
   type HealthMetricType,
+  userInjuries,
+  type UserInjury,
+  type InsertUserInjury,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt, ne, gt } from "drizzle-orm";
@@ -685,6 +688,12 @@ export interface IStorage {
   // Health goal operations
   getHealthGoals(userId: string): Promise<HealthGoal[]>;
   upsertHealthGoal(userId: string, metricType: HealthMetricType, targetValue: number): Promise<HealthGoal>;
+
+  // User injury operations
+  getUserInjuries(userId: string): Promise<UserInjury[]>;
+  createUserInjury(data: InsertUserInjury): Promise<UserInjury>;
+  deleteUserInjury(id: string, userId: string): Promise<boolean>;
+  clearUserInjuries(userId: string): Promise<void>;
 
   // VATMEBOP accountability chart
   getVatmebopChart(userId: string, year: number): Promise<VatmebopCheck[]>;
@@ -8231,6 +8240,31 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return row;
+  }
+
+  async getUserInjuries(userId: string): Promise<UserInjury[]> {
+    return db
+      .select()
+      .from(userInjuries)
+      .where(eq(userInjuries.userId, userId))
+      .orderBy(asc(userInjuries.createdAt));
+  }
+
+  async createUserInjury(data: InsertUserInjury): Promise<UserInjury> {
+    const [row] = await db.insert(userInjuries).values(data).returning();
+    return row;
+  }
+
+  async deleteUserInjury(id: string, userId: string): Promise<boolean> {
+    const deleted = await db
+      .delete(userInjuries)
+      .where(and(eq(userInjuries.id, id), eq(userInjuries.userId, userId)))
+      .returning({ id: userInjuries.id });
+    return deleted.length > 0;
+  }
+
+  async clearUserInjuries(userId: string): Promise<void> {
+    await db.delete(userInjuries).where(eq(userInjuries.userId, userId));
   }
 
   async upsertVatmebopCheck(
