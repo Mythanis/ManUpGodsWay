@@ -1,5 +1,5 @@
 import type { Express } from "express";
-import { CURRENT_TERMS_VERSION } from "@shared/termsContent";
+import { CURRENT_TERMS_VERSION, TERMS_EFFECTIVE_DATE } from "@shared/termsContent";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from 'ws';
 import multer from 'multer';
@@ -18181,18 +18181,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ─── Terms Acknowledgement ────────────────────────────────────────────────
-  // GET /api/terms/current — return the current terms version (no auth required)
+  // GET /api/terms/current — return the current terms version and effective date (no auth required)
   app.get('/api/terms/current', (_req, res) => {
-    res.json({ version: CURRENT_TERMS_VERSION });
+    res.json({ version: CURRENT_TERMS_VERSION, effectiveDate: TERMS_EFFECTIVE_DATE });
   });
 
-  // GET /api/terms/me — return the version this user has accepted
+  // GET /api/terms/me — return the version and timestamp this user has accepted (null if never)
   app.get('/api/terms/me', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       if (!userId) return res.status(401).json({ message: 'Unauthorized' });
-      const version = await storage.getUserTermsVersion(userId);
-      res.json({ acceptedTermsVersion: version });
+      const result = await storage.getUserTermsInfo(userId);
+      res.json(result);
     } catch (err: any) {
       res.status(500).json({ message: 'Failed to fetch terms version' });
     }

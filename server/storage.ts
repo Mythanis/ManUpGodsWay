@@ -707,6 +707,7 @@ export interface IStorage {
   // Terms acknowledgement
   recordTermsAcceptance(userId: string, termsVersion: string, source: string): Promise<TermsAcknowledgement>;
   getUserTermsVersion(userId: string): Promise<string | null>;
+  getUserTermsInfo(userId: string): Promise<{ acceptedTermsVersion: string | null; acceptedTermsAt: Date | null }>;
 
   // VATMEBOP accountability chart
   getVatmebopChart(userId: string, year: number): Promise<VatmebopCheck[]>;
@@ -8328,6 +8329,17 @@ export class DatabaseStorage implements IStorage {
       .from(users)
       .where(eq(users.id, userId));
     return user?.acceptedTermsVersion ?? null;
+  }
+
+  async getUserTermsInfo(userId: string): Promise<{ acceptedTermsVersion: string | null; acceptedTermsAt: Date | null }> {
+    const [user] = await db
+      .select({ acceptedTermsVersion: users.acceptedTermsVersion, acceptedTermsAt: users.acceptedTermsAt })
+      .from(users)
+      .where(eq(users.id, userId));
+    return {
+      acceptedTermsVersion: user?.acceptedTermsVersion ?? null,
+      acceptedTermsAt: user?.acceptedTermsAt ?? null,
+    };
   }
 }
 
