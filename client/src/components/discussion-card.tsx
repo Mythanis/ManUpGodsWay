@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { MentionTextarea, MentionText } from "@/components/mention-textarea";
+import { MentionTextarea, MentionText, renderMentionsInHtml } from "@/components/mention-textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -585,7 +585,7 @@ export default function DiscussionCard({
               {hasHtml ? (
                 <div
                   className={`${FONT_SIZE_CLASSES[fontSizeLevel]} text-white/80 leading-relaxed prose-invert [&_strong]:font-bold [&_em]:italic [&_u]:underline [&_s]:line-through ${!isExpanded && isLongContent ? 'line-clamp-5' : ''}`}
-                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(discussion.content) }}
+                  dangerouslySetInnerHTML={{ __html: renderMentionsInHtml(sanitizeHtml(discussion.content)) }}
                   data-testid="text-discussion-content"
                 />
               ) : (

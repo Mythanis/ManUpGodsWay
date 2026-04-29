@@ -19,8 +19,6 @@ interface MentionTextareaProps
   onChange: (value: string) => void;
 }
 
-const NAME_RE = /(\S+)/;
-
 function fullName(u: MentionUser): string {
   return `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || "Brother";
 }
@@ -32,7 +30,7 @@ function initials(u: MentionUser): string {
 }
 
 interface ActiveMention {
-  // index in the textarea string of the '@' character that started the trigger
+  // index in the source string of the '@' character that started the trigger
   start: number;
   // current text after the '@'
   query: string;
@@ -42,7 +40,7 @@ interface ActiveMention {
  * Detects an in-progress @-mention at the caret. Returns null when not
  * actively mentioning (no '@', or '@' followed by whitespace/newline, etc).
  */
-function findActiveMention(text: string, caret: number): ActiveMention | null {
+export function findActiveMention(text: string, caret: number): ActiveMention | null {
   // Walk back from caret looking for '@', stopping at whitespace
   let i = caret - 1;
   while (i >= 0) {
@@ -63,20 +61,20 @@ function findActiveMention(text: string, caret: number): ActiveMention | null {
   return null;
 }
 
-export function MentionTextarea({
-  value,
-  onChange,
-  className,
-  onKeyDown,
-  ...props
-}: MentionTextareaProps) {
-  const ref = React.useRef<HTMLTextAreaElement | null>(null);
+type DropdownItem =
+  | { kind: "special"; token: "brothers" | "everyone"; label: string; description: string }
+  | { kind: "user"; user: MentionUser };
+
+/**
+ * Hook that owns the data + keyboard-navigation state for the mention
+ * dropdown. Hosts pass in the active mention (start + query) and an `onPick`
+ * callback that performs the insertion in the host's own buffer.
+ */
+export function useMentionDropdown(active: ActiveMention | null, onPick: (display: string, token: string) => void) {
   const { user } = useAuth() as { user: any };
   const isOwner = user?.role === "owner";
 
-  const [active, setActive] = React.useState<ActiveMention | null>(null);
   const [highlight, setHighlight] = React.useState(0);
-
   const search = active?.query ?? "";
   const enabled = active != null && search.length >= 2;
 
@@ -94,8 +92,7 @@ export function MentionTextarea({
     staleTime: 30_000,
   });
 
-  // Build special tokens list (always visible at top when active)
-  const specials: Array<{ token: "brothers" | "everyone"; label: string; description: string }> = React.useMemo(() => {
+  const specials = React.useMemo(() => {
     const list: Array<{ token: "brothers" | "everyone"; label: string; description: string }> = [];
     list.push({ token: "brothers", label: "@brothers", description: "Tag all your confirmed brothers" });
     if (isOwner) {
@@ -107,7 +104,7 @@ export function MentionTextarea({
     });
   }, [isOwner, search]);
 
-  const items = React.useMemo(() => {
+  const items: DropdownItem[] = React.useMemo(() => {
     return [
       ...specials.map((s) => ({ kind: "special" as const, ...s })),
       ...searchResults.map((u) => ({ kind: "user" as const, user: u })),
@@ -117,6 +114,166 @@ export function MentionTextarea({
   React.useEffect(() => {
     setHighlight(0);
   }, [active?.query, items.length]);
+
+  const pick = React.useCallback((idx: number) => {
+    const item = items[idx];
+    if (!item) return false;
+    if (item.kind === "special") {
+      onPick(item.token, item.token);
+    } else {
+      onPick(fullName(item.user), item.user.id);
+    }
+    return true;
+  }, [items, onPick]);
+
+  const onKeyNav = React.useCallback((e: KeyboardEvent | React.KeyboardEvent): boolean => {
+    if (!active || items.length === 0) return false;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlight((h) => (h + 1) % items.length);
+      return true;
+    }
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlight((h) => (h - 1 + items.length) % items.length);
+      return true;
+    }
+    if (e.key === "Enter" || e.key === "Tab") {
+      if (pick(highlight)) {
+        e.preventDefault();
+        return true;
+      }
+    }
+    return false;
+  }, [active, items, highlight, pick]);
+
+  return { items, highlight, setHighlight, isFetching, pick, onKeyNav };
+}
+
+interface MentionDropdownProps {
+  active: ActiveMention | null;
+  items: DropdownItem[];
+  highlight: number;
+  setHighlight: (i: number) => void;
+  isFetching: boolean;
+  onPickIndex: (idx: number) => void;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+export function MentionDropdown({
+  active,
+  items,
+  highlight,
+  setHighlight,
+  isFetching,
+  onPickIndex,
+  className,
+  style,
+}: MentionDropdownProps) {
+  if (!active) return null;
+  if (items.length === 0 && !isFetching) return null;
+
+  return (
+    <div
+      className={cn(
+        "absolute z-50 mt-1 max-h-64 w-full max-w-sm overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md",
+        className
+      )}
+      style={style}
+      data-testid="mention-dropdown"
+      onMouseDown={(e) => e.preventDefault()}
+    >
+      {items.length === 0 && isFetching && (
+        <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Searching brothers…
+        </div>
+      )}
+      {items.map((item, idx) => {
+        const isHighlighted = idx === highlight;
+        const baseCls = cn(
+          "flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm",
+          isHighlighted ? "bg-accent text-accent-foreground" : "hover:bg-accent/60"
+        );
+        if (item.kind === "special") {
+          const Icon = item.token === "brothers" ? Users : Megaphone;
+          return (
+            <button
+              type="button"
+              key={item.token}
+              className={baseCls}
+              onMouseEnter={() => setHighlight(idx)}
+              onClick={() => onPickIndex(idx)}
+              data-testid={`mention-option-${item.token}`}
+            >
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Icon className="h-3.5 w-3.5" />
+              </span>
+              <span className="flex flex-1 flex-col">
+                <span className="font-medium">{item.label}</span>
+                <span className="text-xs text-muted-foreground">{item.description}</span>
+              </span>
+            </button>
+          );
+        }
+        return (
+          <button
+            type="button"
+            key={item.user.id}
+            className={baseCls}
+            onMouseEnter={() => setHighlight(idx)}
+            onClick={() => onPickIndex(idx)}
+            data-testid={`mention-option-user-${item.user.id}`}
+          >
+            <Avatar className="h-7 w-7">
+              {item.user.profileImageUrl ? (
+                <AvatarImage src={item.user.profileImageUrl} />
+              ) : null}
+              <AvatarFallback className="text-[10px]">
+                {initials(item.user)}
+              </AvatarFallback>
+            </Avatar>
+            <span className="flex-1 truncate font-medium">{fullName(item.user)}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+export function MentionTextarea({
+  value,
+  onChange,
+  className,
+  onKeyDown,
+  ...props
+}: MentionTextareaProps) {
+  const ref = React.useRef<HTMLTextAreaElement | null>(null);
+
+  const [active, setActive] = React.useState<ActiveMention | null>(null);
+
+  const insertMention = React.useCallback((display: string, token: string) => {
+    const el = ref.current;
+    if (!el || !active) return;
+    const caret = el.selectionStart ?? value.length;
+    const before = value.slice(0, active.start);
+    const after = value.slice(caret);
+    const inserted = `@[${display}](mention:${token}) `;
+    const next = before + inserted + after;
+    onChange(next);
+    const newCaret = before.length + inserted.length;
+    setActive(null);
+    requestAnimationFrame(() => {
+      if (ref.current) {
+        ref.current.focus();
+        ref.current.setSelectionRange(newCaret, newCaret);
+      }
+    });
+  }, [active, value, onChange]);
+
+  const { items, highlight, setHighlight, isFetching, pick, onKeyNav } =
+    useMentionDropdown(active, insertMention);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const next = e.target.value;
@@ -134,55 +291,9 @@ export function MentionTextarea({
 
   const closeMention = () => setActive(null);
 
-  const insertMention = (display: string, token: string) => {
-    const el = ref.current;
-    if (!el || !active) return;
-    const caret = el.selectionStart ?? value.length;
-    const before = value.slice(0, active.start);
-    const after = value.slice(caret);
-    const inserted = `@[${display}](mention:${token}) `;
-    const next = before + inserted + after;
-    onChange(next);
-    const newCaret = before.length + inserted.length;
-    setActive(null);
-    requestAnimationFrame(() => {
-      if (ref.current) {
-        ref.current.focus();
-        ref.current.setSelectionRange(newCaret, newCaret);
-      }
-    });
-  };
-
-  const pickActive = () => {
-    const item = items[highlight];
-    if (!item) return false;
-    if (item.kind === "special") {
-      const display = item.token === "brothers" ? "brothers" : "everyone";
-      insertMention(display, item.token);
-    } else {
-      insertMention(fullName(item.user), item.user.id);
-    }
-    return true;
-  };
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (active && items.length > 0) {
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setHighlight((h) => (h + 1) % items.length);
-        return;
-      }
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setHighlight((h) => (h - 1 + items.length) % items.length);
-        return;
-      }
-      if (e.key === "Enter" || e.key === "Tab") {
-        if (pickActive()) {
-          e.preventDefault();
-          return;
-        }
-      }
+    if (active) {
+      if (onKeyNav(e)) return;
       if (e.key === "Escape") {
         e.preventDefault();
         closeMention();
@@ -209,74 +320,14 @@ export function MentionTextarea({
         {...props}
       />
 
-      {active && (items.length > 0 || isFetching) && (
-        <div
-          className="absolute z-50 mt-1 max-h-64 w-full max-w-sm overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
-          data-testid="mention-dropdown"
-          onMouseDown={(e) => e.preventDefault()}
-        >
-          {items.length === 0 && isFetching && (
-            <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Searching brothers…
-            </div>
-          )}
-          {items.map((item, idx) => {
-            const isHighlighted = idx === highlight;
-            const baseCls = cn(
-              "flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm",
-              isHighlighted ? "bg-accent text-accent-foreground" : "hover:bg-accent/60"
-            );
-            if (item.kind === "special") {
-              const Icon = item.token === "brothers" ? Users : Megaphone;
-              return (
-                <button
-                  type="button"
-                  key={item.token}
-                  className={baseCls}
-                  onMouseEnter={() => setHighlight(idx)}
-                  onClick={() => {
-                    setHighlight(idx);
-                    pickActive();
-                  }}
-                  data-testid={`mention-option-${item.token}`}
-                >
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <Icon className="h-3.5 w-3.5" />
-                  </span>
-                  <span className="flex flex-1 flex-col">
-                    <span className="font-medium">{item.label}</span>
-                    <span className="text-xs text-muted-foreground">{item.description}</span>
-                  </span>
-                </button>
-              );
-            }
-            return (
-              <button
-                type="button"
-                key={item.user.id}
-                className={baseCls}
-                onMouseEnter={() => setHighlight(idx)}
-                onClick={() => {
-                  setHighlight(idx);
-                  pickActive();
-                }}
-                data-testid={`mention-option-user-${item.user.id}`}
-              >
-                <Avatar className="h-7 w-7">
-                  {item.user.profileImageUrl ? (
-                    <AvatarImage src={item.user.profileImageUrl} />
-                  ) : null}
-                  <AvatarFallback className="text-[10px]">
-                    {initials(item.user)}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="flex-1 truncate font-medium">{fullName(item.user)}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
+      <MentionDropdown
+        active={active}
+        items={items}
+        highlight={highlight}
+        setHighlight={setHighlight}
+        isFetching={isFetching}
+        onPickIndex={(idx) => pick(idx)}
+      />
     </div>
   );
 }
@@ -313,4 +364,24 @@ export function MentionText({ text, className }: { text: string | null | undefin
 export function stripMentionMarkdown(text: string | null | undefined): string {
   if (!text) return "";
   return text.replace(MENTION_RE, (_, display) => `@${display}`);
+}
+
+// Convert mention markdown inside an HTML string into chip <span>s.
+// Used by admin/HTML rendering paths so that mentions still render as chips
+// even when the surrounding content is sanitized HTML.
+export function renderMentionsInHtml(html: string): string {
+  if (!html) return html;
+  return html.replace(MENTION_RE, (_, display, token) => {
+    const safeDisplay = String(display)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+    const safeToken = String(token)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+    return `<span class="inline rounded px-1 font-semibold text-primary bg-primary/10" data-testid="mention-chip-${safeToken}">@${safeDisplay}</span>`;
+  });
 }

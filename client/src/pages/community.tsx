@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { MentionTextarea, MentionText } from "@/components/mention-textarea";
+import { MentionTextarea, MentionText, MentionDropdown, useMentionDropdown, findActiveMention } from "@/components/mention-textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DiscussionCard from "@/components/discussion-card";
 import { BackButton } from "@/components/BackButton";
@@ -332,6 +332,99 @@ export default function Community() {
     document.execCommand(command, false);
     const html = normalizeHtml(contentEditableRef.current?.innerHTML || '');
     form.setValue('content', html, { shouldValidate: true });
+  };
+
+  // ----- @-mention support for the admin contentEditable editor -----
+  const [editorMention, setEditorMention] = useState<{ start: number; query: string } | null>(null);
+
+  // Compute caret offset within the contentEditable's textContent.
+  const getCaretOffset = (root: HTMLElement): number | null => {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return null;
+    const range = sel.getRangeAt(0);
+    if (!root.contains(range.startContainer)) return null;
+    const pre = range.cloneRange();
+    pre.selectNodeContents(root);
+    pre.setEnd(range.startContainer, range.startOffset);
+    return pre.toString().length;
+  };
+
+  const detectEditorMention = () => {
+    const root = contentEditableRef.current;
+    if (!root) return;
+    const caret = getCaretOffset(root);
+    if (caret == null) {
+      setEditorMention(null);
+      return;
+    }
+    const text = root.textContent ?? '';
+    setEditorMention(findActiveMention(text, caret));
+  };
+
+  // Insert a mention at the current @-trigger by replacing the matching range.
+  const insertEditorMention = (display: string, token: string) => {
+    const root = contentEditableRef.current;
+    if (!root || !editorMention) return;
+    const caret = getCaretOffset(root);
+    if (caret == null) return;
+
+    // Walk text nodes to map character offsets back to DOM positions.
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    let startNode: Text | null = null;
+    let startOffsetInNode = 0;
+    let endNode: Text | null = null;
+    let endOffsetInNode = 0;
+    let consumed = 0;
+    let node: Node | null = walker.nextNode();
+    while (node) {
+      const t = node as Text;
+      const len = t.data.length;
+      if (!startNode && editorMention.start <= consumed + len) {
+        startNode = t;
+        startOffsetInNode = editorMention.start - consumed;
+      }
+      if (!endNode && caret <= consumed + len) {
+        endNode = t;
+        endOffsetInNode = caret - consumed;
+      }
+      if (startNode && endNode) break;
+      consumed += len;
+      node = walker.nextNode();
+    }
+
+    if (!startNode || !endNode) return;
+
+    const range = document.createRange();
+    range.setStart(startNode, startOffsetInNode);
+    range.setEnd(endNode, endOffsetInNode);
+    range.deleteContents();
+    const insertText = `@[${display}](mention:${token}) `;
+    const textNode = document.createTextNode(insertText);
+    range.insertNode(textNode);
+
+    // Move caret to right after the inserted text.
+    const newRange = document.createRange();
+    newRange.setStartAfter(textNode);
+    newRange.collapse(true);
+    const sel = window.getSelection();
+    sel?.removeAllRanges();
+    sel?.addRange(newRange);
+
+    const html = normalizeHtml(root.innerHTML);
+    form.setValue('content', html, { shouldValidate: true });
+    setEditorMention(null);
+  };
+
+  const editorMentionDropdown = useMentionDropdown(editorMention, insertEditorMention);
+
+  const handleEditorKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (editorMention) {
+      if (editorMentionDropdown.onKeyNav(e)) return;
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setEditorMention(null);
+      }
+    }
   };
 
   const form = useForm({
@@ -662,18 +755,36 @@ export default function Community() {
                             </div>
                           )}
                           {isAdmin ? (
-                            <div
-                              ref={contentEditableRef}
-                              contentEditable
-                              suppressContentEditableWarning
-                              onInput={() => {
-                                const html = normalizeHtml(contentEditableRef.current?.innerHTML || '');
-                                form.setValue('content', html, { shouldValidate: true });
-                              }}
-                              data-placeholder="Share your thoughts, photos, videos, or memes..."
-                              className="min-h-[120px] max-h-[40vh] overflow-y-auto bg-white border-2 border-black text-black rounded-sm p-2.5 text-sm leading-relaxed focus:outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400"
-                              data-testid="div-discussion-content"
-                            />
+                            <div className="relative">
+                              <div
+                                ref={contentEditableRef}
+                                contentEditable
+                                suppressContentEditableWarning
+                                onInput={() => {
+                                  const html = normalizeHtml(contentEditableRef.current?.innerHTML || '');
+                                  form.setValue('content', html, { shouldValidate: true });
+                                  detectEditorMention();
+                                }}
+                                onKeyDown={handleEditorKeyDown}
+                                onKeyUp={detectEditorMention}
+                                onClick={detectEditorMention}
+                                onBlur={() => {
+                                  // Defer so dropdown click handlers can run first
+                                  setTimeout(() => setEditorMention(null), 150);
+                                }}
+                                data-placeholder="Share your thoughts, photos, videos, or memes... Type @ to mention a brother."
+                                className="min-h-[120px] max-h-[40vh] overflow-y-auto bg-white border-2 border-black text-black rounded-sm p-2.5 text-sm leading-relaxed focus:outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400"
+                                data-testid="div-discussion-content"
+                              />
+                              <MentionDropdown
+                                active={editorMention}
+                                items={editorMentionDropdown.items}
+                                highlight={editorMentionDropdown.highlight}
+                                setHighlight={editorMentionDropdown.setHighlight}
+                                isFetching={editorMentionDropdown.isFetching}
+                                onPickIndex={(idx) => editorMentionDropdown.pick(idx)}
+                              />
+                            </div>
                           ) : (
                             <MentionTextarea
                               placeholder="Share your thoughts, photos, videos, or memes... Type @ to mention a brother."
