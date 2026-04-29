@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Eye, Ban, UserCheck, Shield, CreditCard, Mail, Calendar, Activity, Trash2, AlertTriangle, Dumbbell, X, Bell, BellOff, ChevronLeft, ChevronRight, ArrowUpDown, BookOpen, CheckCircle, Circle, Unlock, Lock, ChevronDown, Clock } from "lucide-react";
+import { Search, Eye, Ban, UserCheck, Shield, CreditCard, Mail, Calendar, Activity, Trash2, AlertTriangle, Dumbbell, X, Bell, BellOff, ChevronLeft, ChevronRight, ArrowUpDown, BookOpen, CheckCircle, Circle, Unlock, Lock, ChevronDown, Clock, RefreshCw } from "lucide-react";
 
 const PAGE_SIZE = 100;
 
@@ -413,6 +413,21 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
       toast({ title: "Lesson Relocked", description: "Drip bypass removed — lesson is drip-gated again." });
     },
     onError: () => { toast({ title: "Error", description: "Failed to relock lesson.", variant: "destructive" }); },
+  });
+
+  const forceReloadUser = useMutation({
+    mutationFn: async (userId: string) => {
+      return await apiRequest('POST', `/api/admin/users/${userId}/force-reload`, {});
+    },
+    onSuccess: () => {
+      toast({
+        title: "Refresh Signal Sent",
+        description: `Reload signal sent to ${selectedUser?.firstName ?? 'user'}'s open sessions.`,
+      });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to send refresh signal.", variant: "destructive" });
+    },
   });
 
   const handleSaveChanges = async () => {
@@ -1042,7 +1057,18 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
 
               {/* ── Action bar ── */}
               <div className="flex justify-between items-center pt-3 border-t">
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-orange-300 text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-400 dark:hover:bg-orange-950"
+                    onClick={() => forceReloadUser.mutate(selectedUser.id)}
+                    disabled={forceReloadUser.isPending}
+                    title="Send a reload signal to all of this user's open browser tabs"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+                    {forceReloadUser.isPending ? "Sending..." : "Force Refresh"}
+                  </Button>
                   {selectedUser.role === 'owner' ? (
                     <div className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-50 border border-yellow-300 rounded-md">
                       <Shield className="w-3.5 h-3.5 text-yellow-600 flex-shrink-0" />

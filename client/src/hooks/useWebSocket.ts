@@ -220,6 +220,16 @@ export function useWebSocket(userId?: string) {
             // Invalidate accountability requests to show updated assist status
             queryClient.invalidateQueries({ queryKey: ['/api/accountability-requests'] });
             break;
+
+          case 'force_reload':
+          case 'force_reload_user':
+            toast({
+              title: 'App Updated',
+              description: 'A fresh version of the app is loading...',
+              duration: 2000,
+            });
+            setTimeout(() => window.location.reload(), 1500);
+            break;
         }
       } catch (error) {
         console.error('Error parsing WebSocket message:', error);

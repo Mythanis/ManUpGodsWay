@@ -7434,6 +7434,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 
+  // Force-reload all currently connected users (all tabs)
+  app.post('/api/admin/force-reload', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      let connectedCount = 0;
+      connectedClients.forEach((sockets) => { connectedCount += sockets.size; });
+      (app as any).broadcastToAll({ type: 'force_reload', triggeredBy: user.id });
+      return res.json({ ok: true, connectedCount });
+    } catch (error) {
+      console.error('Error sending force-reload broadcast:', error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Force-reload a specific user (all their open tabs)
+  app.post('/api/admin/users/:targetUserId/force-reload', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const { targetUserId } = req.params;
+      (app as any).sendToUser(targetUserId, { type: 'force_reload_user' });
+      return res.json({ ok: true });
+    } catch (error) {
+      console.error('Error sending per-user force-reload:', error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Broadcast Notification API Route
   app.post('/api/admin/notifications/broadcast', isAuthenticated, async (req: any, res) => {
     try {

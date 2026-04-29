@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Home, Shield, Calendar } from "lucide-react";
+import { Loader2, Home, Shield, Calendar, RefreshCw, AlertTriangle } from "lucide-react";
 
 interface SystemSettings {
   id: string;
@@ -22,6 +22,7 @@ export default function SystemSettings() {
   const queryClient = useQueryClient();
   const [tagline, setTagline] = useState("");
   const [calendlyUrl, setCalendlyUrl] = useState("");
+  const [showForceReloadConfirm, setShowForceReloadConfirm] = useState(false);
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ['api', 'system-settings'],
@@ -42,6 +43,21 @@ export default function SystemSettings() {
     onError: (error: any) => {
       toast({ title: "Error", description: error.message || "Failed to update settings", variant: "destructive" });
     }
+  });
+
+  const forceReloadMutation = useMutation({
+    mutationFn: () =>
+      fetch('/api/admin/force-reload', { method: 'POST', credentials: 'include' }).then(res => res.json()) as Promise<{ ok: boolean; connectedCount: number }>,
+    onSuccess: (data) => {
+      setShowForceReloadConfirm(false);
+      toast({
+        title: "Refresh Signal Sent",
+        description: `Reload sent to ${data.connectedCount} connected session${data.connectedCount !== 1 ? 's' : ''}.`,
+      });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to send refresh signal.", variant: "destructive" });
+    },
   });
 
   const updateCalendlyMutation = useMutation({
@@ -197,6 +213,64 @@ export default function SystemSettings() {
               )}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* Force App Refresh */}
+      <Card className="border-orange-200 dark:border-orange-900">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <RefreshCw className="h-5 w-5 text-orange-500" />
+            <div>
+              <CardTitle>Force App Refresh</CardTitle>
+              <CardDescription>
+                Send a reload signal to all currently connected users. Use after pushing updates or changing global settings.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {!showForceReloadConfirm ? (
+            <Button
+              variant="outline"
+              className="border-orange-300 text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-400 dark:hover:bg-orange-950"
+              onClick={() => setShowForceReloadConfirm(true)}
+              data-testid="button-force-reload-all"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh All Users Now
+            </Button>
+          ) : (
+            <div className="flex items-start gap-3 p-3 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-lg">
+              <AlertTriangle className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-orange-800 dark:text-orange-300">
+                  This will reload the app for all currently connected users. Are you sure?
+                </p>
+                <div className="flex gap-2 mt-3">
+                  <Button
+                    size="sm"
+                    className="bg-orange-600 hover:bg-orange-700 text-white"
+                    onClick={() => forceReloadMutation.mutate()}
+                    disabled={forceReloadMutation.isPending}
+                    data-testid="button-force-reload-confirm"
+                  >
+                    {forceReloadMutation.isPending ? (
+                      <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />Sending...</>
+                    ) : "Yes, Refresh All"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowForceReloadConfirm(false)}
+                    disabled={forceReloadMutation.isPending}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
