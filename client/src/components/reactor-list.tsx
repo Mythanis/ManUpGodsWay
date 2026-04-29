@@ -94,7 +94,7 @@ export function ReactorList({ endpointUrl, label, count, children, queryKey }: R
                   className="w-6 h-6 rounded-full object-cover flex-shrink-0 border border-[#FDD000]/20"
                 />
                 <span className="text-xs font-medium text-white/90 truncate">
-                  {r.firstName} {r.lastName?.charAt(0)}.
+                  {r.firstName} {r.lastName}
                 </span>
               </div>
             ))
