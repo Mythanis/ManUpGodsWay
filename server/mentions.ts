@@ -39,6 +39,9 @@ interface FanOutContext {
   surfaceLabel: string;
   isAuthorOwner?: boolean;
   alwaysNotify?: boolean;
+  // When true, the notification title hides the author's real name (used for
+  // anonymous Hurdle Wall posts/replies). The mention itself still fires.
+  anonymizeAuthor?: boolean;
 }
 
 async function getExistingMentionedIds(sourceType: MentionSourceType, sourceId: string): Promise<Set<string>> {
@@ -129,9 +132,11 @@ export async function extractMentionsAndFanOut(ctx: FanOutContext): Promise<void
     if (newlyMentioned.length === 0) return;
 
     const author = await storage.getUser(ctx.authorId);
-    const authorName = author
-      ? `${author.firstName ?? ''} ${author.lastName ?? ''}`.trim() || 'A brother'
-      : 'A brother';
+    const authorName = ctx.anonymizeAuthor
+      ? 'A brother'
+      : author
+        ? `${author.firstName ?? ''} ${author.lastName ?? ''}`.trim() || 'A brother'
+        : 'A brother';
 
     const title = `${authorName} mentioned you`;
     const message = `You were tagged in ${ctx.surfaceLabel}.`;

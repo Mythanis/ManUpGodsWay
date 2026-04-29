@@ -13987,8 +13987,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Broadcast to all connected clients about new post
       (app as any).broadcastToAll({ type: 'hurdle_wall_post_created', data: post });
 
-      // @-mention fan-out (only if not anonymous — anonymous posts shouldn't reveal author via mention)
-      if (post.isAnonymous === false) {
+      // @-mention fan-out — fires even for anonymous posts so tagged brothers
+      // still get notified, but the notification hides the author's real name.
+      {
         const author = await storage.getUser(userId);
         await extractMentionsAndFanOut({
           text: post.content,
@@ -13998,6 +13999,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           linkUrl: `/hurdle-wall?post=${post.id}`,
           surfaceLabel: 'a Hurdle Wall post',
           isAuthorOwner: author?.role === 'owner',
+          anonymizeAuthor: post.isAnonymous !== false,
         });
       }
 
@@ -14082,8 +14084,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Broadcast to all connected clients about new reply
       (app as any).broadcastToAll({ type: 'hurdle_wall_reply_created', data: { reply, postId } });
 
-      // @-mention fan-out (skip if reply is anonymous)
-      if (reply.isAnonymous === false) {
+      // @-mention fan-out — fires even for anonymous replies; the notification
+      // hides the author's real name when anonymous.
+      {
         const author = await storage.getUser(userId);
         await extractMentionsAndFanOut({
           text: reply.content,
@@ -14093,6 +14096,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           linkUrl: `/hurdle-wall?post=${postId}`,
           surfaceLabel: 'a Hurdle Wall reply',
           isAuthorOwner: author?.role === 'owner',
+          anonymizeAuthor: reply.isAnonymous !== false,
         });
       }
 
@@ -14320,7 +14324,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updated = await storage.updateHurdleWallReply(req.params.replyId, userId, content.trim());
       if (!updated) return res.status(403).json({ message: "You can only edit your own replies" });
 
-      if (updated.isAnonymous === false) {
+      {
         const author = await storage.getUser(userId);
         await extractMentionsAndFanOut({
           text: updated.content,
@@ -14330,6 +14334,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           linkUrl: `/hurdle-wall?post=${updated.postId}`,
           surfaceLabel: 'a Hurdle Wall reply',
           isAuthorOwner: author?.role === 'owner',
+          anonymizeAuthor: updated.isAnonymous !== false,
         });
       }
 
