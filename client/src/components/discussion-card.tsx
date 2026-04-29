@@ -110,7 +110,6 @@ export default function DiscussionCard({
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const [showLikersDialog, setShowLikersDialog] = useState(false);
   const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
   const [editReplyContent, setEditReplyContent] = useState('');
   
@@ -136,12 +135,6 @@ export default function DiscussionCard({
     refetchIntervalInBackground: true,
   });
 
-  type Liker = { id: string; firstName: string | null; lastName: string | null; profileImageUrl: string | null };
-  const { data: likers = [], isLoading: likersLoading } = useQuery<Liker[]>({
-    queryKey: ["/api/discussions", discussion.id, "likers"],
-    enabled: showLikersDialog && likeCount > 0,
-    retry: false,
-  });
 
   // Scroll to and flash-highlight the target reply from a notification link
   useEffect(() => {
@@ -630,19 +623,40 @@ export default function DiscussionCard({
         )}
 
         {/* ── Counts row ─────────────────────────── */}
-        {(likeCount > 0 || (discussion.replyCount || 0) > 0) && (
+        {(likeCount > 0 || dislikeCount > 0 || (discussion.replyCount || 0) > 0) && (
           <div className="flex items-center justify-between px-4 py-2 text-xs text-white/40">
-            {likeCount > 0 && (
-              <button
-                onClick={() => setShowLikersDialog(true)}
-                className="flex items-center gap-1 hover:text-white/70 transition-colors"
-              >
-                <span className="w-4 h-4 rounded-full bg-[#FDD000] flex items-center justify-center">
-                  <ChristianCross className="w-2.5 h-2.5 text-black" />
-                </span>
-                {likeCount}
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {likeCount > 0 && (
+                <ReactorList
+                  endpointUrl={`/api/discussions/${discussion.id}/likers`}
+                  queryKey={['/api/discussions', discussion.id, 'likers']}
+                  label="Said Amen"
+                  count={likeCount}
+                >
+                  <span className="flex items-center gap-1 hover:text-white/70 transition-colors cursor-pointer">
+                    <span className="w-4 h-4 rounded-full bg-[#FDD000] flex items-center justify-center">
+                      <ChristianCross className="w-2.5 h-2.5 text-black" />
+                    </span>
+                    {likeCount}
+                  </span>
+                </ReactorList>
+              )}
+              {dislikeCount > 0 && (
+                <ReactorList
+                  endpointUrl={`/api/discussions/${discussion.id}/dislikers`}
+                  queryKey={['/api/discussions', discussion.id, 'dislikers']}
+                  label="Said Oh Me!"
+                  count={dislikeCount}
+                >
+                  <span className="flex items-center gap-1 hover:text-white/70 transition-colors cursor-pointer">
+                    <span className="w-4 h-4 rounded-full bg-red-500/80 flex items-center justify-center">
+                      <ThumbsDown className="w-2.5 h-2.5 text-white" />
+                    </span>
+                    {dislikeCount}
+                  </span>
+                </ReactorList>
+              )}
+            </div>
             {(discussion.replyCount || 0) > 0 && (
               <button onClick={() => setShowReplies(!showReplies)} className="ml-auto text-white/40 hover:text-white/70 transition-colors">
                 {discussion.replyCount} {discussion.replyCount === 1 ? 'comment' : 'comments'}
@@ -650,38 +664,6 @@ export default function DiscussionCard({
             )}
           </div>
         )}
-
-        {/* ── Who Amened dialog ──────────────────── */}
-        <Dialog open={showLikersDialog} onOpenChange={setShowLikersDialog}>
-          <DialogContent className="bg-[#1a1a1a] border-white/10 text-white max-w-sm">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-[#FDD000]">
-                <ChristianCross className="w-4 h-4" />
-                Who said Amen
-              </DialogTitle>
-            </DialogHeader>
-            <div className="mt-2 max-h-72 overflow-y-auto space-y-3">
-              {likersLoading ? (
-                <p className="text-sm text-white/50 text-center py-4">Loading...</p>
-              ) : likers.length === 0 ? (
-                <p className="text-sm text-white/50 text-center py-4">No one has said Amen yet.</p>
-              ) : (
-                likers.map((liker) => (
-                  <div key={liker.id} className="flex items-center gap-3">
-                    <img
-                      src={liker.profileImageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent((liker.firstName || '') + '+' + (liker.lastName || ''))}&background=FCD000&color=000`}
-                      alt={`${liker.firstName} ${liker.lastName}`}
-                      className="w-8 h-8 rounded-full object-cover border border-[#FDD000]/30 flex-shrink-0"
-                    />
-                    <span className="text-sm font-medium text-white">
-                      {liker.firstName} {liker.lastName?.charAt(0)}.
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
 
         {/* ── Facebook-style action bar ───────────── */}
         <div className="flex items-center border-t border-white/8 mx-0">
