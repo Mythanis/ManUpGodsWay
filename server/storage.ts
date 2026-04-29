@@ -3460,6 +3460,7 @@ export class DatabaseStorage implements IStorage {
     activeSubscribers: number;
     cancelledAfter7Days: number;
     nonSubscribersAfter7Days: number;
+    farthest52WeekLesson: { week: number; day: number } | null;
   }> {
     const [{ totalUsers }] = await db.select({ totalUsers: count(users.id) }).from(users);
     const [{ totalStudies }] = await db.select({ totalStudies: count(studies.id) }).from(studies);
