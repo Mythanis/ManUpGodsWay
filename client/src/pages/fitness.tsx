@@ -96,6 +96,7 @@ import { evaluateExerciseAgainstInjuries, getInjuryRecommendations, getInjuryStr
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { HealthMetric, HealthMetricType, HealthGoal } from "@shared/schema";
+import { ReactorList } from "@/components/reactor-list";
 
 interface FitnessChallenge {
   id: string;
@@ -5017,7 +5018,17 @@ export default function Fitness() {
                           }`}
                         >
                           <Heart className={`w-4 h-4 ${post.likedByMe ? 'fill-[#FDD000]' : ''}`} />
-                          <span>Amen{post.likes > 0 ? ` ${post.likes}` : ''}</span>
+                          <span>Amen</span>
+                          {post.likes > 0 && (
+                            <ReactorList
+                              endpointUrl={`/api/fitness/community/posts/${post.id}/likers`}
+                              queryKey={['/api/fitness/community/posts', post.id, 'likers']}
+                              label="Said Amen"
+                              count={post.likes}
+                            >
+                              <span>{post.likes}</span>
+                            </ReactorList>
+                          )}
                         </button>
 
                         {/* Oh Me */}
@@ -5028,7 +5039,17 @@ export default function Fitness() {
                           }`}
                         >
                           <Flame className={`w-4 h-4 ${post.ohMeByMe ? 'fill-red-400' : ''}`} />
-                          <span>Oh Me{post.ohMeCount > 0 ? ` ${post.ohMeCount}` : ''}</span>
+                          <span>Oh Me</span>
+                          {post.ohMeCount > 0 && (
+                            <ReactorList
+                              endpointUrl={`/api/fitness/community/posts/${post.id}/oh-mes`}
+                              queryKey={['/api/fitness/community/posts', post.id, 'oh-mes']}
+                              label="Said Oh Me!"
+                              count={post.ohMeCount}
+                            >
+                              <span>{post.ohMeCount}</span>
+                            </ReactorList>
+                          )}
                         </button>
 
                         {/* Comments */}

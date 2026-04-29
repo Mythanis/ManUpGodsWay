@@ -368,6 +368,10 @@ export interface IStorage {
   // Like/Dislike operations
   toggleDiscussionLike(discussionId: string, userId: string): Promise<{ liked: boolean; totalLikes: number }>;
   getDiscussionLikers(discussionId: string): Promise<{ id: string; firstName: string | null; lastName: string | null; profileImageUrl: string | null }[]>;
+  getDiscussionDislikers(discussionId: string): Promise<{ id: string; firstName: string | null; lastName: string | null; profileImageUrl: string | null }[]>;
+  getReplyLikers(replyId: string): Promise<{ id: string; firstName: string | null; lastName: string | null; profileImageUrl: string | null }[]>;
+  getReplyDislikers(replyId: string): Promise<{ id: string; firstName: string | null; lastName: string | null; profileImageUrl: string | null }[]>;
+  getHurdleWallAmeners(postId: string): Promise<{ id: string; firstName: string | null; lastName: string | null; profileImageUrl: string | null }[]>;
   toggleDiscussionDislike(discussionId: string, userId: string): Promise<{ disliked: boolean; totalDislikes: number }>;
   toggleDiscussionReplyDislike(replyId: string, userId: string): Promise<{ disliked: boolean; totalDislikes: number }>;
   
@@ -2727,6 +2731,46 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(users, eq(discussionLikes.userId, users.id))
       .where(eq(discussionLikes.discussionId, discussionId))
       .orderBy(desc(discussionLikes.createdAt));
+    return rows;
+  }
+
+  async getDiscussionDislikers(discussionId: string): Promise<{ id: string; firstName: string | null; lastName: string | null; profileImageUrl: string | null }[]> {
+    const rows = await db
+      .select({ id: users.id, firstName: users.firstName, lastName: users.lastName, profileImageUrl: users.profileImageUrl })
+      .from(discussionDislikes)
+      .innerJoin(users, eq(discussionDislikes.userId, users.id))
+      .where(eq(discussionDislikes.discussionId, discussionId))
+      .orderBy(desc(discussionDislikes.createdAt));
+    return rows;
+  }
+
+  async getReplyLikers(replyId: string): Promise<{ id: string; firstName: string | null; lastName: string | null; profileImageUrl: string | null }[]> {
+    const rows = await db
+      .select({ id: users.id, firstName: users.firstName, lastName: users.lastName, profileImageUrl: users.profileImageUrl })
+      .from(replyHonors)
+      .innerJoin(users, eq(replyHonors.userId, users.id))
+      .where(eq(replyHonors.replyId, replyId))
+      .orderBy(desc(replyHonors.createdAt));
+    return rows;
+  }
+
+  async getReplyDislikers(replyId: string): Promise<{ id: string; firstName: string | null; lastName: string | null; profileImageUrl: string | null }[]> {
+    const rows = await db
+      .select({ id: users.id, firstName: users.firstName, lastName: users.lastName, profileImageUrl: users.profileImageUrl })
+      .from(discussionReplyDislikes)
+      .innerJoin(users, eq(discussionReplyDislikes.userId, users.id))
+      .where(eq(discussionReplyDislikes.replyId, replyId))
+      .orderBy(desc(discussionReplyDislikes.createdAt));
+    return rows;
+  }
+
+  async getHurdleWallAmeners(postId: string): Promise<{ id: string; firstName: string | null; lastName: string | null; profileImageUrl: string | null }[]> {
+    const rows = await db
+      .select({ id: users.id, firstName: users.firstName, lastName: users.lastName, profileImageUrl: users.profileImageUrl })
+      .from(hurdleWallAmens)
+      .innerJoin(users, eq(hurdleWallAmens.userId, users.id))
+      .where(eq(hurdleWallAmens.postId, postId))
+      .orderBy(desc(hurdleWallAmens.createdAt));
     return rows;
   }
 

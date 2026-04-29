@@ -34,6 +34,7 @@ const ChristianCross = ({ className }: { className?: string }) => (
 );
 import { SiFacebook, SiX, SiWhatsapp } from "react-icons/si";
 import { FlagContentDialog } from "@/components/flag-content-dialog";
+import { ReactorList } from "@/components/reactor-list";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { z } from "zod";
@@ -694,7 +695,16 @@ export default function DiscussionCard({
           >
             <ChristianCross className="w-4 h-4" />
             <span>Amen</span>
-            {likeCount > 0 && <span className="text-xs opacity-70">{likeCount}</span>}
+            {likeCount > 0 && (
+              <ReactorList
+                endpointUrl={`/api/discussions/${discussion.id}/likers`}
+                queryKey={['/api/discussions', discussion.id, 'likers']}
+                label="Said Amen"
+                count={likeCount}
+              >
+                <span className="text-xs opacity-70">{likeCount}</span>
+              </ReactorList>
+            )}
           </button>
           <button
             onClick={handleToggleDislike}
@@ -705,7 +715,16 @@ export default function DiscussionCard({
           >
             <ThumbsDown className="w-4 h-4" />
             <span>Oh Me!</span>
-            {dislikeCount > 0 && <span className="text-xs opacity-70">{dislikeCount}</span>}
+            {dislikeCount > 0 && (
+              <ReactorList
+                endpointUrl={`/api/discussions/${discussion.id}/dislikers`}
+                queryKey={['/api/discussions', discussion.id, 'dislikers']}
+                label="Said Oh Me!"
+                count={dislikeCount}
+              >
+                <span className="text-xs opacity-70">{dislikeCount}</span>
+              </ReactorList>
+            )}
           </button>
 
           {/* Comment */}
@@ -852,7 +871,14 @@ export default function DiscussionCard({
                           <ChristianCross className="w-3 h-3" />
                           <span>Amen</span>
                           {(replyLikeCounts[reply.id] ?? reply.likes ?? 0) > 0 && (
-                            <span className="opacity-70">{replyLikeCounts[reply.id] ?? reply.likes}</span>
+                            <ReactorList
+                              endpointUrl={`/api/discussions/${discussion.id}/replies/${reply.id}/likers`}
+                              queryKey={['/api/discussions', discussion.id, 'replies', reply.id, 'likers']}
+                              label="Said Amen"
+                              count={replyLikeCounts[reply.id] ?? reply.likes ?? 0}
+                            >
+                              <span className="opacity-70">{replyLikeCounts[reply.id] ?? reply.likes}</span>
+                            </ReactorList>
                           )}
                         </button>
                         <button
@@ -866,7 +892,14 @@ export default function DiscussionCard({
                           <ThumbsDown className="w-3 h-3" />
                           <span>Oh Me!</span>
                           {(replyDislikeCounts[reply.id] ?? (reply as any).dislikes ?? 0) > 0 && (
-                            <span className="opacity-70">{replyDislikeCounts[reply.id] ?? (reply as any).dislikes}</span>
+                            <ReactorList
+                              endpointUrl={`/api/discussions/${discussion.id}/replies/${reply.id}/dislikers`}
+                              queryKey={['/api/discussions', discussion.id, 'replies', reply.id, 'dislikers']}
+                              label="Said Oh Me!"
+                              count={replyDislikeCounts[reply.id] ?? (reply as any).dislikes ?? 0}
+                            >
+                              <span className="opacity-70">{replyDislikeCounts[reply.id] ?? (reply as any).dislikes}</span>
+                            </ReactorList>
                           )}
                         </button>
                         {!isNested && canReply && (

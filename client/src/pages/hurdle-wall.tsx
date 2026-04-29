@@ -25,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Link } from 'wouter';
 import { BackButton } from "@/components/BackButton";
+import { ReactorList } from "@/components/reactor-list";
 
 interface HurdleWallPraise {
   id: string;
@@ -773,7 +774,16 @@ export default function HurdleWall() {
                           data-testid={`button-amen-${post.id}`}
                         >
                           <ChristianCross className={`h-4 w-4 ${hasAmened ? 'opacity-100' : 'opacity-60'}`} />
-                          {amenCount > 0 && <span>{amenCount}</span>}
+                          {amenCount > 0 && (
+                            <ReactorList
+                              endpointUrl={`/api/hurdle-wall/${post.id}/ameners`}
+                              queryKey={['/api/hurdle-wall', post.id, 'ameners']}
+                              label="Said Amen"
+                              count={amenCount}
+                            >
+                              <span>{amenCount}</span>
+                            </ReactorList>
+                          )}
                           Amen
                         </Button>
                       </div>

@@ -3153,6 +3153,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/discussions/:id/dislikers', isAuthenticated, async (req: any, res) => {
+    try {
+      const dislikers = await storage.getDiscussionDislikers(req.params.id);
+      res.json(dislikers);
+    } catch (error) {
+      console.error("Error fetching dislikers:", error);
+      res.status(500).json({ message: "Failed to fetch dislikers" });
+    }
+  });
+
+  app.get('/api/discussions/:id/replies/:replyId/likers', isAuthenticated, async (req: any, res) => {
+    try {
+      const likers = await storage.getReplyLikers(req.params.replyId);
+      res.json(likers);
+    } catch (error) {
+      console.error("Error fetching reply likers:", error);
+      res.status(500).json({ message: "Failed to fetch reply likers" });
+    }
+  });
+
+  app.get('/api/discussions/:id/replies/:replyId/dislikers', isAuthenticated, async (req: any, res) => {
+    try {
+      const dislikers = await storage.getReplyDislikers(req.params.replyId);
+      res.json(dislikers);
+    } catch (error) {
+      console.error("Error fetching reply dislikers:", error);
+      res.status(500).json({ message: "Failed to fetch reply dislikers" });
+    }
+  });
+
   app.post('/api/discussions/:id/replies/:replyId/like', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -12557,6 +12587,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Who Amened / Oh Me'd a fitness community post
+  app.get('/api/fitness/community/posts/:id/likers', isAuthenticated, requireFitnessAccess, async (req: any, res) => {
+    try {
+      const postId = req.params.id;
+      const rows = await db
+        .select({ id: schema.users.id, firstName: schema.users.firstName, lastName: schema.users.lastName, profileImageUrl: schema.users.profileImageUrl })
+        .from(schema.fitnessPostLikes)
+        .innerJoin(schema.users, eq(schema.fitnessPostLikes.userId, schema.users.id))
+        .where(eq(schema.fitnessPostLikes.postId, postId))
+        .orderBy(desc(schema.fitnessPostLikes.createdAt));
+      res.json(rows);
+    } catch (error) {
+      console.error('Error fetching fitness post likers:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.get('/api/fitness/community/posts/:id/oh-mes', isAuthenticated, requireFitnessAccess, async (req: any, res) => {
+    try {
+      const postId = req.params.id;
+      const rows = await db
+        .select({ id: schema.users.id, firstName: schema.users.firstName, lastName: schema.users.lastName, profileImageUrl: schema.users.profileImageUrl })
+        .from(schema.fitnessPostOhMes)
+        .innerJoin(schema.users, eq(schema.fitnessPostOhMes.userId, schema.users.id))
+        .where(eq(schema.fitnessPostOhMes.postId, postId))
+        .orderBy(desc(schema.fitnessPostOhMes.createdAt));
+      res.json(rows);
+    } catch (error) {
+      console.error('Error fetching fitness post Oh Me\'s:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+
   // ─── Fitness Community — Comments ────────────────────────────────────────────
 
   app.get('/api/fitness/community/posts/:id/comments', isAuthenticated, requireFitnessAccess, async (req: any, res) => {
@@ -14250,6 +14314,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error removing amen:", error);
       res.status(500).json({ message: "Failed to remove Amen" });
+    }
+  });
+
+  app.get('/api/hurdle-wall/:postId/ameners', isAuthenticated, async (req: any, res) => {
+    try {
+      const ameners = await storage.getHurdleWallAmeners(req.params.postId);
+      res.json(ameners);
+    } catch (error) {
+      console.error("Error fetching ameners:", error);
+      res.status(500).json({ message: "Failed to fetch ameners" });
     }
   });
 
