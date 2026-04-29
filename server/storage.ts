@@ -3514,33 +3514,30 @@ export class DatabaseStorage implements IStorage {
       );
 
     // Farthest completed lesson in the 52-week Bible Study series.
-    // Week number is extracted from the study title (e.g. "Week 3- God Speaks...")
-    // because displayOrder is 0 for all studies in this series.
+    // Week number = each study's sequential position in the series (ROW_NUMBER),
+    // ordered by displayOrder ASC then createdAt ASC to match the app's series ordering.
+    // displayOrder is 0 for all studies in this series, so createdAt gives the stable tiebreak.
     let farthest52WeekLesson: { week: number; day: number } | null = null;
-    try {
-      const farthestResult = await db.execute<{ week: number; day: number }>(sql`
-        SELECT
-          CAST(regexp_replace(s.title, '^Week\\s+(\\d+).*', '\\1') AS INTEGER) AS week,
-          sl.day_number AS day
-        FROM user_lesson_progress ulp
-        JOIN study_lessons sl ON sl.id = ulp.lesson_id
-        JOIN studies s ON s.id = sl.study_id
-        JOIN study_series ss ON ss.id = s.series_id
+    const farthestResult = await db.execute<{ week: number; day: number }>(sql`
+      WITH series_studies AS (
+        SELECT s.id,
+          ROW_NUMBER() OVER (ORDER BY s.display_order ASC, s.created_at ASC) AS week_num
+        FROM study_series ss
+        JOIN studies s ON s.series_id = ss.id
         WHERE lower(ss.title) LIKE '%52%week%'
-          AND ulp.is_completed = true
-          AND s.title ~ '^Week\\s+\\d+'
-        ORDER BY
-          CAST(regexp_replace(s.title, '^Week\\s+(\\d+).*', '\\1') AS INTEGER) DESC,
-          sl.day_number DESC
-        LIMIT 1
-      `);
+      )
+      SELECT ss.week_num AS week, sl.day_number AS day
+      FROM user_lesson_progress ulp
+      JOIN study_lessons sl ON sl.id = ulp.lesson_id
+      JOIN series_studies ss ON ss.id = sl.study_id
+      WHERE ulp.is_completed = true
+      ORDER BY ss.week_num DESC, sl.day_number DESC
+      LIMIT 1
+    `);
 
-      const farthest = farthestResult.rows[0];
-      if (farthest) {
-        farthest52WeekLesson = { week: Number(farthest.week), day: Number(farthest.day) };
-      }
-    } catch (e) {
-      console.error('[getSystemStats] Failed to compute farthest 52-week lesson:', e);
+    const farthest = farthestResult.rows[0];
+    if (farthest) {
+      farthest52WeekLesson = { week: Number(farthest.week), day: Number(farthest.day) };
     }
 
     return {
