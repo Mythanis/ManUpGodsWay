@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageSquare, Users, User, CheckCircle, Clock, Bell, FileText, Scale, Camera, Upload, X, Check, CalendarClock, Crown, Shield, BookOpen, Video, Sword } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { CURRENT_TERMS_VERSION, TERMS_SECTIONS, TERMS_INTRO, TERMS_CLOSING, TERMS_EFFECTIVE_DATE } from "@shared/termsContent";
 
 interface SetupData {
   firstName: string;
@@ -68,6 +69,15 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
         });
       } catch {
         // Non-fatal — they can set it in notification preferences
+      }
+      // Record terms acceptance for this signup
+      try {
+        await apiRequest('POST', '/api/terms/accept', {
+          version: CURRENT_TERMS_VERSION,
+          source: 'signup',
+        });
+      } catch {
+        // Non-fatal — gate will catch any missing acceptance on next login
       }
       // Do NOT invalidate the /api/auth/user query here. Doing so would update
       // isProfileComplete → true, causing App.tsx to unmount the wizard before
@@ -684,68 +694,43 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-white">
               <Scale className="w-5 h-5 text-ministry-gold" />
-              Terms of Use
+              Terms & Conditions of Use
             </DialogTitle>
           </DialogHeader>
           <ScrollArea className="h-[50vh] pr-4">
             <div className="text-white space-y-4">
-              <p className="text-gray-400 text-sm">Effective Date: 1/9/2026</p>
-              
-              <p className="text-gray-300 text-sm leading-relaxed">
-                By using this App, you agree to these Terms.
-              </p>
-
-              <section>
-                <h2 className="text-base font-bold text-ministry-gold uppercase mb-2">1. Purpose</h2>
-                <p className="text-gray-300 text-sm leading-relaxed">
-                  This App exists to support the Man Up God's Way ministry.
-                </p>
-              </section>
-
-              <section>
-                <h2 className="text-base font-bold text-ministry-gold uppercase mb-2">2. User Content</h2>
-                <p className="text-gray-300 text-sm leading-relaxed mb-2">
-                  You retain ownership of your submissions but grant us permission to store, display, and manage them within the App.
-                </p>
-                <p className="text-gray-300 text-sm leading-relaxed">
-                  You agree not to submit unlawful, abusive, or inappropriate content.
-                </p>
-              </section>
-
-              <section>
-                <h2 className="text-base font-bold text-ministry-gold uppercase mb-2">3. Account & Access</h2>
-                <p className="text-gray-300 text-sm leading-relaxed">
-                  We may suspend or remove content or access that violates these Terms.
-                </p>
-              </section>
-
-              <section>
-                <h2 className="text-base font-bold text-ministry-gold uppercase mb-2">4. No Warranties</h2>
-                <p className="text-gray-300 text-sm leading-relaxed">
-                  The App is provided "as-is" without warranties.
-                </p>
-              </section>
-
-              <section>
-                <h2 className="text-base font-bold text-ministry-gold uppercase mb-2">5. Limitation of Liability</h2>
-                <p className="text-gray-300 text-sm leading-relaxed">
-                  We are not liable for damages arising from use of the App.
-                </p>
-              </section>
-
-              <section>
-                <h2 className="text-base font-bold text-ministry-gold uppercase mb-2">6. Termination</h2>
-                <p className="text-gray-300 text-sm leading-relaxed">
-                  We may terminate access at any time.
-                </p>
-              </section>
-
-              <section>
-                <h2 className="text-base font-bold text-ministry-gold uppercase mb-2">7. Governing Law</h2>
-                <p className="text-gray-300 text-sm leading-relaxed">
-                  Governed by laws of the United States.
-                </p>
-              </section>
+              <p className="text-gray-400 text-sm">Effective Date: {TERMS_EFFECTIVE_DATE}</p>
+              <p className="text-gray-300 text-sm leading-relaxed italic">{TERMS_INTRO}</p>
+              {TERMS_SECTIONS.map((section) => (
+                <section key={section.id}>
+                  <h2 className="text-base font-bold text-ministry-gold uppercase mb-2">{section.heading}</h2>
+                  {section.intro && <p className="text-gray-300 text-sm leading-relaxed mb-1">{section.intro}</p>}
+                  {section.body && <p className={`text-sm leading-relaxed mb-1 ${section.allCaps ? "text-gray-200 font-semibold" : "text-gray-300"}`}>{section.body}</p>}
+                  {section.bullets && (
+                    <ul className="list-disc list-inside text-gray-300 text-sm space-y-1 ml-2 mb-1">
+                      {section.bullets.map((b, i) => <li key={i}>{b}</li>)}
+                    </ul>
+                  )}
+                  {section.closing && <p className="text-gray-300 text-sm leading-relaxed mt-1 whitespace-pre-line">{section.closing}</p>}
+                  {section.subsections && (
+                    <div className="space-y-3 mt-2">
+                      {section.subsections.map((sub) => (
+                        <div key={sub.id}>
+                          <h3 className="text-sm font-semibold text-ministry-gold mb-1">{sub.heading}</h3>
+                          {sub.body && <p className={`text-sm leading-relaxed mb-1 ${sub.allCaps ? "text-gray-200 font-semibold" : "text-gray-300"}`}>{sub.body}</p>}
+                          {sub.bullets && (
+                            <ul className="list-disc list-inside text-gray-300 text-sm space-y-1 ml-2 mb-1">
+                              {sub.bullets.map((b, i) => <li key={i}>{b}</li>)}
+                            </ul>
+                          )}
+                          {sub.closing && <p className="text-gray-300 text-sm leading-relaxed mt-1 whitespace-pre-line">{sub.closing}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              ))}
+              <p className="text-ministry-gold text-sm font-semibold italic leading-relaxed">{TERMS_CLOSING}</p>
             </div>
           </ScrollArea>
           <div className="pt-4 border-t border-ministry-steel">

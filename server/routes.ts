@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import { CURRENT_TERMS_VERSION } from "@shared/termsContent";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from 'ws';
 import multer from 'multer';
@@ -18176,6 +18177,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (err: any) {
       console.error('[sidedness-reviews] bulk-approve error:', err.message);
       res.status(500).json({ message: err.message });
+    }
+  });
+
+  // ─── Terms Acknowledgement ────────────────────────────────────────────────
+  // GET /api/terms/current — return the current terms version (no auth required)
+  app.get('/api/terms/current', (_req, res) => {
+    res.json({ version: CURRENT_TERMS_VERSION });
+  });
+
+  // GET /api/terms/me — return the version this user has accepted
+  app.get('/api/terms/me', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+      const version = await storage.getUserTermsVersion(userId);
+      res.json({ acceptedTermsVersion: version });
+    } catch (err: any) {
+      res.status(500).json({ message: 'Failed to fetch terms version' });
+    }
+  });
+
+  // POST /api/terms/accept — record a user's acceptance of a terms version
+  app.post('/api/terms/accept', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+      const { version, source } = req.body;
+      if (!version || typeof version !== 'string') {
+        return res.status(400).json({ message: 'Missing version' });
+      }
+      const validSources = ['signup', 'forced_reagreement', 'settings_reaccept'];
+      const safeSource = validSources.includes(source) ? source : 'forced_reagreement';
+      const row = await storage.recordTermsAcceptance(userId, version, safeSource);
+      res.json({ ok: true, row });
+    } catch (err: any) {
+      console.error('[terms/accept] error:', err.message);
+      res.status(500).json({ message: 'Failed to record terms acceptance' });
     }
   });
 

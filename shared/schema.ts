@@ -65,6 +65,8 @@ export const users = pgTable("users", {
   hasFitnessAccess: boolean("has_fitness_access").default(false),
   hasCompletedTour: boolean("has_completed_tour").default(false),
   hasCompletedFitnessTour: boolean("has_completed_fitness_tour").default(false),
+  acceptedTermsVersion: varchar("accepted_terms_version"),
+  acceptedTermsAt: timestamp("accepted_terms_at"),
   conversionNudgesSent: jsonb("conversion_nudges_sent").default(sql`'{}'::jsonb`),
   timezone: varchar("timezone").default("UTC"), // IANA timezone for reminders, e.g. "America/New_York"
   createdAt: timestamp("created_at").defaultNow(),
@@ -3171,6 +3173,26 @@ export const insertWorkoutInjuryAcknowledgementSchema = createInsertSchema(worko
 
 export type WorkoutInjuryAcknowledgement = typeof workoutInjuryAcknowledgements.$inferSelect;
 export type InsertWorkoutInjuryAcknowledgement = z.infer<typeof insertWorkoutInjuryAcknowledgementSchema>;
+
+// ─── Terms Acknowledgements ───────────────────────────────────────────────────
+// Audit log of every time a user accepts a version of the Terms.
+// source: 'signup' | 'forced_reagreement' | 'settings_reaccept'
+export const termsAcknowledgements = pgTable("terms_acknowledgements", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  termsVersion: varchar("terms_version").notNull(),
+  source: varchar("source").notNull().default("forced_reagreement"),
+  acknowledgedAt: timestamp("acknowledged_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_terms_ack_user_id").on(table.userId),
+]);
+
+export const insertTermsAcknowledgementSchema = createInsertSchema(termsAcknowledgements).omit({
+  id: true,
+  acknowledgedAt: true,
+});
+export type TermsAcknowledgement = typeof termsAcknowledgements.$inferSelect;
+export type InsertTermsAcknowledgement = z.infer<typeof insertTermsAcknowledgementSchema>;
 
 // ─── Stripe Test Subscription (Owner testing tool) ────────────────────────────
 

@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Scale, ArrowLeft } from "lucide-react";
+import { TERMS_SECTIONS, TERMS_INTRO, TERMS_CLOSING, TERMS_EFFECTIVE_DATE, CURRENT_TERMS_VERSION } from "@shared/termsContent";
 
 export default function TermsConditions() {
   return (
@@ -26,73 +27,74 @@ export default function TermsConditions() {
               <Scale className="w-6 h-6 text-black" />
             </div>
             <h1 className="text-2xl font-black text-white uppercase tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>
-              Terms of Use
+              Terms & Conditions of Use
             </h1>
           </div>
-          <p className="text-gray-400 text-sm">
-            Effective Date: 1/9/2026
-          </p>
+          <p className="text-gray-400 text-sm">Effective Date: {TERMS_EFFECTIVE_DATE}</p>
+          <p className="text-gray-500 text-xs mt-1">Version: {CURRENT_TERMS_VERSION}</p>
         </div>
       </div>
       
       <div className="px-6 py-6 space-y-6">
         <Card className="liquid-black border-2 border-ministry-gold-exact overflow-hidden rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,1)]">
           <CardContent className="p-6 space-y-6">
-            <p className="text-gray-300 text-sm leading-relaxed">
-              By using this App, you agree to these Terms.
+            <p className="text-gray-300 text-sm leading-relaxed italic">
+              {TERMS_INTRO}
             </p>
 
-            <section>
-              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">1. Purpose</h2>
-              <p className="text-gray-300 text-sm leading-relaxed">
-                This App exists to support the Man Up God's Way ministry.
-              </p>
-            </section>
+            {TERMS_SECTIONS.map((section) => (
+              <section key={section.id}>
+                <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">{section.heading}</h2>
+                {section.intro && (
+                  <p className="text-gray-300 text-sm leading-relaxed mb-2">{section.intro}</p>
+                )}
+                {section.body && (
+                  <p className={`text-sm leading-relaxed mb-2 ${section.allCaps ? "text-gray-200 font-semibold" : "text-gray-300"}`}>
+                    {section.body}
+                  </p>
+                )}
+                {section.bullets && (
+                  <ul className="list-disc list-inside text-gray-300 text-sm space-y-1 ml-2 mb-2">
+                    {section.bullets.map((b, i) => (
+                      <li key={i}>{b}</li>
+                    ))}
+                  </ul>
+                )}
+                {section.closing && (
+                  <p className="text-gray-300 text-sm leading-relaxed mt-2 whitespace-pre-line">{section.closing}</p>
+                )}
+                {section.subsections && (
+                  <div className="space-y-4 mt-2">
+                    {section.subsections.map((sub) => (
+                      <div key={sub.id}>
+                        <h3 className="text-base font-semibold text-ministry-gold-exact mb-2">{sub.heading}</h3>
+                        {sub.body && (
+                          <p className={`text-sm leading-relaxed mb-2 ${sub.allCaps ? "text-gray-200 font-semibold" : "text-gray-300"}`}>
+                            {sub.body}
+                          </p>
+                        )}
+                        {sub.bullets && (
+                          <ul className="list-disc list-inside text-gray-300 text-sm space-y-1 ml-2 mb-2">
+                            {sub.bullets.map((b, i) => (
+                              <li key={i}>{b}</li>
+                            ))}
+                          </ul>
+                        )}
+                        {sub.closing && (
+                          <p className="text-gray-300 text-sm leading-relaxed mt-2 whitespace-pre-line">{sub.closing}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            ))}
 
-            <section>
-              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">2. User Content</h2>
-              <p className="text-gray-300 text-sm leading-relaxed mb-2">
-                You retain ownership of your submissions but grant us permission to store, display, and manage them within the App.
+            <div className="border-t border-ministry-gold-exact/30 pt-4">
+              <p className="text-ministry-gold-exact text-sm font-semibold italic leading-relaxed">
+                {TERMS_CLOSING}
               </p>
-              <p className="text-gray-300 text-sm leading-relaxed">
-                You agree not to submit unlawful, abusive, or inappropriate content.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">3. Account & Access</h2>
-              <p className="text-gray-300 text-sm leading-relaxed">
-                We may suspend or remove content or access that violates these Terms.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">4. No Warranties</h2>
-              <p className="text-gray-300 text-sm leading-relaxed">
-                The App is provided "as-is" without warranties.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">5. Limitation of Liability</h2>
-              <p className="text-gray-300 text-sm leading-relaxed">
-                We are not liable for damages arising from use of the App.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">6. Termination</h2>
-              <p className="text-gray-300 text-sm leading-relaxed">
-                We may terminate access at any time.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-lg font-bold text-ministry-gold-exact uppercase mb-3">7. Governing Law</h2>
-              <p className="text-gray-300 text-sm leading-relaxed">
-                Governed by laws of the United States.
-              </p>
-            </section>
+            </div>
           </CardContent>
         </Card>
       </div>

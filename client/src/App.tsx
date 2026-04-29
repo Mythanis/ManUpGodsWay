@@ -62,6 +62,7 @@ import TermsConditions from "@/pages/terms-conditions";
 import NotFound from "@/pages/not-found";
 import Navigation from "@/components/navigation";
 import { UserSetupWizard } from "@/components/user-setup-wizard";
+import { TermsReagreementGate } from "@/components/terms-reagreement-gate";
 import { NameCompletionModal } from "@/components/name-completion-modal";
 import { AccountSettingsButton } from "@/components/account-settings-button";
 import { TopRightLogo } from "@/components/top-right-logo";
@@ -70,6 +71,7 @@ import { useTrialAccess } from "@/hooks/useTrialAccess";
 import TrialPaywallModal from "@/components/trial-paywall-modal";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { CURRENT_TERMS_VERSION } from "@shared/termsContent";
 
 // Tracks the last path the user was on before navigating to the current one,
 // so the paywall can send them back somewhere sensible.
@@ -218,6 +220,26 @@ function Router() {
         }} 
       />
     );
+  }
+
+  // Terms re-agreement gate — shown to any authenticated user whose accepted
+  // version does not match the current version.  Allow-listed paths bypass it
+  // so users can always view legal pages, manage their profile, or log out.
+  const TERMS_GATE_ALLOW_LIST = [
+    "/profile",
+    "/privacy-policy",
+    "/terms-conditions",
+    "/privacy-security",
+  ];
+  const needsTermsReagreement =
+    isAuthenticated &&
+    user &&
+    user.isProfileComplete &&
+    user.acceptedTermsVersion !== CURRENT_TERMS_VERSION &&
+    !TERMS_GATE_ALLOW_LIST.some((p) => location === p || location.startsWith(p + "/"));
+
+  if (needsTermsReagreement) {
+    return <TermsReagreementGate user={user} />;
   }
 
   return (

@@ -17,6 +17,7 @@ export type User = {
   hasCompletedTour?: boolean;
   hasCompletedFitnessTour?: boolean;
   hasFitnessAccess?: boolean;
+  acceptedTermsVersion?: string | null;
 };
 
 export function useAuth() {

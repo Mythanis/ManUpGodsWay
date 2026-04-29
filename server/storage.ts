@@ -232,6 +232,9 @@ import {
   workoutInjuryAcknowledgements,
   type WorkoutInjuryAcknowledgement,
   type InsertWorkoutInjuryAcknowledgement,
+  termsAcknowledgements,
+  type TermsAcknowledgement,
+  type InsertTermsAcknowledgement,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt, ne, gt } from "drizzle-orm";
@@ -700,6 +703,10 @@ export interface IStorage {
 
   // Workout injury acknowledgement audit log
   createWorkoutInjuryAcknowledgement(data: InsertWorkoutInjuryAcknowledgement): Promise<WorkoutInjuryAcknowledgement>;
+
+  // Terms acknowledgement
+  recordTermsAcceptance(userId: string, termsVersion: string, source: string): Promise<TermsAcknowledgement>;
+  getUserTermsVersion(userId: string): Promise<string | null>;
 
   // VATMEBOP accountability chart
   getVatmebopChart(userId: string, year: number): Promise<VatmebopCheck[]>;
@@ -8298,6 +8305,29 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return row;
+  }
+
+  // ─── Terms Acknowledgement ────────────────────────────────────────────────
+  async recordTermsAcceptance(userId: string, termsVersion: string, source: string): Promise<TermsAcknowledgement> {
+    // Write audit row
+    const [row] = await db
+      .insert(termsAcknowledgements)
+      .values({ userId, termsVersion, source })
+      .returning();
+    // Update user's current accepted version
+    await db
+      .update(users)
+      .set({ acceptedTermsVersion: termsVersion, acceptedTermsAt: new Date() })
+      .where(eq(users.id, userId));
+    return row;
+  }
+
+  async getUserTermsVersion(userId: string): Promise<string | null> {
+    const [user] = await db
+      .select({ acceptedTermsVersion: users.acceptedTermsVersion })
+      .from(users)
+      .where(eq(users.id, userId));
+    return user?.acceptedTermsVersion ?? null;
   }
 }
 
