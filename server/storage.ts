@@ -445,6 +445,7 @@ export interface IStorage {
     activeSubscribers: number;
     cancelledAfter7Days: number;
     nonSubscribersAfter7Days: number;
+    farthest52WeekLesson: { week: number; day: number } | null;
   }>;
 
   // Messaging operations
@@ -3511,6 +3512,36 @@ export class DatabaseStorage implements IStorage {
             AND ${users.createdAt} <= NOW() - INTERVAL '7 days'`
       );
 
+    // Farthest completed lesson in the 52-week Bible Study series.
+    // Week number is extracted from the study title (e.g. "Week 3- God Speaks...")
+    // because displayOrder is 0 for all studies in this series.
+    let farthest52WeekLesson: { week: number; day: number } | null = null;
+    try {
+      const farthestResult = await db.execute<{ week: number; day: number }>(sql`
+        SELECT
+          CAST(regexp_replace(s.title, '^Week\\s+(\\d+).*', '\\1') AS INTEGER) AS week,
+          sl.day_number AS day
+        FROM user_lesson_progress ulp
+        JOIN study_lessons sl ON sl.id = ulp.lesson_id
+        JOIN studies s ON s.id = sl.study_id
+        JOIN study_series ss ON ss.id = s.series_id
+        WHERE lower(ss.title) LIKE '%52%week%'
+          AND ulp.is_completed = true
+          AND s.title ~ '^Week\\s+\\d+'
+        ORDER BY
+          CAST(regexp_replace(s.title, '^Week\\s+(\\d+).*', '\\1') AS INTEGER) DESC,
+          sl.day_number DESC
+        LIMIT 1
+      `);
+
+      const farthest = farthestResult.rows[0];
+      if (farthest) {
+        farthest52WeekLesson = { week: Number(farthest.week), day: Number(farthest.day) };
+      }
+    } catch (e) {
+      console.error('[getSystemStats] Failed to compute farthest 52-week lesson:', e);
+    }
+
     return {
       totalUsers,
       totalStudies,
@@ -3519,6 +3550,7 @@ export class DatabaseStorage implements IStorage {
       activeSubscribers,
       cancelledAfter7Days,
       nonSubscribersAfter7Days,
+      farthest52WeekLesson,
     };
   }
 

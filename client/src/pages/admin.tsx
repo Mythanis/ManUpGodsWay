@@ -214,6 +214,7 @@ export default function Admin() {
     activeSubscribers: number;
     cancelledAfter7Days: number;
     nonSubscribersAfter7Days: number;
+    farthest52WeekLesson: { week: number; day: number } | null;
   }>({
     queryKey: ["/api/admin/stats"],
     retry: false,
@@ -599,6 +600,14 @@ export default function Admin() {
               {(stats as any)?.newPosts || 0}
             </p>
             <p className="text-xs font-bold uppercase tracking-wide text-black">New Posts</p>
+          </div>
+          <div className="col-span-2 bg-black border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(212,175,55,1)] p-4 text-center" data-testid="card-52-week-stat">
+            <p className="text-2xl font-black text-ministry-gold-exact" data-testid="text-52-week-furthest">
+              {stats?.farthest52WeekLesson
+                ? `Week ${stats.farthest52WeekLesson.week} Day ${stats.farthest52WeekLesson.day}`
+                : 'No completions yet'}
+            </p>
+            <p className="text-xs font-bold uppercase tracking-wide text-white mt-1">52 Week Study — Furthest Completed</p>
           </div>
         </div>
       </div>
