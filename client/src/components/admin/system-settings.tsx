@@ -23,6 +23,8 @@ export default function SystemSettings() {
   const [tagline, setTagline] = useState("");
   const [calendlyUrl, setCalendlyUrl] = useState("");
   const [showForceReloadConfirm, setShowForceReloadConfirm] = useState(false);
+  const [connectedCount, setConnectedCount] = useState<number | null>(null);
+  const [fetchingCount, setFetchingCount] = useState(false);
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ['api', 'system-settings'],
@@ -45,18 +47,43 @@ export default function SystemSettings() {
     }
   });
 
+  const handleShowForceReloadConfirm = async () => {
+    setFetchingCount(true);
+    try {
+      const res = await fetch('/api/admin/connected-count', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setConnectedCount(data.connectedCount ?? 0);
+      } else {
+        setConnectedCount(null);
+      }
+    } catch {
+      setConnectedCount(null);
+    } finally {
+      setFetchingCount(false);
+      setShowForceReloadConfirm(true);
+    }
+  };
+
   const forceReloadMutation = useMutation({
-    mutationFn: () =>
-      fetch('/api/admin/force-reload', { method: 'POST', credentials: 'include' }).then(res => res.json()) as Promise<{ ok: boolean; connectedCount: number }>,
+    mutationFn: async () => {
+      const res = await fetch('/api/admin/force-reload', { method: 'POST', credentials: 'include' });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error((body as any).message || 'Failed to send reload signal');
+      }
+      return res.json() as Promise<{ ok: boolean; connectedCount: number }>;
+    },
     onSuccess: (data) => {
       setShowForceReloadConfirm(false);
+      setConnectedCount(null);
       toast({
         title: "Refresh Signal Sent",
         description: `Reload sent to ${data.connectedCount} connected session${data.connectedCount !== 1 ? 's' : ''}.`,
       });
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to send refresh signal.", variant: "destructive" });
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to send refresh signal.", variant: "destructive" });
     },
   });
 
@@ -234,18 +261,27 @@ export default function SystemSettings() {
             <Button
               variant="outline"
               className="border-orange-300 text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-400 dark:hover:bg-orange-950"
-              onClick={() => setShowForceReloadConfirm(true)}
+              onClick={handleShowForceReloadConfirm}
+              disabled={fetchingCount}
               data-testid="button-force-reload-all"
             >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh All Users Now
+              {fetchingCount ? (
+                <><Loader2 className="h-4 w-4 animate-spin mr-2" />Checking...</>
+              ) : (
+                <><RefreshCw className="h-4 w-4 mr-2" />Refresh All Users Now</>
+              )}
             </Button>
           ) : (
             <div className="flex items-start gap-3 p-3 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-lg">
               <AlertTriangle className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" />
               <div className="flex-1">
                 <p className="text-sm font-medium text-orange-800 dark:text-orange-300">
-                  This will reload the app for all currently connected users. Are you sure?
+                  {connectedCount === null
+                    ? "This will reload the app for all currently connected users. Are you sure?"
+                    : connectedCount === 0
+                      ? "No users are currently connected. The signal will be sent but no one will receive it right now. Are you sure?"
+                      : `This will reload the app for ${connectedCount} connected session${connectedCount !== 1 ? 's' : ''}. Are you sure?`
+                  }
                 </p>
                 <div className="flex gap-2 mt-3">
                   <Button
@@ -262,7 +298,7 @@ export default function SystemSettings() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => setShowForceReloadConfirm(false)}
+                    onClick={() => { setShowForceReloadConfirm(false); setConnectedCount(null); }}
                     disabled={forceReloadMutation.isPending}
                   >
                     Cancel

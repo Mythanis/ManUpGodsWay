@@ -7434,6 +7434,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 
+  // Return the current number of connected WebSocket sessions (tabs, not unique users)
+  app.get('/api/admin/connected-count', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      let count = 0;
+      connectedClients.forEach((sockets) => { count += sockets.size; });
+      return res.json({ connectedCount: count });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Force-reload all currently connected users (all tabs)
   app.post('/api/admin/force-reload', isAuthenticated, async (req: any, res) => {
     try {
