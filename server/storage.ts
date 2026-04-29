@@ -447,6 +447,7 @@ export interface IStorage {
     nonSubscribersAfter7Days: number;
     farthest52WeekLesson: { week: number; day: number } | null;
   }>;
+  get52WeekLeaders(): Promise<{ id: string; firstName: string | null; lastName: string | null; profileImageUrl: string | null; week: number; day: number }[]>;
 
   // Messaging operations
   getUserConversations(userId: string, currentUserId?: string): Promise<(Conversation & { participants: (ConversationParticipant & { user: User })[] })[]>;
@@ -3550,6 +3551,55 @@ export class DatabaseStorage implements IStorage {
       nonSubscribersAfter7Days,
       farthest52WeekLesson,
     };
+  }
+
+  async get52WeekLeaders(): Promise<{ id: string; firstName: string | null; lastName: string | null; profileImageUrl: string | null; week: number; day: number }[]> {
+    // Returns only users who have reached the globally furthest completed lesson
+    // (i.e. tied at the top), sorted furthest-first within that threshold.
+    const result = await db.execute<{ id: string; first_name: string | null; last_name: string | null; profile_image_url: string | null; week: number; day: number }>(sql`
+      WITH series_studies AS (
+        SELECT s.id,
+          ROW_NUMBER() OVER (ORDER BY s.display_order ASC, s.created_at ASC) AS week_num
+        FROM study_series ss
+        JOIN studies s ON s.series_id = ss.id
+        WHERE lower(ss.title) LIKE '%52%week%'
+      ),
+      user_farthest AS (
+        SELECT
+          ulp.user_id,
+          MAX(ss.week_num * 1000 + sl.day_number) AS progress_rank,
+          (array_agg(ss.week_num ORDER BY ss.week_num DESC, sl.day_number DESC))[1] AS week_num,
+          (array_agg(sl.day_number ORDER BY ss.week_num DESC, sl.day_number DESC))[1] AS day_number
+        FROM user_lesson_progress ulp
+        JOIN study_lessons sl ON sl.id = ulp.lesson_id
+        JOIN series_studies ss ON ss.id = sl.study_id
+        WHERE ulp.is_completed = true
+        GROUP BY ulp.user_id
+      ),
+      global_max AS (
+        SELECT MAX(progress_rank) AS max_rank FROM user_farthest
+      )
+      SELECT
+        u.id,
+        u.first_name,
+        u.last_name,
+        u.profile_image_url,
+        uf.week_num AS week,
+        uf.day_number AS day
+      FROM user_farthest uf
+      JOIN users u ON u.id = uf.user_id
+      JOIN global_max gm ON uf.progress_rank >= gm.max_rank
+      ORDER BY uf.progress_rank DESC
+    `);
+
+    return result.rows.map(row => ({
+      id: row.id,
+      firstName: row.first_name,
+      lastName: row.last_name,
+      profileImageUrl: row.profile_image_url,
+      week: Number(row.week),
+      day: Number(row.day),
+    }));
   }
 
   // Messaging operations

@@ -104,6 +104,7 @@ export default function Admin() {
     selectedUserIds: [] as string[],
     landingPage: "/",
   });
+  const [show52WeekLeadersModal, setShow52WeekLeadersModal] = useState(false);
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [subscriptionFilter, setSubscriptionFilter] = useState<string | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
@@ -219,6 +220,13 @@ export default function Admin() {
     queryKey: ["/api/admin/stats"],
     retry: false,
     enabled: ['admin', 'owner'].includes((user as any)?.role),
+  });
+
+  // Fetch 52-week leaders when modal is open
+  const { data: weekLeaders = [], isLoading: weekLeadersLoading } = useQuery<{ id: string; firstName: string | null; lastName: string | null; profileImageUrl: string | null; week: number; day: number }[]>({
+    queryKey: ["/api/admin/52-week-leaders"],
+    retry: false,
+    enabled: show52WeekLeadersModal && ['admin', 'owner'].includes((user as any)?.role),
   });
 
   // Fetch all studies for management
@@ -601,14 +609,19 @@ export default function Admin() {
             </p>
             <p className="text-xs font-bold uppercase tracking-wide text-black">New Posts</p>
           </div>
-          <div className="col-span-2 bg-black border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(212,175,55,1)] p-4 text-center" data-testid="card-52-week-stat">
+          <button
+            className="col-span-2 bg-black border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(212,175,55,1)] p-4 text-center hover:bg-white/5 transition-colors active:bg-white/10"
+            data-testid="card-52-week-stat"
+            onClick={() => setShow52WeekLeadersModal(true)}
+          >
             <p className="text-2xl font-black text-ministry-gold-exact" data-testid="text-52-week-furthest">
               {stats?.farthest52WeekLesson
                 ? `Week ${stats.farthest52WeekLesson.week} Day ${stats.farthest52WeekLesson.day}`
                 : 'No completions yet'}
             </p>
             <p className="text-xs font-bold uppercase tracking-wide text-white mt-1">52 Week Study — Furthest Completed</p>
-          </div>
+            <p className="text-[10px] text-white/40 mt-0.5">Tap to see who's leading</p>
+          </button>
         </div>
       </div>
 
@@ -700,6 +713,58 @@ export default function Admin() {
           })}
         </div>
       </div>
+
+      {/* 52-Week Leaders Modal */}
+      <Dialog open={show52WeekLeadersModal} onOpenChange={setShow52WeekLeadersModal}>
+        <DialogContent className="w-[95vw] max-w-md max-h-[80vh] flex flex-col p-0 bg-[#0d0d0d] border-2 border-ministry-gold-exact">
+          <DialogHeader className="px-5 py-4 border-b border-white/10 flex-shrink-0">
+            <DialogTitle className="text-base font-black uppercase tracking-wide text-ministry-gold-exact">
+              52 Week Study — Furthest Brothers
+            </DialogTitle>
+            <p className="text-xs text-white/40 mt-0.5">Brothers who have reached the furthest completed lesson</p>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto p-4">
+            {weekLeadersLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="flex items-center gap-3 p-3 rounded-sm bg-white/5 animate-pulse">
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex-shrink-0" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-3.5 bg-white/10 rounded w-32" />
+                      <div className="h-3 bg-white/10 rounded w-20" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : weekLeaders.length === 0 ? (
+              <p className="text-center text-white/40 text-sm py-8">No completions recorded yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {weekLeaders.map((leader, index) => (
+                  <div key={leader.id} className="flex items-center gap-3 p-3 rounded-sm bg-white/5 border border-white/10">
+                    <span className="text-xs font-black text-white/30 w-5 text-right flex-shrink-0">{index + 1}</span>
+                    <div className="w-9 h-9 rounded-full overflow-hidden bg-white/10 flex-shrink-0 flex items-center justify-center">
+                      {leader.profileImageUrl ? (
+                        <img src={leader.profileImageUrl} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-sm font-black text-white/50">
+                          {(leader.firstName?.[0] ?? leader.lastName?.[0] ?? '?').toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-white truncate">
+                        {[leader.firstName, leader.lastName].filter(Boolean).join(' ') || 'Unknown'}
+                      </p>
+                      <p className="text-xs text-ministry-gold-exact">Week {leader.week} · Day {leader.day}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Content Dialog */}
       <Dialog open={showContentDialog} onOpenChange={setShowContentDialog}>

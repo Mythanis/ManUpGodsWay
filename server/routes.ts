@@ -6261,6 +6261,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/admin/52-week-leaders', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const leaders = await storage.get52WeekLeaders();
+      res.json(leaders);
+    } catch (error) {
+      console.error("Error fetching 52-week leaders:", error);
+      res.status(500).json({ message: "Failed to fetch leaders" });
+    }
+  });
+
   // Public Community Stats Route
   app.get('/api/community/stats', async (req: any, res) => {
     try {
