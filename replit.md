@@ -283,3 +283,16 @@ Requires `ANTHROPIC_API_KEY` (already configured as a Replit secret).
 **Server guard:**
 `POST /api/fitness-plans/:planId/exercises/bulk` returns 409 `{ code: "INJURY_RISK", blockedExercises }` if any exercise is blocked and `acknowledgeInjuryRisk` is not true.
 
+
+## @-Mention System (Task #174)
+
+**Files:**
+- `shared/schema.ts` — `mentions` table (sourceType, sourceId, mentionedUserId), `notifications.linkUrl`, `notification_preferences.mentionNotifications`
+- `server/mentions.ts` — `extractMentionsAndFanOut()` parses `@[Display](mention:token)` markdown; resolves tokens (userId | "brothers" | "everyone"); persists mention rows; emits notifications honoring prefs (with `alwaysNotify=true` for war-group mentions); on edit, only newly-added mentions are notified
+- `server/routes.ts` — wired into 10 endpoints: hurdle-wall (create+reply+reply-edit, skip anonymous), accountability-request create, discussion (create+update+reply+reply-edit), DM/group message send, war-group post (create+reply+reply-edit, alwaysNotify=true)
+- `server/pushNotificationService.ts` & `storage.ts` — mention notification case → routes to `linkUrl` (`/notifications` fallback)
+- `client/src/components/mention-textarea.tsx` — `MentionTextarea` (popover dropdown, `/api/users/search?q=` min 2 chars, `@brothers` always, `@everyone` owner-only), `MentionText` (renders `@Display` chips), `stripMentionMarkdown` helper
+- `client/src/components/notification-panel.tsx` — honors `linkUrl` for navigation
+- `client/src/components/notification-preferences.tsx` — Mention Notifications toggle (AtSign icon)
+
+**Wired surfaces:** hurdle-wall posts/comments/reply-edit, under-fire requests, messages (DM + group), community discussions/replies (incl. discussion-card render), war-group posts/replies/reply-edit. Storage format: `@[Display Name](mention:userId|brothers|everyone)`. Owner = `user.role === 'owner'`. Server strips `@everyone` for non-owners. War-group mentions always notify regardless of user prefs.

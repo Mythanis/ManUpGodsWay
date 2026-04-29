@@ -87,6 +87,8 @@ export function getPushUrl(type: string, relatedId?: string | null): string {
       return relatedId ? `/fitness?tab=community&post=${relatedId}` : '/fitness?tab=community';
     case 'fitness_meal':
       return '/fitness?tab=intake&openAddFood=true';
+    case 'mention':
+      return '/notifications';
     default:
       return '/';
   }

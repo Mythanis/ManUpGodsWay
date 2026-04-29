@@ -201,6 +201,13 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
       setLocation(path);
     };
 
+    // If a direct link URL was stored on the notification (used for @-mentions),
+    // honor it over per-type lookup so the user lands on the exact post/reply.
+    if ((notification as any).linkUrl) {
+      goTo((notification as any).linkUrl);
+      return;
+    }
+
     // Navigate based on notification type and relatedId
     switch (notification.type) {
       case 'message':

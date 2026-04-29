@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { MentionTextarea, MentionText } from '@/components/mention-textarea';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { apiRequest } from '@/lib/queryClient';
@@ -544,11 +545,11 @@ export default function HurdleWall() {
               <Label htmlFor="content" className="text-white font-semibold">
                 Prayer Request
               </Label>
-              <Textarea
+              <MentionTextarea
                 id="content"
-                placeholder="Share what you'd like prayer for..."
+                placeholder="Share what you'd like prayer for... Type @ to mention a brother."
                 value={newPostContent}
-                onChange={(e) => setNewPostContent(e.target.value)}
+                onChange={setNewPostContent}
                 className="min-h-[100px] bg-white text-black border-2 border-black placeholder:text-black/50"
                 data-testid="textarea-prayer-request"
               />
@@ -621,7 +622,7 @@ export default function HurdleWall() {
                   <CardContent className="space-y-4 relative z-10">
                     {/* Prayer request text box */}
                     <div className="bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-sm p-3">
-                      <p className="text-black leading-relaxed">{post.content}</p>
+                      <p className="text-black leading-relaxed whitespace-pre-wrap"><MentionText text={post.content} /></p>
                     </div>
 
                     {/* Praise input (owner only, when no praise yet) */}
@@ -856,9 +857,9 @@ export default function HurdleWall() {
                                 </div>
                                 {editingReplyId === reply.id ? (
                                   <div>
-                                    <Textarea
+                                    <MentionTextarea
                                       value={editReplyContent}
-                                      onChange={(e) => setEditReplyContent(e.target.value)}
+                                      onChange={setEditReplyContent}
                                       className="bg-white text-black border-2 border-black text-sm min-h-[60px] resize-none"
                                       autoFocus
                                     />
@@ -875,7 +876,7 @@ export default function HurdleWall() {
                                     </div>
                                   </div>
                                 ) : (
-                                  <p className="text-black text-sm leading-relaxed">{reply.content}</p>
+                                  <p className="text-black text-sm leading-relaxed whitespace-pre-wrap"><MentionText text={reply.content} /></p>
                                 )}
                               </div>
                             ))}
@@ -884,12 +885,12 @@ export default function HurdleWall() {
 
                         {/* Comment Form */}
                         <div className="space-y-3">
-                          <Textarea
-                            placeholder="Add a comment..."
+                          <MentionTextarea
+                            placeholder="Add a comment... Type @ to mention a brother."
                             value={commentContent[post.id] || ''}
-                            onChange={(e) => setCommentContent(prev => ({
+                            onChange={(value) => setCommentContent(prev => ({
                               ...prev,
-                              [post.id]: e.target.value
+                              [post.id]: value
                             }))}
                             className="bg-white text-black border-2 border-black placeholder:text-black/50"
                             data-testid={`textarea-comment-${post.id}`}

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Bell, Settings, AlertCircle, Shield, Dumbbell, Users, Utensils } from "lucide-react";
+import { Bell, Settings, AlertCircle, Shield, Dumbbell, Users, Utensils, AtSign } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface NotificationPreferences {
@@ -23,6 +23,7 @@ interface NotificationPreferences {
   fitnessPlanReminderNotifications: boolean;
   fitnessCommunityNotifications: boolean;
   mealReminderNotifications: boolean;
+  mentionNotifications: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -182,6 +183,12 @@ export function NotificationPreferences() {
       title: 'Meal Reminder Notifications',
       description: 'Receive reminders to log your meals at your scheduled meal times',
       icon: <Utensils className="h-4 w-4" />
+    },
+    {
+      key: 'mentionNotifications' as const,
+      title: 'Mention Notifications',
+      description: 'Get notified when a brother mentions you with @ in posts, comments, or messages',
+      icon: <AtSign className="h-4 w-4" />
     }
   ];
 

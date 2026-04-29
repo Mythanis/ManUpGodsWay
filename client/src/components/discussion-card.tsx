@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+import { MentionTextarea, MentionText } from "@/components/mention-textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -588,9 +589,9 @@ export default function DiscussionCard({
                   data-testid="text-discussion-content"
                 />
               ) : (
-                <p className={`${FONT_SIZE_CLASSES[fontSizeLevel]} text-white/80 leading-relaxed ${!isExpanded && isLongContent ? 'line-clamp-5' : ''}`}
+                <p className={`${FONT_SIZE_CLASSES[fontSizeLevel]} text-white/80 leading-relaxed whitespace-pre-wrap ${!isExpanded && isLongContent ? 'line-clamp-5' : ''}`}
                   data-testid="text-discussion-content">
-                  {discussion.content}
+                  <MentionText text={discussion.content} />
                 </p>
               )}
               {isLongContent && (
@@ -835,7 +836,7 @@ export default function DiscussionCard({
                             </div>
                           </div>
                         ) : (
-                          <p className="text-sm text-white/80 leading-relaxed mt-0.5">{reply.content}</p>
+                          <p className="text-sm text-white/80 leading-relaxed mt-0.5 whitespace-pre-wrap"><MentionText text={reply.content} /></p>
                         )}
                       </div>
                       <div className="flex items-center gap-3 mt-1 px-1">

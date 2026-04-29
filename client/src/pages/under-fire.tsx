@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { MentionTextarea, MentionText } from '@/components/mention-textarea';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { apiRequest } from '@/lib/queryClient';
@@ -313,11 +314,11 @@ export default function UnderFire() {
               <Label htmlFor="content" className="text-white font-semibold">
                 Accountability Request
               </Label>
-              <Textarea
+              <MentionTextarea
                 id="content"
-                placeholder="Share what you need accountability for..."
+                placeholder="Share what you need accountability for... Type @ to mention a brother."
                 value={newRequestContent}
-                onChange={(e) => setNewRequestContent(e.target.value)}
+                onChange={setNewRequestContent}
                 className="min-h-[100px] bg-white text-black border-2 border-black placeholder:text-black/50"
                 data-testid="textarea-accountability-request"
               />
@@ -385,7 +386,7 @@ export default function UnderFire() {
                 </CardHeader>
                 <CardContent className="space-y-4 relative z-10">
                   <div className="bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-sm p-3">
-                    <p className="text-black leading-relaxed">{request.content}</p>
+                    <p className="text-black leading-relaxed whitespace-pre-wrap"><MentionText text={request.content} /></p>
                   </div>
                   
                   <Separator className="bg-ministry-gold-exact/30" />

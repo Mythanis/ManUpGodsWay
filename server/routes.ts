@@ -19,6 +19,7 @@ import { reclassifyExerciseSidedness } from "./exerciseSidednessJob";
 import { getNextMidnightInTimezone } from "./drip-utils";
 import { safeTimezone } from "./timezone-utils";
 import { warGroupsService } from "./warGroupsService";
+import { extractMentionsAndFanOut } from "./mentions";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { db } from "./db";
 import * as schema from "@shared/schema";
@@ -2854,7 +2855,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const discussion = await storage.createDiscussion(discussionData);
-      
+
+      // @-mention fan-out
+      {
+        const author = await storage.getUser(userId);
+        await extractMentionsAndFanOut({
+          text: discussion.content,
+          authorId: userId,
+          sourceType: 'discussion',
+          sourceId: discussion.id,
+          linkUrl: `/community?discussion=${discussion.id}`,
+          surfaceLabel: `the discussion "${discussion.title}"`,
+          isAuthorOwner: author?.role === 'owner',
+        });
+      }
+
       // Send notification to all users about the new discussion
       try {
         const allUsers = await storage.getAllUsers();
@@ -2912,6 +2927,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Update the discussion
       const updatedDiscussion = await storage.updateDiscussion(discussionId, { title, content });
+
+      // @-mention fan-out
+      {
+        const author = await storage.getUser(userId);
+        await extractMentionsAndFanOut({
+          text: updatedDiscussion.content,
+          authorId: userId,
+          sourceType: 'discussion',
+          sourceId: updatedDiscussion.id,
+          linkUrl: `/community?discussion=${updatedDiscussion.id}`,
+          surfaceLabel: `the discussion "${updatedDiscussion.title}"`,
+          isAuthorOwner: author?.role === 'owner',
+        });
+      }
+
       res.json(updatedDiscussion);
     } catch (error) {
       console.error("Error updating discussion:", error);
@@ -2963,7 +2993,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const reply = await storage.createReply(replyData);
-      
+
+      // @-mention fan-out
+      {
+        const author = await storage.getUser(userId);
+        await extractMentionsAndFanOut({
+          text: reply.content,
+          authorId: userId,
+          sourceType: 'discussion_reply',
+          sourceId: reply.id,
+          linkUrl: `/community?discussion=${discussionId}&reply=${reply.id}`,
+          surfaceLabel: `a reply to "${discussion.title}"`,
+          isAuthorOwner: author?.role === 'owner',
+        });
+      }
+
       // Automatically subscribe the user to the discussion so they get notified of future replies
       try {
         await storage.subscribeToDiscussion({
@@ -3052,6 +3096,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!content?.trim()) return res.status(400).json({ message: "Content is required" });
       const updated = await storage.updateDiscussionReply(req.params.replyId, userId, content.trim(), req.params.id);
       if (!updated) return res.status(403).json({ message: "You can only edit your own replies" });
+
+      // @-mention fan-out (only newly added mentions get notified)
+      {
+        const author = await storage.getUser(userId);
+        await extractMentionsAndFanOut({
+          text: updated.content,
+          authorId: userId,
+          sourceType: 'discussion_reply',
+          sourceId: updated.id,
+          linkUrl: `/community?discussion=${req.params.id}&reply=${updated.id}`,
+          surfaceLabel: 'a community reply',
+          isAuthorOwner: author?.role === 'owner',
+        });
+      }
+
       res.json(updated);
     } catch (error) {
       console.error("Error updating discussion reply:", error);
@@ -5131,6 +5190,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const message = await storage.sendMessage(messageData);
+
+      // @-mention fan-out within the conversation
+      {
+        const author = await storage.getUser(userId);
+        await extractMentionsAndFanOut({
+          text: message.content,
+          authorId: userId,
+          sourceType: 'message',
+          sourceId: message.id,
+          linkUrl: `/messages?conversation=${conversationId}`,
+          surfaceLabel: 'a message',
+          isAuthorOwner: author?.role === 'owner',
+        });
+      }
 
       // Create notifications for other participants in the conversation
       try {
@@ -7645,6 +7718,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'fitnessPlanReminderNotifications',
         'fitnessCommunityNotifications',
         'mealReminderNotifications',
+        'mentionNotifications',
       ];
       
       const filteredUpdates: any = {};
@@ -13913,6 +13987,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Broadcast to all connected clients about new post
       (app as any).broadcastToAll({ type: 'hurdle_wall_post_created', data: post });
 
+      // @-mention fan-out (only if not anonymous — anonymous posts shouldn't reveal author via mention)
+      if (post.isAnonymous === false) {
+        const author = await storage.getUser(userId);
+        await extractMentionsAndFanOut({
+          text: post.content,
+          authorId: userId,
+          sourceType: 'hurdle_wall_post',
+          sourceId: post.id,
+          linkUrl: `/hurdle-wall?post=${post.id}`,
+          surfaceLabel: 'a Hurdle Wall post',
+          isAuthorOwner: author?.role === 'owner',
+        });
+      }
+
       // Fan-out in-app notifications to all users with War Room notifications enabled
       try {
         const usersToNotify = await db
@@ -13993,6 +14081,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Broadcast to all connected clients about new reply
       (app as any).broadcastToAll({ type: 'hurdle_wall_reply_created', data: { reply, postId } });
+
+      // @-mention fan-out (skip if reply is anonymous)
+      if (reply.isAnonymous === false) {
+        const author = await storage.getUser(userId);
+        await extractMentionsAndFanOut({
+          text: reply.content,
+          authorId: userId,
+          sourceType: 'hurdle_wall_reply',
+          sourceId: reply.id,
+          linkUrl: `/hurdle-wall?post=${postId}`,
+          surfaceLabel: 'a Hurdle Wall reply',
+          isAuthorOwner: author?.role === 'owner',
+        });
+      }
 
       res.json(reply);
     } catch (error) {
@@ -14217,6 +14319,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!content?.trim()) return res.status(400).json({ message: "Content is required" });
       const updated = await storage.updateHurdleWallReply(req.params.replyId, userId, content.trim());
       if (!updated) return res.status(403).json({ message: "You can only edit your own replies" });
+
+      if (updated.isAnonymous === false) {
+        const author = await storage.getUser(userId);
+        await extractMentionsAndFanOut({
+          text: updated.content,
+          authorId: userId,
+          sourceType: 'hurdle_wall_reply',
+          sourceId: updated.id,
+          linkUrl: `/hurdle-wall?post=${updated.postId}`,
+          surfaceLabel: 'a Hurdle Wall reply',
+          isAuthorOwner: author?.role === 'owner',
+        });
+      }
+
       res.json(updated);
     } catch (error) {
       console.error("Error updating hurdle wall reply:", error);
@@ -14265,6 +14381,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         content: content.trim(),
       });
+
+      // @-mention fan-out
+      {
+        const author = await storage.getUser(userId);
+        await extractMentionsAndFanOut({
+          text: request.content,
+          authorId: userId,
+          sourceType: 'accountability_request',
+          sourceId: request.id,
+          linkUrl: `/under-fire?request=${request.id}`,
+          surfaceLabel: 'an Under Fire request',
+          isAuthorOwner: author?.role === 'owner',
+        });
+      }
 
       // Fan-out in-app notifications to all users with Under Fire notifications enabled
       try {
@@ -15513,6 +15643,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.status(201).json({ ...post, rations: rationResult });
 
+      // @-mention fan-out for war groups (alwaysNotify because mentioned users may not be members)
+      (async () => {
+        try {
+          const author = await storage.getUser(userId);
+          await extractMentionsAndFanOut({
+            text: content || '',
+            authorId: userId,
+            sourceType: 'war_group_post',
+            sourceId: post.id,
+            linkUrl: `/war-groups/${groupId}?postId=${post.id}`,
+            surfaceLabel: 'a War Group post',
+            isAuthorOwner: author?.role === 'owner',
+            alwaysNotify: true,
+          });
+        } catch (e) {
+          console.error('War group post mention fan-out error:', e);
+        }
+      })();
+
       // Fire-and-forget: notify all approved members of the new post (except the poster)
       (async () => {
         try {
@@ -15644,6 +15793,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!content?.trim()) return res.status(400).json({ message: "Content is required" });
       const updated = await warGroupsService.updateGroupPostReply(replyId, userId, content.trim(), req.params.postId);
       res.json(updated);
+
+      if (updated) {
+        (async () => {
+          try {
+            const author = await storage.getUser(userId);
+            await extractMentionsAndFanOut({
+              text: content.trim(),
+              authorId: userId,
+              sourceType: 'war_group_reply',
+              sourceId: replyId,
+              linkUrl: `/war-groups/${req.params.id}?postId=${req.params.postId}&openReplies=true`,
+              surfaceLabel: 'a War Group reply',
+              isAuthorOwner: author?.role === 'owner',
+              alwaysNotify: true,
+            });
+          } catch (e) {
+            console.error('War group reply edit mention fan-out error:', e);
+          }
+        })();
+      }
     } catch (error: any) {
       console.error('Error updating group post reply:', error);
       res.status(403).json({ message: error.message || 'Failed to update reply' });
@@ -15695,6 +15864,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const groupId = req.params.id;
       res.status(201).json({ ...reply, rations: rationResult });
+
+      // @-mention fan-out (alwaysNotify because mentioned users may not be members)
+      (async () => {
+        try {
+          const author = await storage.getUser(userId);
+          await extractMentionsAndFanOut({
+            text: content,
+            authorId: userId,
+            sourceType: 'war_group_reply',
+            sourceId: reply.id,
+            linkUrl: `/war-groups/${groupId}?postId=${postId}&openReplies=true`,
+            surfaceLabel: 'a War Group reply',
+            isAuthorOwner: author?.role === 'owner',
+            alwaysNotify: true,
+          });
+        } catch (e) {
+          console.error('War group reply mention fan-out error:', e);
+        }
+      })();
 
       // Fire-and-forget: send real-time signals + push notification for reply
       (async () => {

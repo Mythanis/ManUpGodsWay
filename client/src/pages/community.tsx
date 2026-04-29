@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { MentionTextarea, MentionText } from "@/components/mention-textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DiscussionCard from "@/components/discussion-card";
 import { BackButton } from "@/components/BackButton";
@@ -85,7 +86,7 @@ function DiscussionReplies({ discussionId }: { discussionId: string }) {
                 • {getTimeAgo(reply.createdAt)}
               </span>
             </div>
-            <p className="text-xs text-black">{reply.content}</p>
+            <p className="text-xs text-black whitespace-pre-wrap"><MentionText text={reply.content} /></p>
             <div className="mt-1">
               <HonorButton
                 type="reply"
@@ -180,11 +181,14 @@ function DiscussionReplyForm({ discussionId, currentUserSubscriptionStatus, disc
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Textarea
-                  placeholder={hasReplyAccess ? "Write your reply..." : "Subscription required to reply"}
+                <MentionTextarea
+                  placeholder={hasReplyAccess ? "Write your reply... Type @ to mention a brother." : "Subscription required to reply"}
                   className="min-h-[80px] resize-none"
                   disabled={!hasReplyAccess || createReply.isPending}
-                  {...field}
+                  value={field.value || ''}
+                  onChange={field.onChange}
+                  name={field.name}
+                  onBlur={field.onBlur}
                 />
               </FormControl>
               <FormMessage />
@@ -671,10 +675,13 @@ export default function Community() {
                               data-testid="div-discussion-content"
                             />
                           ) : (
-                            <Textarea
-                              placeholder="Share your thoughts, photos, videos, or memes..."
+                            <MentionTextarea
+                              placeholder="Share your thoughts, photos, videos, or memes... Type @ to mention a brother."
                               className="min-h-[120px] max-h-[40vh] bg-white border-2 border-black text-black placeholder:text-gray-500 rounded-sm resize-none"
-                              {...field}
+                              value={field.value || ''}
+                              onChange={field.onChange}
+                              name={field.name}
+                              onBlur={field.onBlur}
                               data-testid="textarea-discussion-content"
                             />
                           )}

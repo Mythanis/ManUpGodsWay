@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { MentionTextarea, MentionText } from "@/components/mention-textarea";
 import { MapPin, Users, User, Calendar, ChevronLeft, LogOut, CheckCircle2, XCircle, UserPlus, MessageCircle, Pin, Trash2, Send, Pencil, X, Save, Image, Video, Loader2, Shield, UserMinus, ChevronDown, ChevronUp } from "lucide-react";
 import { BackButton } from "@/components/BackButton";
 
@@ -935,10 +936,10 @@ export default function WarGroupDetail() {
               {/* Create Post */}
               <Card className="bg-black/90 border-2 border-ministry-gold-exact shadow-[0_0_20px_rgba(253,208,0,0.1)]">
                 <CardContent className="pt-4">
-                  <Textarea
-                    placeholder="SHARE SOMETHING WITH YOUR GROUP..."
+                  <MentionTextarea
+                    placeholder="SHARE SOMETHING WITH YOUR GROUP... TYPE @ TO MENTION"
                     value={newPostContent}
-                    onChange={(e) => setNewPostContent(e.target.value)}
+                    onChange={setNewPostContent}
                     className="bg-white text-black border-2 border-black font-medium placeholder:text-black/50 placeholder:text-xs placeholder:tracking-widest placeholder:uppercase resize-none"
                     rows={3}
                     data-testid="input-new-post"
@@ -1196,7 +1197,7 @@ function PostCard({
 
         {/* White content box */}
         <div className="bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-sm p-3 mb-3">
-          <p className="text-black font-medium leading-relaxed whitespace-pre-wrap">{post.content}</p>
+          <p className="text-black font-medium leading-relaxed whitespace-pre-wrap"><MentionText text={post.content} /></p>
 
           {/* Media Display */}
           {post.mediaUrls && post.mediaUrls.length > 0 && (
@@ -1254,10 +1255,10 @@ function PostCard({
           <div className="mt-3 pt-3 border-t border-white/10">
             {/* Reply Input */}
             <div className="flex gap-2 mb-3">
-              <Textarea
-                placeholder="WRITE A REPLY..."
+              <MentionTextarea
+                placeholder="WRITE A REPLY... TYPE @ TO MENTION"
                 value={replyContent}
-                onChange={(e) => onReplyContentChange(e.target.value)}
+                onChange={onReplyContentChange}
                 className="bg-white text-black border-2 border-black font-medium placeholder:text-black/50 placeholder:text-xs placeholder:tracking-widest placeholder:uppercase resize-none flex-1"
                 rows={2}
                 data-testid={`input-reply-${post.id}`}
@@ -1321,9 +1322,9 @@ function PostCard({
                       </div>
                       {editingReplyId === reply.id ? (
                         <div className="mt-1">
-                          <Textarea
+                          <MentionTextarea
                             value={editReplyContent}
-                            onChange={(e) => setEditReplyContent(e.target.value)}
+                            onChange={setEditReplyContent}
                             className="bg-white text-black border-2 border-ministry-gold-exact text-sm min-h-[60px] resize-none"
                             autoFocus
                           />

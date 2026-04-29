@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { MentionTextarea, MentionText } from "@/components/mention-textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -783,7 +784,7 @@ export default function Messages() {
                             {message.user.firstName} {message.user.lastName}
                           </p>
                         )}
-                        <p className="text-sm">{message.content}</p>
+                        <p className="text-sm whitespace-pre-wrap"><MentionText text={message.content} /></p>
                         <p className={`text-xs mt-1 ${
                           message.userId === (user as any)?.id ? 'text-black/70' : 'text-black/50'
                         }`}>
@@ -803,12 +804,18 @@ export default function Messages() {
             <div className="px-6 py-4">
               <form onSubmit={handleSendMessage}>
                 <div className="flex space-x-2">
-                  <Input
+                  <MentionTextarea
                     value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Type a message..."
-                    className="flex-1 rounded-sm border-2 border-black"
+                    onChange={setNewMessage}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage(e as any);
+                      }
+                    }}
+                    placeholder="Type a message... Type @ to mention a brother."
+                    className="flex-1 rounded-sm border-2 border-black min-h-[40px] max-h-32"
+                    rows={1}
                     disabled={sendMessageMutation.isPending}
                     data-testid="input-new-message"
                     autoComplete="off"

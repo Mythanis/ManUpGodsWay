@@ -781,6 +781,7 @@ export const notificationPreferences = pgTable("notification_preferences", {
   fitnessPlanReminderNotifications: boolean("fitness_plan_reminder_notifications").default(true),
   fitnessCommunityNotifications: boolean("fitness_community_notifications").default(true),
   mealReminderNotifications: boolean("meal_reminder_notifications").default(true),
+  mentionNotifications: boolean("mention_notifications").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -922,15 +923,33 @@ export const messageRequests = pgTable("message_requests", {
 export const notifications = pgTable("notifications", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
-  type: varchar("type").notNull(), // 'message_request', 'new_message', 'new_study', 'new_devotional', 'group_message'
+  type: varchar("type").notNull(), // 'message_request', 'new_message', 'new_study', 'new_devotional', 'group_message', 'mention'
   title: varchar("title").notNull(),
   message: text("message").notNull(),
   relatedId: varchar("related_id"), // ID of related entity (conversation, study, etc.)
+  linkUrl: varchar("link_url"), // Direct deep-link URL preferred over per-type lookup (used for mentions)
   isRead: boolean("is_read").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_notifications_user_id_created_at").on(table.userId, table.createdAt), // Notification bell queries
 ]);
+
+// Tracks who was mentioned in which post/reply/message — used for edit deltas
+// (only newly-added mentions are notified on edit)
+export const mentions = pgTable("mentions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sourceType: varchar("source_type").notNull(), // 'hurdle_wall_post', 'hurdle_wall_reply', 'discussion', 'discussion_reply', 'message', 'war_group_post', 'war_group_reply', 'accountability_request'
+  sourceId: varchar("source_id").notNull(),
+  mentionedUserId: varchar("mentioned_user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  authorId: varchar("author_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_mentions_source").on(table.sourceType, table.sourceId),
+  index("idx_mentions_user").on(table.mentionedUserId),
+]);
+
+export type Mention = typeof mentions.$inferSelect;
+export type InsertMention = typeof mentions.$inferInsert;
 
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
