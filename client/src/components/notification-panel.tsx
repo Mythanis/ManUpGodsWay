@@ -17,10 +17,11 @@ import { useToast } from "@/hooks/use-toast";
 interface Notification {
   id: string;
   userId: string;
-  type: 'message_request' | 'new_message' | 'new_study' | 'new_devotional' | 'devotional' | 'group_message' | 'message' | 'new_discussion' | 'discussion' | 'discussion_reply' | 'study' | 'video' | 'new_video' | 'admin' | 'brotherhood' | 'event' | 'new_event' | 'challenge' | 'challenge_ended' | 'new_challenge' | 'war_group' | 'content_flag' | 'war_room_post' | 'under_fire_post' | 'fitness_community';
+  type: 'message_request' | 'new_message' | 'new_study' | 'new_devotional' | 'devotional' | 'group_message' | 'message' | 'new_discussion' | 'discussion' | 'discussion_reply' | 'study' | 'video' | 'new_video' | 'admin' | 'brotherhood' | 'event' | 'new_event' | 'challenge' | 'challenge_ended' | 'new_challenge' | 'war_group' | 'content_flag' | 'war_room_post' | 'under_fire_post' | 'fitness_community' | 'mention';
   title: string;
   message: string;
   relatedId?: string;
+  linkUrl?: string;
   isRead: boolean;
   createdAt: string;
 }
@@ -203,8 +204,8 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
 
     // If a direct link URL was stored on the notification (used for @-mentions),
     // honor it over per-type lookup so the user lands on the exact post/reply.
-    if ((notification as any).linkUrl) {
-      goTo((notification as any).linkUrl);
+    if (notification.linkUrl) {
+      goTo(notification.linkUrl);
       return;
     }
 
@@ -306,6 +307,10 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
 
       case 'fitness_community':
         goTo('/fitness?tab=community');
+        break;
+
+      case 'mention':
+        goTo(notification.relatedId ? `/community?discussion=${notification.relatedId}` : '/community');
         break;
 
       default:

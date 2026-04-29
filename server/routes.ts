@@ -2887,7 +2887,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               title: '💬 New Community Discussion',
               message: `${creatorName} started a new discussion: "${discussion.title}"`,
               relatedId: discussion.id,
-            });
+              linkUrl: `/community?discussion=${discussion.id}`,
+            }, { url: `/community?discussion=${discussion.id}` });
           });
           
           await Promise.allSettled(notificationPromises);
@@ -3037,7 +3038,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               title: '💬 New Reply in Subscribed Discussion',
               message: `${replierName} replied to "${discussion.title}"`,
               relatedId: `${discussion.id}__reply__${reply.id}`,
-            });
+              linkUrl: `/community?discussion=${discussion.id}&reply=${reply.id}`,
+            }, { url: `/community?discussion=${discussion.id}&reply=${reply.id}` });
           });
           
           await Promise.allSettled(notificationPromises);
