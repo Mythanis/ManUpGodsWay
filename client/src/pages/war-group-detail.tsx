@@ -1341,7 +1341,7 @@ function PostCard({
                           </div>
                         </div>
                       ) : (
-                        <p className="text-black text-sm font-medium leading-relaxed mt-1">{reply.content}</p>
+                        <p className="text-black text-sm font-medium leading-relaxed mt-1"><MentionText text={reply.content} /></p>
                       )}
                     </div>
                   </div>

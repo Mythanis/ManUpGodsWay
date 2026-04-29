@@ -3961,8 +3961,9 @@ export class DatabaseStorage implements IStorage {
       return null;
     }
     
-    const newNotification = await this.createNotification(notification);
-    // Push notification is fired automatically inside createNotification
+    // Thread the per-notification deep-link URL through so push notifications
+    // open the exact post/message instead of the generic type-based fallback.
+    const newNotification = await this.createNotification(notification, pushPayload?.url ? { pushUrl: pushPayload.url } : undefined);
     return newNotification;
   }
 
