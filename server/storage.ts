@@ -433,6 +433,8 @@ export interface IStorage {
   }): Promise<User>;
   cancelUserSubscription(userId: string): Promise<User>;
   reactivateUserSubscription(userId: string, currentPeriodEnd?: Date): Promise<User>;
+  countEligibleForTrialExtension(): Promise<number>;
+  bulkGrantTrialExtension(trialDays: number): Promise<number>;
   checkExpiredSubscriptions(): Promise<User[]>;
   banUser(userId: string, reason: string): Promise<User>;
   unbanUser(userId: string): Promise<User>;
@@ -3335,6 +3337,32 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, userId))
       .returning();
     return updatedUser;
+  }
+
+  async countEligibleForTrialExtension(): Promise<number> {
+    const result = await db
+      .select({ count: count() })
+      .from(users)
+      .where(inArray(users.subscriptionStatus, ['expired', 'trial']));
+    return Number(result[0]?.count ?? 0);
+  }
+
+  async bulkGrantTrialExtension(trialDays: number): Promise<number> {
+    const now = new Date();
+    const trialEnd = new Date(now);
+    trialEnd.setDate(now.getDate() + trialDays);
+    const result = await db
+      .update(users)
+      .set({
+        subscriptionStatus: 'trial',
+        subscriptionTier: 'trial',
+        trialStartDate: now,
+        trialEndDate: trialEnd,
+        updatedAt: now,
+      })
+      .where(inArray(users.subscriptionStatus, ['expired', 'trial']))
+      .returning({ id: users.id });
+    return result.length;
   }
 
   async reactivateUserSubscription(userId: string, currentPeriodEnd?: Date): Promise<User> {

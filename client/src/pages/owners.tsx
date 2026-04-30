@@ -8,10 +8,20 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Crown, Users, Database, Activity, Trash2, CreditCard,
   CheckCircle2, XCircle, AlertCircle, RefreshCw, BookOpen, Video,
   Newspaper, Swords, Calendar, Mic, Book, ArrowLeft, FlaskConical,
-  Ban, Loader2, DollarSign, Repeat, Lock,
+  Ban, Loader2, DollarSign, Repeat, Lock, Gift,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { loadStripe } from "@stripe/stripe-js";
@@ -711,6 +721,14 @@ const navCards = [
 
 export default function Owners() {
   const [view, setView] = useState<View>('landing');
+  const [showTrialConfirm, setShowTrialConfirm] = useState(false);
+  const { toast } = useToast();
+
+  const { data: currentUser } = useQuery<any>({
+    queryKey: ['/api/auth/user'],
+  });
+
+  const isOwnerUser = currentUser?.role === 'owner';
 
   const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ['/api/admin/users'],
@@ -740,6 +758,32 @@ export default function Owners() {
     },
   });
 
+  const { data: trialCountData, refetch: refetchTrialCount } = useQuery({
+    queryKey: ['/api/owners/users/grant-trial-extension/count'],
+    queryFn: async () => {
+      const res = await fetch('/api/owners/users/grant-trial-extension/count', { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed');
+      return res.json() as Promise<{ eligibleCount: number }>;
+    },
+    enabled: isOwnerUser,
+  });
+
+  const grantTrialMutation = useMutation({
+    mutationFn: async () => apiRequest('POST', '/api/owners/users/grant-trial-extension'),
+    onSuccess: (data: any) => {
+      toast({
+        title: 'Trial Extension Granted',
+        description: `Granted ${data.trialDays}-day trial to ${data.count} member${data.count !== 1 ? 's' : ''}.`,
+      });
+      refetchTrialCount();
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+    },
+    onError: () => {
+      toast({ title: 'Error', description: 'Failed to grant trial extension.', variant: 'destructive' });
+    },
+  });
+
   // ── Sub-page routing ────────────────────────────────────────────────────────
   if (view === 'overview') return <OverviewPage onBack={() => setView('landing')} users={users as any[]} stats={stats} contentStats={contentStats} />;
   if (view === 'stripe')   return <StripePage   onBack={() => setView('landing')} />;
@@ -753,6 +797,8 @@ export default function Owners() {
       </div>
     );
   }
+
+  const eligibleCount = trialCountData?.eligibleCount ?? 0;
 
   return (
     <div className="pb-24 bg-ministry-light-gray min-h-screen">
@@ -797,6 +843,39 @@ export default function Owners() {
         </div>
       </div>
 
+      {/* Trial Boost — owner-only */}
+      {isOwnerUser && (
+        <div className="px-6 mb-6">
+          <SectionCard title="Trial Boost">
+            <div className="px-4 py-4">
+              <p className="text-white/70 text-sm mb-1">
+                Grant a fresh 7-day trial to all expired and trial-status members.
+              </p>
+              <p className="text-white/40 text-xs mb-4">
+                Active subscribers and cancelled-but-still-active members are never touched.
+              </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[#FDD000] font-black text-2xl">{eligibleCount}</p>
+                  <p className="text-white/50 text-xs uppercase tracking-wide">Eligible members</p>
+                </div>
+                <Button
+                  onClick={() => setShowTrialConfirm(true)}
+                  disabled={grantTrialMutation.isPending || eligibleCount === 0}
+                  className="bg-[#FDD000] hover:bg-[#FDD000]/90 text-black font-black uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50"
+                >
+                  {grantTrialMutation.isPending ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Granting…</>
+                  ) : (
+                    <><Gift className="w-4 h-4 mr-2" /> Grant 7-Day Trial</>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </SectionCard>
+        </div>
+      )}
+
       {/* Nav cards */}
       <div className="px-6 mb-6">
         <div className="space-y-2">
@@ -825,6 +904,45 @@ export default function Owners() {
           })}
         </div>
       </div>
+
+      {/* Trial Boost confirmation dialog */}
+      <AlertDialog open={showTrialConfirm} onOpenChange={setShowTrialConfirm}>
+        <AlertDialogContent className="bg-[#111] border-2 border-[#FDD000]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white font-black uppercase">
+              Grant 7-Day Trial to {eligibleCount} Member{eligibleCount !== 1 ? 's' : ''}?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-white/60 text-sm space-y-2">
+              <span className="block">
+                This will reset the trial window to <strong className="text-white">7 days from now</strong> for every member currently in expired or trial status.
+              </span>
+              <span className="block mt-2 text-green-400 font-semibold">
+                ✓ Active subscribers — untouched
+              </span>
+              <span className="block text-green-400 font-semibold">
+                ✓ Cancelled (still in billing period) — untouched
+              </span>
+              <span className="block text-yellow-400 font-semibold">
+                → Expired &amp; trial members — get fresh 7-day access
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-white/20 text-white bg-transparent hover:bg-white/10">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowTrialConfirm(false);
+                grantTrialMutation.mutate();
+              }}
+              className="bg-[#FDD000] text-black font-black hover:bg-[#FDD000]/90 border-2 border-black"
+            >
+              Yes, Grant Trial
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

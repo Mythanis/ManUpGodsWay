@@ -493,6 +493,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Count users eligible for bulk trial extension (expired + trial status only)
+  app.get('/api/owners/users/grant-trial-extension/count', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!isOwner(user)) {
+        return res.status(403).json({ message: "Owner access required" });
+      }
+      const eligibleCount = await storage.countEligibleForTrialExtension();
+      res.json({ eligibleCount });
+    } catch (error) {
+      console.error("Error counting eligible trial users:", error);
+      res.status(500).json({ message: "Failed to count eligible users" });
+    }
+  });
+
+  // Bulk grant 7-day trial extension to all expired + trial users
+  app.post('/api/owners/users/grant-trial-extension', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!isOwner(user)) {
+        return res.status(403).json({ message: "Owner access required" });
+      }
+      let trialDays = 7;
+      try {
+        const settings = await storage.getSubscriptionSettings();
+        if (settings?.trialDurationDays) trialDays = settings.trialDurationDays;
+      } catch {}
+      const count = await storage.bulkGrantTrialExtension(trialDays);
+      console.log(`[TrialBoost] Owner ${user.id} granted ${trialDays}-day trial to ${count} users`);
+      res.json({ count, trialDays, grantedAt: new Date().toISOString() });
+    } catch (error) {
+      console.error("Error granting bulk trial extension:", error);
+      res.status(500).json({ message: "Failed to grant trial extension" });
+    }
+  });
+
   // Update user theme preference
   app.put('/api/user/theme', isAuthenticated, async (req: any, res) => {
     try {
