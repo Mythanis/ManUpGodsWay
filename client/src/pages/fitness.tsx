@@ -2067,11 +2067,16 @@ export default function Fitness() {
 
       let cardioPool: APIExercise[] = [];
       if (workoutStyle === 'standard-cardio') {
-        const cardioEquipment = ['Treadmill','Stationary Bike','Rowing Machine','Elliptical Machine','Assault Bike','Jump Rope','Stepmill','Battle Ropes','Ski Ergometer','Rebounder'];
-        try {
-          cardioPool = await getExercisesForEquipment(cardioEquipment, level);
-        } catch (e) {
-          console.warn('Failed to fetch cardio pool', e);
+        const allCardioEquipment = ['Treadmill','Stationary Bike','Rowing Machine','Elliptical Machine','Assault Bike','Jump Rope','Stepmill','Battle Ropes','Ski Ergometer','Rebounder'];
+        // Only include cardio machines the user has actually selected (case-insensitive match)
+        const userEquipmentLower = equipmentList.map(e => e.toLowerCase());
+        const cardioEquipment = allCardioEquipment.filter(eq => userEquipmentLower.includes(eq.toLowerCase()));
+        if (cardioEquipment.length > 0) {
+          try {
+            cardioPool = await getExercisesForEquipment(cardioEquipment, level);
+          } catch (e) {
+            console.warn('Failed to fetch cardio pool', e);
+          }
         }
         // Bodyweight cardio fallback by name match
         const cardioNamePatterns = ['burpee','mountain climber','jumping jack','high knee','jump rope','jump squat','sprint','running','jog'];
