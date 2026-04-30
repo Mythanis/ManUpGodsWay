@@ -861,7 +861,7 @@ export default function Owners() {
                   <p className="text-white/50 text-xs uppercase tracking-wide">Eligible members</p>
                 </div>
                 <Button
-                  onClick={() => setShowTrialConfirm(true)}
+                  onClick={() => { refetchTrialCount(); setShowTrialConfirm(true); }}
                   disabled={grantTrialMutation.isPending || eligibleCount === 0}
                   className="bg-[#FDD000] hover:bg-[#FDD000]/90 text-black font-black uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50"
                 >
