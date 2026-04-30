@@ -3343,7 +3343,10 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .select({ count: count() })
       .from(users)
-      .where(inArray(users.subscriptionStatus, ['expired', 'trial']));
+      .where(and(
+        inArray(users.subscriptionStatus, ['expired', 'trial']),
+        not(inArray(users.role, ['owner', 'admin'])),
+      ));
     return Number(result[0]?.count ?? 0);
   }
 
@@ -3360,7 +3363,10 @@ export class DatabaseStorage implements IStorage {
         trialEndDate: trialEnd,
         updatedAt: now,
       })
-      .where(inArray(users.subscriptionStatus, ['expired', 'trial']))
+      .where(and(
+        inArray(users.subscriptionStatus, ['expired', 'trial']),
+        not(inArray(users.role, ['owner', 'admin'])),
+      ))
       .returning({ id: users.id });
     return result.length;
   }

@@ -763,7 +763,7 @@ export default function Owners() {
     queryFn: async () => {
       const res = await fetch('/api/owners/users/grant-trial-extension/count', { credentials: 'include' });
       if (!res.ok) throw new Error('Failed');
-      return res.json() as Promise<{ eligibleCount: number }>;
+      return res.json() as Promise<{ eligibleCount: number; trialDays: number }>;
     },
     enabled: isOwnerUser,
   });
@@ -799,6 +799,7 @@ export default function Owners() {
   }
 
   const eligibleCount = trialCountData?.eligibleCount ?? 0;
+  const configuredTrialDays = trialCountData?.trialDays ?? 7;
 
   return (
     <div className="pb-24 bg-ministry-light-gray min-h-screen">
@@ -849,7 +850,7 @@ export default function Owners() {
           <SectionCard title="Trial Boost">
             <div className="px-4 py-4">
               <p className="text-white/70 text-sm mb-1">
-                Grant a fresh 7-day trial to all expired and trial-status members.
+                Grant a fresh {configuredTrialDays}-day trial to all expired and trial-status members.
               </p>
               <p className="text-white/40 text-xs mb-4">
                 Active subscribers and cancelled-but-still-active members are never touched.
@@ -867,7 +868,7 @@ export default function Owners() {
                   {grantTrialMutation.isPending ? (
                     <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Granting…</>
                   ) : (
-                    <><Gift className="w-4 h-4 mr-2" /> Grant 7-Day Trial</>
+                    <><Gift className="w-4 h-4 mr-2" /> Grant {configuredTrialDays}-Day Trial</>
                   )}
                 </Button>
               </div>
@@ -910,11 +911,11 @@ export default function Owners() {
         <AlertDialogContent className="bg-[#111] border-2 border-[#FDD000]">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white font-black uppercase">
-              Grant 7-Day Trial to {eligibleCount} Member{eligibleCount !== 1 ? 's' : ''}?
+              Grant {configuredTrialDays}-Day Trial to {eligibleCount} Member{eligibleCount !== 1 ? 's' : ''}?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-white/60 text-sm space-y-2">
               <span className="block">
-                This will reset the trial window to <strong className="text-white">7 days from now</strong> for every member currently in expired or trial status.
+                This will reset the trial window to <strong className="text-white">{configuredTrialDays} days from now</strong> for every member currently in expired or trial status.
               </span>
               <span className="block mt-2 text-green-400 font-semibold">
                 ✓ Active subscribers — untouched
@@ -922,8 +923,11 @@ export default function Owners() {
               <span className="block text-green-400 font-semibold">
                 ✓ Cancelled (still in billing period) — untouched
               </span>
+              <span className="block text-green-400 font-semibold">
+                ✓ Owners &amp; admins — untouched
+              </span>
               <span className="block text-yellow-400 font-semibold">
-                → Expired &amp; trial members — get fresh 7-day access
+                → Expired &amp; trial members — get fresh {configuredTrialDays}-day access
               </span>
             </AlertDialogDescription>
           </AlertDialogHeader>
