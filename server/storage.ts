@@ -166,6 +166,9 @@ import {
   type HurdleWallAmen,
   accountabilityRequests,
   accountabilitySupports,
+  accountabilityRequestComments,
+  accountabilityRequestAmens,
+  accountabilityRequestOhMes,
   type AccountabilityRequest,
   type UserPrayerStats,
   type InsertUserPrayerStats,
@@ -772,6 +775,14 @@ export interface IStorage {
   unassistAccountabilityRequest(requestId: string): Promise<any>;
   deleteAccountabilityRequest(id: string): Promise<void>;
   toggleAccountabilitySupport(requestId: string, userId: string): Promise<{ supported: boolean; totalSupports: number }>;
+  getAccountabilityRequestComments(requestId: string): Promise<any[]>;
+  createAccountabilityRequestComment(data: { requestId: string; userId: string; content: string; parentCommentId?: string }): Promise<any>;
+  deleteAccountabilityRequestComment(commentId: string, userId: string, canModerate: boolean): Promise<boolean>;
+  updateAccountabilityRequestComment(commentId: string, userId: string, content: string): Promise<any>;
+  toggleAccountabilityRequestAmen(requestId: string, userId: string): Promise<{ amened: boolean; count: number }>;
+  getAccountabilityRequestAmeners(requestId: string): Promise<any[]>;
+  toggleAccountabilityRequestOhMe(requestId: string, userId: string): Promise<{ ohMed: boolean; count: number }>;
+  getAccountabilityRequestOhMers(requestId: string): Promise<any[]>;
 
   getActiveManUpLinks(): Promise<ManUpLink[]>;
   getAllManUpLinks(): Promise<ManUpLink[]>;
@@ -7945,21 +7956,40 @@ export class DatabaseStorage implements IStorage {
       .from(accountabilityRequests)
       .orderBy(desc(accountabilityRequests.createdAt));
 
-    // Pre-fetch support counts and current user's support status in bulk
     const requestIds = requests.map(r => r.id);
     let supportCountsMap: Record<string, number> = {};
     let userSupportedSet = new Set<string>();
+    let amenCountsMap: Record<string, number> = {};
+    let userAmenedSet = new Set<string>();
+    let ohMeCountsMap: Record<string, number> = {};
+    let userOhMedSet = new Set<string>();
+    let commentCountsMap: Record<string, number> = {};
 
     if (requestIds.length > 0) {
-      const supportRows = await db
-        .select({ requestId: accountabilitySupports.requestId, userId: accountabilitySupports.userId })
-        .from(accountabilitySupports)
-        .where(inArray(accountabilitySupports.requestId, requestIds));
+      const [supportRows, amenRows, ohMeRows, commentRows] = await Promise.all([
+        db.select({ requestId: accountabilitySupports.requestId, userId: accountabilitySupports.userId })
+          .from(accountabilitySupports).where(inArray(accountabilitySupports.requestId, requestIds)),
+        db.select({ requestId: accountabilityRequestAmens.requestId, userId: accountabilityRequestAmens.userId })
+          .from(accountabilityRequestAmens).where(inArray(accountabilityRequestAmens.requestId, requestIds)),
+        db.select({ requestId: accountabilityRequestOhMes.requestId, userId: accountabilityRequestOhMes.userId })
+          .from(accountabilityRequestOhMes).where(inArray(accountabilityRequestOhMes.requestId, requestIds)),
+        db.select({ requestId: accountabilityRequestComments.requestId })
+          .from(accountabilityRequestComments).where(inArray(accountabilityRequestComments.requestId, requestIds)),
+      ]);
       for (const row of supportRows) {
         supportCountsMap[row.requestId] = (supportCountsMap[row.requestId] || 0) + 1;
-        if (currentUserId && row.userId === currentUserId) {
-          userSupportedSet.add(row.requestId);
-        }
+        if (currentUserId && row.userId === currentUserId) userSupportedSet.add(row.requestId);
+      }
+      for (const row of amenRows) {
+        amenCountsMap[row.requestId] = (amenCountsMap[row.requestId] || 0) + 1;
+        if (currentUserId && row.userId === currentUserId) userAmenedSet.add(row.requestId);
+      }
+      for (const row of ohMeRows) {
+        ohMeCountsMap[row.requestId] = (ohMeCountsMap[row.requestId] || 0) + 1;
+        if (currentUserId && row.userId === currentUserId) userOhMedSet.add(row.requestId);
+      }
+      for (const row of commentRows) {
+        commentCountsMap[row.requestId] = (commentCountsMap[row.requestId] || 0) + 1;
       }
     }
 
@@ -7987,6 +8017,11 @@ export class DatabaseStorage implements IStorage {
           } : null,
           supportCount: supportCountsMap[request.id] || 0,
           gotYour6ByMe: userSupportedSet.has(request.id),
+          amenCount: amenCountsMap[request.id] || 0,
+          amenedByMe: userAmenedSet.has(request.id),
+          ohMeCount: ohMeCountsMap[request.id] || 0,
+          ohMeByMe: userOhMedSet.has(request.id),
+          commentCount: commentCountsMap[request.id] || 0,
         };
       })
     );
@@ -8060,6 +8095,104 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAccountabilityRequest(id: string): Promise<void> {
     await db.delete(accountabilityRequests).where(eq(accountabilityRequests.id, id));
+  }
+
+  async getAccountabilityRequestComments(requestId: string): Promise<any[]> {
+    const rows = await db
+      .select({
+        id: accountabilityRequestComments.id,
+        requestId: accountabilityRequestComments.requestId,
+        userId: accountabilityRequestComments.userId,
+        content: accountabilityRequestComments.content,
+        parentCommentId: accountabilityRequestComments.parentCommentId,
+        createdAt: accountabilityRequestComments.createdAt,
+        updatedAt: accountabilityRequestComments.updatedAt,
+        authorFirstName: users.firstName,
+        authorLastName: users.lastName,
+        authorProfilePicture: users.profileImageUrl,
+      })
+      .from(accountabilityRequestComments)
+      .leftJoin(users, eq(accountabilityRequestComments.userId, users.id))
+      .where(eq(accountabilityRequestComments.requestId, requestId))
+      .orderBy(asc(accountabilityRequestComments.createdAt));
+    return rows.map(r => ({
+      ...r,
+      authorName: `${r.authorFirstName || ''} ${r.authorLastName || ''}`.trim(),
+    }));
+  }
+
+  async createAccountabilityRequestComment(data: { requestId: string; userId: string; content: string; parentCommentId?: string }): Promise<any> {
+    const [created] = await db
+      .insert(accountabilityRequestComments)
+      .values({
+        requestId: data.requestId,
+        userId: data.userId,
+        content: data.content,
+        parentCommentId: data.parentCommentId || null,
+      })
+      .returning();
+    return created;
+  }
+
+  async deleteAccountabilityRequestComment(commentId: string, userId: string, canModerate: boolean): Promise<boolean> {
+    const [comment] = await db.select().from(accountabilityRequestComments).where(eq(accountabilityRequestComments.id, commentId));
+    if (!comment) return false;
+    if (comment.userId !== userId && !canModerate) return false;
+    await db.delete(accountabilityRequestComments).where(eq(accountabilityRequestComments.id, commentId));
+    return true;
+  }
+
+  async updateAccountabilityRequestComment(commentId: string, userId: string, content: string): Promise<any> {
+    const [comment] = await db.select().from(accountabilityRequestComments).where(eq(accountabilityRequestComments.id, commentId));
+    if (!comment || comment.userId !== userId) return null;
+    const [updated] = await db
+      .update(accountabilityRequestComments)
+      .set({ content, updatedAt: new Date() })
+      .where(eq(accountabilityRequestComments.id, commentId))
+      .returning();
+    return updated;
+  }
+
+  async toggleAccountabilityRequestAmen(requestId: string, userId: string): Promise<{ amened: boolean; count: number }> {
+    const [existing] = await db.select().from(accountabilityRequestAmens)
+      .where(and(eq(accountabilityRequestAmens.requestId, requestId), eq(accountabilityRequestAmens.userId, userId)));
+    if (existing) {
+      await db.delete(accountabilityRequestAmens).where(and(eq(accountabilityRequestAmens.requestId, requestId), eq(accountabilityRequestAmens.userId, userId)));
+    } else {
+      await db.insert(accountabilityRequestAmens).values({ requestId, userId });
+    }
+    const [{ count }] = await db.select({ count: sql<number>`count(*)` }).from(accountabilityRequestAmens).where(eq(accountabilityRequestAmens.requestId, requestId));
+    return { amened: !existing, count: Number(count) };
+  }
+
+  async getAccountabilityRequestAmeners(requestId: string): Promise<any[]> {
+    return db
+      .select({ id: users.id, firstName: users.firstName, lastName: users.lastName, profileImageUrl: users.profileImageUrl })
+      .from(accountabilityRequestAmens)
+      .innerJoin(users, eq(accountabilityRequestAmens.userId, users.id))
+      .where(eq(accountabilityRequestAmens.requestId, requestId))
+      .orderBy(desc(accountabilityRequestAmens.createdAt));
+  }
+
+  async toggleAccountabilityRequestOhMe(requestId: string, userId: string): Promise<{ ohMed: boolean; count: number }> {
+    const [existing] = await db.select().from(accountabilityRequestOhMes)
+      .where(and(eq(accountabilityRequestOhMes.requestId, requestId), eq(accountabilityRequestOhMes.userId, userId)));
+    if (existing) {
+      await db.delete(accountabilityRequestOhMes).where(and(eq(accountabilityRequestOhMes.requestId, requestId), eq(accountabilityRequestOhMes.userId, userId)));
+    } else {
+      await db.insert(accountabilityRequestOhMes).values({ requestId, userId });
+    }
+    const [{ count }] = await db.select({ count: sql<number>`count(*)` }).from(accountabilityRequestOhMes).where(eq(accountabilityRequestOhMes.requestId, requestId));
+    return { ohMed: !existing, count: Number(count) };
+  }
+
+  async getAccountabilityRequestOhMers(requestId: string): Promise<any[]> {
+    return db
+      .select({ id: users.id, firstName: users.firstName, lastName: users.lastName, profileImageUrl: users.profileImageUrl })
+      .from(accountabilityRequestOhMes)
+      .innerJoin(users, eq(accountabilityRequestOhMes.userId, users.id))
+      .where(eq(accountabilityRequestOhMes.requestId, requestId))
+      .orderBy(desc(accountabilityRequestOhMes.createdAt));
   }
 
   async getActiveManUpLinks(): Promise<ManUpLink[]> {

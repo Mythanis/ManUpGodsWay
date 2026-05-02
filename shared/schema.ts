@@ -1939,6 +1939,43 @@ export const accountabilitySupports = pgTable("accountability_supports", {
 
 export type AccountabilitySupport = typeof accountabilitySupports.$inferSelect;
 
+// Accountability request comments (threaded)
+export const accountabilityRequestComments = pgTable("accountability_request_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  requestId: varchar("request_id").notNull().references(() => accountabilityRequests.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  content: text("content").notNull(),
+  parentCommentId: varchar("parent_comment_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_acc_req_comments_request_id").on(table.requestId),
+]);
+
+// Accountability request amens (one per user per request)
+export const accountabilityRequestAmens = pgTable("accountability_request_amens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  requestId: varchar("request_id").notNull().references(() => accountabilityRequests.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  unique().on(table.requestId, table.userId),
+]);
+
+// Accountability request "Oh Me" (I struggle with this too)
+export const accountabilityRequestOhMes = pgTable("accountability_request_oh_mes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  requestId: varchar("request_id").notNull().references(() => accountabilityRequests.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  unique().on(table.requestId, table.userId),
+]);
+
+export type AccountabilityRequestComment = typeof accountabilityRequestComments.$inferSelect;
+export type AccountabilityRequestAmen = typeof accountabilityRequestAmens.$inferSelect;
+export type AccountabilityRequestOhMe = typeof accountabilityRequestOhMes.$inferSelect;
+
 // Carousel items for homepage featured content
 export const carouselItems = pgTable("carousel_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

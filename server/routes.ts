@@ -14716,6 +14716,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete accountability request (own, or any if moderator/admin)
+  // Accountability request comments
+  app.get('/api/accountability-requests/:requestId/comments', isAuthenticated, async (req: any, res) => {
+    try {
+      const comments = await storage.getAccountabilityRequestComments(req.params.requestId);
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching accountability request comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
+
+  app.post('/api/accountability-requests/:requestId/comments', isAuthenticated, strictWriteLimiter, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { requestId } = req.params;
+      const { content, parentCommentId } = req.body;
+      if (!content?.trim()) return res.status(400).json({ message: "Content is required" });
+      const comment = await storage.createAccountabilityRequestComment({ requestId, userId, content: content.trim(), parentCommentId });
+      res.status(201).json(comment);
+    } catch (error) {
+      console.error("Error creating accountability request comment:", error);
+      res.status(500).json({ message: "Failed to create comment" });
+    }
+  });
+
+  app.patch('/api/accountability-requests/comments/:commentId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { content } = req.body;
+      if (!content?.trim()) return res.status(400).json({ message: "Content is required" });
+      const updated = await storage.updateAccountabilityRequestComment(req.params.commentId, userId, content.trim());
+      if (!updated) return res.status(403).json({ message: "You can only edit your own comments" });
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating accountability request comment:", error);
+      res.status(500).json({ message: "Failed to update comment" });
+    }
+  });
+
+  app.delete('/api/accountability-requests/comments/:commentId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      const canModerate = isModerator(user);
+      const success = await storage.deleteAccountabilityRequestComment(req.params.commentId, userId, canModerate);
+      if (!success) return res.status(403).json({ message: "You can only delete your own comments" });
+      res.json({ message: "Comment deleted" });
+    } catch (error) {
+      console.error("Error deleting accountability request comment:", error);
+      res.status(500).json({ message: "Failed to delete comment" });
+    }
+  });
+
+  // Accountability request amens
+  app.post('/api/accountability-requests/:requestId/amen', isAuthenticated, strictWriteLimiter, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const result = await storage.toggleAccountabilityRequestAmen(req.params.requestId, userId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error toggling accountability request amen:", error);
+      res.status(500).json({ message: "Failed to toggle amen" });
+    }
+  });
+
+  app.get('/api/accountability-requests/:requestId/ameners', isAuthenticated, async (req: any, res) => {
+    try {
+      const ameners = await storage.getAccountabilityRequestAmeners(req.params.requestId);
+      res.json(ameners);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch ameners" });
+    }
+  });
+
+  // Accountability request oh-mes
+  app.post('/api/accountability-requests/:requestId/oh-me', isAuthenticated, strictWriteLimiter, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const result = await storage.toggleAccountabilityRequestOhMe(req.params.requestId, userId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error toggling oh-me:", error);
+      res.status(500).json({ message: "Failed to toggle oh-me" });
+    }
+  });
+
+  app.get('/api/accountability-requests/:requestId/oh-mers', isAuthenticated, async (req: any, res) => {
+    try {
+      const ohMers = await storage.getAccountabilityRequestOhMers(req.params.requestId);
+      res.json(ohMers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch oh-mers" });
+    }
+  });
+
   app.delete('/api/accountability-requests/:requestId', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
