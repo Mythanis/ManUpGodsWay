@@ -29,6 +29,7 @@ import prayerTimeIcon from "@assets/ChatGPT_Image_May_1,_2026,_10_48_16_PM_17776
 import trackProgressIcon from "@assets/ChatGPT_Image_May_1,_2026,_10_49_57_PM_1777693839748.png";
 import devotionIcon from "@assets/ChatGPT_Image_May_1,_2026,_11_06_18_PM_1777694829311.png";
 import brotherhoodJoinIcon from "@assets/ChatGPT_Image_May_1,_2026,_11_04_47_PM_1777695001089.png";
+import shareAppIcon from "@assets/ChatGPT_Image_May_1,_2026,_11_18_50_PM_1777695539807.png";
 import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star, Shield, MessageSquare, HandHeart, Mail, Link2, Newspaper, Book, Coins, BellRing, Plus, Trash2, Sun, RefreshCw, Dumbbell } from "lucide-react";
 import { SiFacebook, SiX, SiWhatsapp } from "react-icons/si";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -1504,8 +1505,8 @@ export default function Home() {
           className="w-full flex items-center justify-between p-4 bg-black border-2 border-[#FDD000] rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(253,208,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all active:shadow-none active:translate-x-[4px] active:translate-y-[4px]"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-sm bg-[#FDD000] flex items-center justify-center flex-shrink-0">
-              <Share2 className="w-5 h-5 text-black" />
+            <div className="w-10 h-10 rounded-sm overflow-hidden flex-shrink-0">
+              <img src={shareAppIcon} alt="Share the App" className="w-full h-full object-cover" />
             </div>
             <div className="text-left">
               <p className="text-sm font-black text-white uppercase tracking-wide leading-tight">Share the App</p>
