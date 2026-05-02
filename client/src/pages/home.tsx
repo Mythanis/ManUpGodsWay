@@ -20,6 +20,7 @@ import { WelcomeIntro } from "@/components/WelcomeIntro";
 import { formatLocalDate, formatLocalDateTime } from "@/lib/utils";
 import { stripMentionMarkdown } from "@/components/mention-textarea";
 import { getDefaultThumbnail } from "@/lib/default-thumbnail";
+import weeklyChallengeIcon from "@assets/ChatGPT_Image_May_1,_2026,_10_37_58_PM_1777693401898.png";
 import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star, Shield, MessageSquare, HandHeart, Mail, Link2, Newspaper, Book, Coins, BellRing, Plus, Trash2, Sun, RefreshCw, Dumbbell } from "lucide-react";
 import { SiFacebook, SiX, SiWhatsapp } from "react-icons/si";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -1335,8 +1336,8 @@ export default function Home() {
             data-testid="button-current-challenge"
             onClick={() => setShowChallengeDialog(true)}
           >
-            <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
-              <Target className="w-6 h-6 text-white relative z-10" />
+            <div className="h-full w-16 flex-shrink-0 overflow-hidden">
+              <img src={weeklyChallengeIcon} alt="Weekly Challenge" className="h-full w-full object-cover" />
             </div>
             <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">Weekly Challenge</span>
             <div className="pr-4">
