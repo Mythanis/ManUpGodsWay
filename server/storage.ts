@@ -2389,6 +2389,7 @@ export class DatabaseStorage implements IStorage {
         mediaUrls: discussions.mediaUrls,
         mediaTypes: discussions.mediaTypes,
         postType: discussions.postType,
+        pollOptions: discussions.pollOptions,
         createdAt: discussions.createdAt,
         updatedAt: discussions.updatedAt,
         user: users,
@@ -2458,7 +2459,7 @@ export class DatabaseStorage implements IStorage {
 
     if (currentUserId && rows.length > 0) {
       const discussionIds = rows.map((r: any) => r.id);
-      const [likedRows, dislikedRows, dislikeCounts, pollVoteRows, pollCountRows] = await Promise.all([
+      const [likedRows, dislikedRows, dislikeCounts] = await Promise.all([
         db.select({ discussionId: discussionLikes.discussionId })
           .from(discussionLikes)
           .where(and(eq(discussionLikes.userId, currentUserId), inArray(discussionLikes.discussionId, discussionIds))),
@@ -2469,21 +2470,29 @@ export class DatabaseStorage implements IStorage {
           .from(discussionDislikes)
           .where(inArray(discussionDislikes.discussionId, discussionIds))
           .groupBy(discussionDislikes.discussionId),
-        db.execute(sql`SELECT discussion_id, option_index FROM discussion_poll_votes WHERE user_id = ${currentUserId} AND discussion_id = ANY(${discussionIds})`),
-        db.execute(sql`SELECT discussion_id, option_index, COUNT(*)::int AS vote_count FROM discussion_poll_votes WHERE discussion_id = ANY(${discussionIds}) GROUP BY discussion_id, option_index`),
       ]);
       const likedSet = new Set(likedRows.map((r) => r.discussionId));
       const dislikedSet = new Set(dislikedRows.map((r) => r.discussionId));
       const dislikeCountMap: Record<string, number> = {};
       for (const row of dislikeCounts) { dislikeCountMap[row.discussionId] = Number(row.count); }
+
+      // Poll data — isolated so a missing table never breaks the feed
       const myVoteMap: Record<string, number> = {};
-      for (const row of (pollVoteRows.rows || pollVoteRows as any[])) { myVoteMap[(row as any).discussion_id] = (row as any).option_index; }
       const pollCountMap: Record<string, Record<number, number>> = {};
-      for (const row of (pollCountRows.rows || pollCountRows as any[])) {
-        const did = (row as any).discussion_id;
-        if (!pollCountMap[did]) pollCountMap[did] = {};
-        pollCountMap[did][(row as any).option_index] = Number((row as any).vote_count);
-      }
+      try {
+        const idList = discussionIds.map(id => `'${id}'`).join(',');
+        const [pollVoteRows, pollCountRows] = await Promise.all([
+          db.execute(sql.raw(`SELECT discussion_id, option_index FROM discussion_poll_votes WHERE user_id = '${currentUserId}' AND discussion_id IN (${idList})`)),
+          db.execute(sql.raw(`SELECT discussion_id, option_index, COUNT(*)::int AS vote_count FROM discussion_poll_votes WHERE discussion_id IN (${idList}) GROUP BY discussion_id, option_index`)),
+        ]);
+        for (const row of (pollVoteRows.rows || pollVoteRows as any[])) { myVoteMap[(row as any).discussion_id] = (row as any).option_index; }
+        for (const row of (pollCountRows.rows || pollCountRows as any[])) {
+          const did = (row as any).discussion_id;
+          if (!pollCountMap[did]) pollCountMap[did] = {};
+          pollCountMap[did][(row as any).option_index] = Number((row as any).vote_count);
+        }
+      } catch (_e) { /* poll table may not exist yet — degrade gracefully */ }
+
       return rows.map((r: any) => ({
         ...r,
         likedByMe: likedSet.has(r.id),
@@ -2497,21 +2506,24 @@ export class DatabaseStorage implements IStorage {
     // No current user — still return dislike counts + poll counts
     if (rows.length > 0) {
       const discussionIds = rows.map((r: any) => r.id);
-      const [dislikeCounts, pollCountRows] = await Promise.all([
-        db.select({ discussionId: discussionDislikes.discussionId, count: sql<number>`count(*)` })
-          .from(discussionDislikes)
-          .where(inArray(discussionDislikes.discussionId, discussionIds))
-          .groupBy(discussionDislikes.discussionId),
-        db.execute(sql`SELECT discussion_id, option_index, COUNT(*)::int AS vote_count FROM discussion_poll_votes WHERE discussion_id = ANY(${discussionIds}) GROUP BY discussion_id, option_index`),
-      ]);
+      const dislikeCounts = await db.select({ discussionId: discussionDislikes.discussionId, count: sql<number>`count(*)` })
+        .from(discussionDislikes)
+        .where(inArray(discussionDislikes.discussionId, discussionIds))
+        .groupBy(discussionDislikes.discussionId);
       const dislikeCountMap: Record<string, number> = {};
       for (const row of dislikeCounts) { dislikeCountMap[row.discussionId] = Number(row.count); }
+
       const pollCountMap: Record<string, Record<number, number>> = {};
-      for (const row of (pollCountRows.rows || pollCountRows as any[])) {
-        const did = (row as any).discussion_id;
-        if (!pollCountMap[did]) pollCountMap[did] = {};
-        pollCountMap[did][(row as any).option_index] = Number((row as any).vote_count);
-      }
+      try {
+        const idList = discussionIds.map(id => `'${id}'`).join(',');
+        const pollCountRows = await db.execute(sql.raw(`SELECT discussion_id, option_index, COUNT(*)::int AS vote_count FROM discussion_poll_votes WHERE discussion_id IN (${idList}) GROUP BY discussion_id, option_index`));
+        for (const row of (pollCountRows.rows || pollCountRows as any[])) {
+          const did = (row as any).discussion_id;
+          if (!pollCountMap[did]) pollCountMap[did] = {};
+          pollCountMap[did][(row as any).option_index] = Number((row as any).vote_count);
+        }
+      } catch (_e) { /* poll table may not exist yet — degrade gracefully */ }
+
       return rows.map((r: any) => ({ ...r, likedByMe: false, dislikedByMe: false, dislikes: dislikeCountMap[r.id] || 0, pollVotedIndex: null, pollVoteCounts: pollCountMap[r.id] || {} }));
     }
 
