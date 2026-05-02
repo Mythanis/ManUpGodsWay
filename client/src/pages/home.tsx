@@ -23,6 +23,8 @@ import { getDefaultThumbnail } from "@/lib/default-thumbnail";
 import weeklyChallengeIcon from "@assets/ChatGPT_Image_May_1,_2026,_10_37_58_PM_1777693401898.png";
 import watchVideosIcon from "@assets/ChatGPT_Image_May_1,_2026,_10_39_09_PM_1777693583880.png";
 import fitnessIcon from "@assets/ChatGPT_Image_May_1,_2026,_10_42_56_PM_1777693643747.png";
+import joinDiscussionIcon from "@assets/ChatGPT_Image_May_1,_2026,_10_42_00_PM_1777693666007.png";
+import blogIcon from "@assets/ChatGPT_Image_May_1,_2026,_10_47_02_PM_1777693753651.png";
 import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star, Shield, MessageSquare, HandHeart, Mail, Link2, Newspaper, Book, Coins, BellRing, Plus, Trash2, Sun, RefreshCw, Dumbbell } from "lucide-react";
 import { SiFacebook, SiX, SiWhatsapp } from "react-icons/si";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -1374,8 +1376,8 @@ export default function Home() {
           </Link>
 
           <Link href="/community" className="block h-16 w-full flex items-center justify-between bg-[#FDD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-join-discussion">
-            <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
-              <MessageSquare className="w-6 h-6 text-white relative z-10" />
+            <div className="h-full w-16 flex-shrink-0 overflow-hidden">
+              <img src={joinDiscussionIcon} alt="Join Discussion" className="h-full w-full object-cover" />
             </div>
             <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">Join Discussion</span>
             <div className="pr-4">
@@ -1386,8 +1388,8 @@ export default function Home() {
           </Link>
 
           <Link href="/blog" className="block h-16 w-full flex items-center justify-between bg-[#FDD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-blog">
-            <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
-              <Newspaper className="w-6 h-6 text-white relative z-10" />
+            <div className="h-full w-16 flex-shrink-0 overflow-hidden">
+              <img src={blogIcon} alt="Blog" className="h-full w-full object-cover" />
             </div>
             <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">Blog</span>
             <div className="pr-4">
