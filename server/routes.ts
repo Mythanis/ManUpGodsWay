@@ -2793,7 +2793,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!discussion) {
         return res.status(404).json({ message: "Discussion not found" });
       }
-      res.json({ ...discussion, content: maskMentionIds(discussion.content) });
+      res.json({
+        ...discussion,
+        content: maskMentionIds(discussion.content),
+        replies: Array.isArray(discussion.replies)
+          ? discussion.replies.map((r: any) => ({ ...r, content: maskMentionIds(r.content) }))
+          : discussion.replies,
+      });
     } catch (error) {
       console.error("Error fetching discussion:", error);
       res.status(500).json({ message: "Failed to fetch discussion" });
