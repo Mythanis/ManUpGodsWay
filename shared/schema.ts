@@ -1846,17 +1846,6 @@ export const hurdleWallAmens = pgTable("hurdle_wall_amens", {
   unique().on(table.postId, table.userId),
 ]);
 
-// Poll votes for community discussions
-export const discussionPollVotes = pgTable("discussion_poll_votes", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  discussionId: varchar("discussion_id").notNull().references(() => discussions.id, { onDelete: 'cascade' }),
-  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
-  optionIndex: integer("option_index").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-}, (table) => [
-  unique().on(table.discussionId, table.userId),
-]);
-
 // User Prayer Statistics table
 export const userPrayerStats = pgTable("user_prayer_stats", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

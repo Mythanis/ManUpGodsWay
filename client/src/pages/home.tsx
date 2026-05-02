@@ -122,6 +122,10 @@ export default function Home() {
     queryFn: async () => { const r = await fetch('/api/blogs?limit=1', { credentials: 'include' }); return r.json(); },
     staleTime: 60000,
   });
+  const { data: currentChallenge } = useQuery<any>({
+    queryKey: ['/api/challenges/current'],
+    staleTime: 60000,
+  });
 
   const hasNew = (key: string, newest: any[] | any | undefined): boolean => {
     const last = lastVisits[key] || 0;
@@ -1384,10 +1388,9 @@ export default function Home() {
           {/* Weekly Challenge */}
           <button
             data-testid="button-current-challenge"
-            onClick={() => { markVisited('challenge'); setShowChallengeDialog(true); }}
-            className="relative flex flex-col items-center bg-[#FDD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all overflow-hidden glow-gold active:translate-x-0 active:translate-y-0 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
+            onClick={() => setShowChallengeDialog(true)}
+            className="flex flex-col items-center bg-[#FDD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all overflow-hidden glow-gold active:translate-x-0 active:translate-y-0 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
           >
-            {hasNew('challenge', currentChallenge) && <RedDot />}
             <div className="w-full aspect-square overflow-hidden">
               <img src={weeklyChallengeIcon} alt="Weekly Challenge" className="w-full h-full object-cover" />
             </div>
@@ -1395,13 +1398,7 @@ export default function Home() {
           </button>
 
           {/* Watch Videos */}
-          <Link
-            href="/videos"
-            data-testid="button-watch-videos"
-            onClick={() => markVisited('videos')}
-            className="relative flex flex-col items-center bg-[#FDD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all overflow-hidden glow-gold active:translate-x-0 active:translate-y-0 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
-          >
-            {hasNew('videos', newestVideos) && <RedDot />}
+          <Link href="/videos" data-testid="button-watch-videos" className="flex flex-col items-center bg-[#FDD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all overflow-hidden glow-gold active:translate-x-0 active:translate-y-0 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
             <div className="w-full aspect-square overflow-hidden">
               <img src={watchVideosIcon} alt="Watch Videos" className="w-full h-full object-cover" />
             </div>
@@ -1409,12 +1406,7 @@ export default function Home() {
           </Link>
 
           {/* Fitness */}
-          <Link
-            href="/fitness"
-            data-testid="button-fitness"
-            onClick={() => markVisited('fitness')}
-            className="relative flex flex-col items-center bg-[#FDD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all overflow-hidden glow-gold active:translate-x-0 active:translate-y-0 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
-          >
+          <Link href="/fitness" data-testid="button-fitness" className="flex flex-col items-center bg-[#FDD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all overflow-hidden glow-gold active:translate-x-0 active:translate-y-0 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
             <div className="w-full aspect-square overflow-hidden">
               <img src={fitnessIcon} alt="Fitness" className="w-full h-full object-cover" />
             </div>
@@ -1422,13 +1414,7 @@ export default function Home() {
           </Link>
 
           {/* Join Discussion */}
-          <Link
-            href="/community"
-            data-testid="button-join-discussion"
-            onClick={() => markVisited('community')}
-            className="relative flex flex-col items-center bg-[#FDD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all overflow-hidden glow-gold active:translate-x-0 active:translate-y-0 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
-          >
-            {hasNew('community', newestDiscussion) && <RedDot />}
+          <Link href="/community" data-testid="button-join-discussion" className="flex flex-col items-center bg-[#FDD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all overflow-hidden glow-gold active:translate-x-0 active:translate-y-0 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
             <div className="w-full aspect-square overflow-hidden">
               <img src={joinDiscussionIcon} alt="Join Discussion" className="w-full h-full object-cover" />
             </div>
@@ -1436,13 +1422,7 @@ export default function Home() {
           </Link>
 
           {/* Blog */}
-          <Link
-            href="/blog"
-            data-testid="button-blog"
-            onClick={() => markVisited('blog')}
-            className="relative flex flex-col items-center bg-[#FDD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all overflow-hidden glow-gold active:translate-x-0 active:translate-y-0 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
-          >
-            {hasNew('blog', newestBlogs) && <RedDot />}
+          <Link href="/blog" data-testid="button-blog" className="flex flex-col items-center bg-[#FDD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all overflow-hidden glow-gold active:translate-x-0 active:translate-y-0 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
             <div className="w-full aspect-square overflow-hidden">
               <img src={blogIcon} alt="Blog" className="w-full h-full object-cover" />
             </div>
@@ -1453,7 +1433,7 @@ export default function Home() {
           <button
             data-testid="button-prayer-time"
             onClick={() => isPraying ? endPrayerTime() : setShowPrayerDialog(true)}
-            className="relative flex flex-col items-center bg-[#FDD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all overflow-hidden glow-gold active:translate-x-0 active:translate-y-0 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
+            className="flex flex-col items-center bg-[#FDD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all overflow-hidden glow-gold active:translate-x-0 active:translate-y-0 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
           >
             <div className="w-full aspect-square overflow-hidden">
               {isPraying ? (
@@ -1473,7 +1453,7 @@ export default function Home() {
           <button
             data-testid="button-track-progress"
             onClick={() => setShowProgressDialog(true)}
-            className="relative flex flex-col items-center bg-[#FDD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all overflow-hidden glow-gold active:translate-x-0 active:translate-y-0 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
+            className="flex flex-col items-center bg-[#FDD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all overflow-hidden glow-gold active:translate-x-0 active:translate-y-0 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
           >
             <div className="w-full aspect-square overflow-hidden">
               <img src={trackProgressIcon} alt="Track Progress" className="w-full h-full object-cover" />
@@ -1484,7 +1464,7 @@ export default function Home() {
           {/* Streak */}
           <div
             data-testid="activity-streak"
-            className="relative flex flex-col items-center bg-[#FDD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden glow-gold"
+            className="flex flex-col items-center bg-[#FDD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden glow-gold"
           >
             <div className="w-full aspect-square overflow-hidden">
               <img src={streakIcon} alt="Streak" className="w-full h-full object-cover" />
