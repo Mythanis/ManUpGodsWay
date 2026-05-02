@@ -358,13 +358,6 @@ export default function Home() {
     staleTime: 5000, // Keep data fresh for 5 seconds to prevent flicker
   });
 
-  const { data: currentChallenge } = useQuery({
-    queryKey: ["/api/challenges/current"],
-    retry: false,
-    refetchInterval: 8000, // Real-time updates for current challenge
-    refetchIntervalInBackground: true,
-  });
-
   // Get challenge participant count
   const { data: challengeParticipants } = useQuery({
     queryKey: ["/api/challenges", (currentChallenge as any)?.id, "participant-count"],
