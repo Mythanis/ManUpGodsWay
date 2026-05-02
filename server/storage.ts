@@ -2469,8 +2469,8 @@ export class DatabaseStorage implements IStorage {
           .from(discussionDislikes)
           .where(inArray(discussionDislikes.discussionId, discussionIds))
           .groupBy(discussionDislikes.discussionId),
-        db.execute(sql`SELECT discussion_id, option_index FROM discussion_poll_votes WHERE user_id = ${currentUserId} AND discussion_id = ANY(${discussionIds})`),
-        db.execute(sql`SELECT discussion_id, option_index, COUNT(*)::int AS vote_count FROM discussion_poll_votes WHERE discussion_id = ANY(${discussionIds}) GROUP BY discussion_id, option_index`),
+        db.execute(sql`SELECT discussion_id, option_index FROM discussion_poll_votes WHERE user_id = ${currentUserId} AND discussion_id = ANY(${'{' + discussionIds.join(',') + '}'}::uuid[])`),
+        db.execute(sql`SELECT discussion_id, option_index, COUNT(*)::int AS vote_count FROM discussion_poll_votes WHERE discussion_id = ANY(${'{' + discussionIds.join(',') + '}'}::uuid[]) GROUP BY discussion_id, option_index`),
       ]);
       const likedSet = new Set(likedRows.map((r) => r.discussionId));
       const dislikedSet = new Set(dislikedRows.map((r) => r.discussionId));
@@ -2502,7 +2502,7 @@ export class DatabaseStorage implements IStorage {
           .from(discussionDislikes)
           .where(inArray(discussionDislikes.discussionId, discussionIds))
           .groupBy(discussionDislikes.discussionId),
-        db.execute(sql`SELECT discussion_id, option_index, COUNT(*)::int AS vote_count FROM discussion_poll_votes WHERE discussion_id = ANY(${discussionIds}) GROUP BY discussion_id, option_index`),
+        db.execute(sql`SELECT discussion_id, option_index, COUNT(*)::int AS vote_count FROM discussion_poll_votes WHERE discussion_id = ANY(${'{' + discussionIds.join(',') + '}'}::uuid[]) GROUP BY discussion_id, option_index`),
       ]);
       const dislikeCountMap: Record<string, number> = {};
       for (const row of dislikeCounts) { dislikeCountMap[row.discussionId] = Number(row.count); }
