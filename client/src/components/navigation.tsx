@@ -167,7 +167,7 @@ export default function Navigation() {
     ];
   }
 
-  const primaryTabIds = ['home', 'library', 'community', 'war-groups'];
+  const primaryTabIds = ['home', 'library', 'community', 'fitness'];
   const primaryItems = allNavItems.filter(item => primaryTabIds.includes(item.id));
   const dropdownItems = allNavItems.filter(item => !primaryTabIds.includes(item.id));
 
