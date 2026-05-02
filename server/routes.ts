@@ -120,6 +120,18 @@ function pickMediaFileName(ex: any): string {
   return '';
 }
 
+// Strip user IDs from mention tokens before sending content to clients.
+// Replaces @[Name](mention:userId) with @[Name](mention:nameslug) so the
+// real user ID is never exposed in API responses. The display name (already
+// in the markup) is used as the slug, which is sufficient for chip rendering.
+function maskMentionIds(text: string | null | undefined): string | null | undefined {
+  if (!text) return text;
+  return text.replace(
+    /@\[([^\]]+)\]\(mention:[^)]+\)/g,
+    (_, display) => `@[${display}](mention:${display.toLowerCase().replace(/\s+/g, '')})`
+  );
+}
+
 // Role checking helper functions
 function isAdmin(user: any): boolean {
   return user && (user.role === 'admin' || user.role === 'owner');
@@ -2777,7 +2789,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         search as string,
         currentUserId
       );
-      res.json(discussions);
+      res.json(discussions.map((d: any) => ({ ...d, content: maskMentionIds(d.content) })));
     } catch (error) {
       console.error("Error fetching discussions:", error);
       res.status(500).json({ message: "Failed to fetch discussions" });
@@ -2792,7 +2804,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!discussion) {
         return res.status(404).json({ message: "Discussion not found" });
       }
-      res.json(discussion);
+      res.json({ ...discussion, content: maskMentionIds(discussion.content) });
     } catch (error) {
       console.error("Error fetching discussion:", error);
       res.status(500).json({ message: "Failed to fetch discussion" });
@@ -2996,7 +3008,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const replies = await storage.getDiscussionReplies(req.params.id, userId);
-      res.json(replies);
+      res.json(replies.map((r: any) => ({ ...r, content: maskMentionIds(r.content) })));
     } catch (error) {
       console.error("Error fetching replies:", error);
       res.status(500).json({ message: "Failed to fetch replies" });
@@ -12465,6 +12477,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const result = posts.map(p => ({
         ...p,
+        content: maskMentionIds(p.content),
         authorName: `${p.authorName || ''} ${p.authorLastName || ''}`.trim() || 'Member',
         likedByMe: likedSet.has(p.id),
         ohMeByMe: ohMeSet.has(p.id),
@@ -12705,6 +12718,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(comments.map(c => ({
         ...c,
+        content: maskMentionIds(c.content),
         authorName: `${c.authorName || ''} ${c.authorLastName || ''}`.trim() || 'Member',
       })));
     } catch (error) {
@@ -15745,7 +15759,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const offset = parseInt(req.query.offset as string) || 0;
       
       const posts = await warGroupsService.getGroupPosts(groupId, userId, limit, offset);
-      res.json(posts);
+      res.json(posts.map((p: any) => ({ ...p, content: maskMentionIds(p.content) })));
     } catch (error: any) {
       console.error('Error fetching group posts:', error);
       res.status(403).json({ message: error.message || 'Failed to fetch group posts' });
@@ -15981,7 +15995,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { postId } = req.params;
       
       const replies = await warGroupsService.getPostReplies(postId, userId);
-      res.json(replies);
+      res.json(replies.map((r: any) => ({ ...r, content: maskMentionIds(r.content) })));
     } catch (error: any) {
       console.error('Error fetching post replies:', error);
       res.status(403).json({ message: error.message || 'Failed to fetch replies' });

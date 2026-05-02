@@ -18,6 +18,7 @@ import UpgradeModal from "@/components/upgrade-modal";
 import HomeCarousel from "@/components/home-carousel";
 import { WelcomeIntro } from "@/components/WelcomeIntro";
 import { formatLocalDate, formatLocalDateTime } from "@/lib/utils";
+import { stripMentionMarkdown } from "@/components/mention-textarea";
 import { getDefaultThumbnail } from "@/lib/default-thumbnail";
 import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star, Shield, MessageSquare, HandHeart, Mail, Link2, Newspaper, Book, Coins, BellRing, Plus, Trash2, Sun, RefreshCw } from "lucide-react";
 import { SiFacebook, SiX, SiWhatsapp } from "react-icons/si";
@@ -1127,7 +1128,7 @@ export default function Home() {
                 : diffMins < 60 ? `${diffMins}m ago`
                 : diffMins < 1440 ? `${Math.floor(diffMins / 60)}h ago`
                 : `${Math.floor(diffMins / 1440)}d ago`;
-              const preview = (discussion.content || '').replace(/<[^>]+>/g, '').slice(0, 120);
+              const preview = stripMentionMarkdown((discussion.content || '').replace(/<[^>]+>/g, '')).slice(0, 120);
               return (
                 <div className="space-y-3">
                   <Link href={`/community?discussion=${discussion.id}`} className="block">
