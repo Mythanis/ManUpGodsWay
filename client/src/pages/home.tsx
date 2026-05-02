@@ -122,10 +122,6 @@ export default function Home() {
     queryFn: async () => { const r = await fetch('/api/blogs?limit=1', { credentials: 'include' }); return r.json(); },
     staleTime: 60000,
   });
-  const { data: currentChallenge } = useQuery<any>({
-    queryKey: ['/api/challenges/current'],
-    staleTime: 60000,
-  });
 
   const hasNew = (key: string, newest: any[] | any | undefined): boolean => {
     const last = lastVisits[key] || 0;
