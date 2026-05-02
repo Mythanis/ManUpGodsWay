@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import { maskMentionIds } from './mentionUtils';
 import { CURRENT_TERMS_VERSION, TERMS_EFFECTIVE_DATE } from "@shared/termsContent";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from 'ws';
@@ -118,18 +119,6 @@ function pickMediaFileName(ex: any): string {
     if (typeof c === 'string' && c.trim() !== '') return c.trim();
   }
   return '';
-}
-
-// Strip user IDs from mention tokens before sending content to clients.
-// Replaces @[Name](mention:userId) with @[Name](mention:nameslug) so the
-// real user ID is never exposed in API responses. The display name (already
-// in the markup) is used as the slug, which is sufficient for chip rendering.
-function maskMentionIds(text: string | null | undefined): string | null | undefined {
-  if (!text) return text;
-  return text.replace(
-    /@\[([^\]]+)\]\(mention:[^)]+\)/g,
-    (_, display) => `@[${display}](mention:${display.toLowerCase().replace(/\s+/g, '')})`
-  );
 }
 
 // Role checking helper functions
@@ -2952,7 +2941,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Don't fail the discussion creation if notifications fail
       }
       
-      res.status(201).json(discussion);
+      res.status(201).json({ ...discussion, content: maskMentionIds(discussion.content) });
     } catch (error) {
       console.error("Error creating discussion:", error);
       if (error instanceof z.ZodError) {
@@ -2997,7 +2986,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      res.json(updatedDiscussion);
+      res.json({ ...updatedDiscussion, content: maskMentionIds(updatedDiscussion.content) });
     } catch (error) {
       console.error("Error updating discussion:", error);
       res.status(500).json({ message: "Failed to update discussion" });
@@ -3103,7 +3092,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Don't fail the reply creation if notifications fail
       }
       
-      res.status(201).json(reply);
+      res.status(201).json({ ...reply, content: maskMentionIds(reply.content) });
     } catch (error) {
       console.error("Error creating reply:", error);
       if (error instanceof z.ZodError) {
@@ -3167,7 +3156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      res.json(updated);
+      res.json({ ...updated, content: maskMentionIds(updated.content) });
     } catch (error) {
       console.error("Error updating discussion reply:", error);
       res.status(500).json({ message: "Failed to update reply" });
@@ -12506,7 +12495,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         mediaTypes: mediaTypes || null,
         category: category || 'encouragement',
       }).returning();
-      res.json(post);
+      res.json({ ...post, content: maskMentionIds(post.content) });
 
       // Fan-out: notify ALL users who have not explicitly opted out of fitnessCommunityNotifications
       setImmediate(async () => {
@@ -12789,7 +12778,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      res.json(comment);
+      res.json({ ...comment, content: maskMentionIds(comment.content) });
     } catch (error) {
       console.error('Error creating fitness post comment:', error);
       res.status(500).json({ message: 'Internal server error' });
@@ -15797,7 +15786,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { rationsService } = await import('./rations-service');
       const rationResult = await rationsService.awardRations(userId, 'war_group_post', post.id, 'war_group_post');
 
-      res.status(201).json({ ...post, rations: rationResult });
+      res.status(201).json({ ...post, content: maskMentionIds(post.content), rations: rationResult });
 
       // @-mention fan-out for war groups (alwaysNotify because mentioned users may not be members)
       (async () => {
@@ -15948,7 +15937,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { content } = req.body;
       if (!content?.trim()) return res.status(400).json({ message: "Content is required" });
       const updated = await warGroupsService.updateGroupPostReply(replyId, userId, content.trim(), req.params.postId);
-      res.json(updated);
+      res.json(updated ? { ...updated, content: maskMentionIds(updated.content) } : updated);
 
       if (updated) {
         (async () => {
@@ -16019,7 +16008,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const rationResult = await rationsService.awardRations(userId, 'war_group_comment', reply.id, 'war_group_reply');
 
       const groupId = req.params.id;
-      res.status(201).json({ ...reply, rations: rationResult });
+      res.status(201).json({ ...reply, content: maskMentionIds(reply.content), rations: rationResult });
 
       // @-mention fan-out (alwaysNotify because mentioned users may not be members)
       (async () => {
