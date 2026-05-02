@@ -120,10 +120,10 @@ export function VatmebopChart() {
           className={`w-6 h-6 flex items-center justify-center rounded-sm border transition-colors flex-shrink-0
             ${showHelp
               ? "bg-ministry-gold-exact border-ministry-gold-exact text-black"
-              : "bg-zinc-800 border-zinc-700 text-white/60 hover:text-white hover:bg-zinc-700"}`}
+              : "bg-zinc-800 border-zinc-700 hover:bg-zinc-700"}`}
           aria-label="How to use VATMEBOP"
         >
-          <Info className="w-3 h-3" />
+          <Info className={`w-3 h-3 ${!showHelp ? "text-white animate-pulse" : ""}`} style={!showHelp ? { animationDuration: '2s' } : {}} />
         </button>
         <div className="flex-1 h-px bg-white/10" />
         <div className="flex items-center gap-1.5">
