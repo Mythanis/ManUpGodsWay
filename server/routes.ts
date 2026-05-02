@@ -526,9 +526,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const settings = await storage.getSubscriptionSettings();
         if (settings?.trialDurationDays) trialDays = settings.trialDurationDays;
       } catch {}
-      const count = await storage.bulkGrantTrialExtension(trialDays);
+      const { count, userIds } = await storage.bulkGrantTrialExtension(trialDays);
       const updatedAt = new Date().toISOString();
       console.log(`[TrialBoost] Owner ${user.id} granted ${trialDays}-day trial to ${count} users`);
+
+      // Notify each affected user about their trial extension
+      for (const userId of userIds) {
+        try {
+          await storage.createNotificationWithPreferences(
+            {
+              userId,
+              type: 'trial_extension',
+              title: 'Trial Extended!',
+              message: `Your trial has been extended — you have ${trialDays} more days of full access!`,
+              relatedId: null,
+              linkUrl: '/home',
+            },
+            { url: '/home' }
+          );
+        } catch (notifyErr) {
+          console.error(`[TrialBoost] Failed to notify user ${userId}:`, notifyErr);
+        }
+      }
+
       res.json({ count, trialDays, updatedAt });
     } catch (error) {
       console.error("Error granting bulk trial extension:", error);

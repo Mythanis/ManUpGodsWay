@@ -438,7 +438,7 @@ export interface IStorage {
   cancelUserSubscription(userId: string): Promise<User>;
   reactivateUserSubscription(userId: string, currentPeriodEnd?: Date): Promise<User>;
   countEligibleForTrialExtension(): Promise<number>;
-  bulkGrantTrialExtension(trialDays: number): Promise<number>;
+  bulkGrantTrialExtension(trialDays: number): Promise<{ count: number; userIds: string[] }>;
   checkExpiredSubscriptions(): Promise<User[]>;
   banUser(userId: string, reason: string): Promise<User>;
   unbanUser(userId: string): Promise<User>;
@@ -3409,7 +3409,7 @@ export class DatabaseStorage implements IStorage {
     return Number(result[0]?.count ?? 0);
   }
 
-  async bulkGrantTrialExtension(trialDays: number): Promise<number> {
+  async bulkGrantTrialExtension(trialDays: number): Promise<{ count: number; userIds: string[] }> {
     const now = new Date();
     const trialEnd = new Date(now);
     trialEnd.setDate(now.getDate() + trialDays);
@@ -3427,7 +3427,7 @@ export class DatabaseStorage implements IStorage {
         not(inArray(users.role, ['owner', 'admin'])),
       ))
       .returning({ id: users.id });
-    return result.length;
+    return { count: result.length, userIds: result.map(r => r.id) };
   }
 
   async reactivateUserSubscription(userId: string, currentPeriodEnd?: Date): Promise<User> {
