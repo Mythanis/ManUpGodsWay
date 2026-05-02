@@ -25,6 +25,7 @@ import watchVideosIcon from "@assets/ChatGPT_Image_May_1,_2026,_10_39_09_PM_1777
 import fitnessIcon from "@assets/ChatGPT_Image_May_1,_2026,_10_42_56_PM_1777693643747.png";
 import joinDiscussionIcon from "@assets/ChatGPT_Image_May_1,_2026,_10_42_00_PM_1777693666007.png";
 import blogIcon from "@assets/ChatGPT_Image_May_1,_2026,_10_47_02_PM_1777693753651.png";
+import prayerTimeIcon from "@assets/ChatGPT_Image_May_1,_2026,_10_48_16_PM_1777693819498.png";
 import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star, Shield, MessageSquare, HandHeart, Mail, Link2, Newspaper, Book, Coins, BellRing, Plus, Trash2, Sun, RefreshCw, Dumbbell } from "lucide-react";
 import { SiFacebook, SiX, SiWhatsapp } from "react-icons/si";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -1405,11 +1406,13 @@ export default function Home() {
             data-testid="button-prayer-time"
             onClick={() => isPraying ? endPrayerTime() : setShowPrayerDialog(true)}
           >
-            <div className="h-full w-16 liquid-black flex items-center justify-center flex-shrink-0">
+            <div className="h-full w-16 flex-shrink-0 overflow-hidden">
               {isPraying ? (
-                <PauseCircle className="w-6 h-6 text-white relative z-10" />
+                <div className="h-full w-full liquid-black flex items-center justify-center">
+                  <PauseCircle className="w-6 h-6 text-white relative z-10" />
+                </div>
               ) : (
-                <Clock className="w-6 h-6 text-white relative z-10" />
+                <img src={prayerTimeIcon} alt="Prayer Time" className="h-full w-full object-cover" />
               )}
             </div>
             <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">
