@@ -27,6 +27,7 @@ import joinDiscussionIcon from "@assets/ChatGPT_Image_May_1,_2026,_11_04_47_PM_1
 import blogIcon from "@assets/ChatGPT_Image_May_1,_2026,_10_47_02_PM_1777693753651.png";
 import prayerTimeIcon from "@assets/ChatGPT_Image_May_1,_2026,_10_48_16_PM_1777693819498.png";
 import trackProgressIcon from "@assets/ChatGPT_Image_May_1,_2026,_10_49_57_PM_1777693839748.png";
+import devotionIcon from "@assets/ChatGPT_Image_May_1,_2026,_11_06_18_PM_1777694829311.png";
 import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star, Shield, MessageSquare, HandHeart, Mail, Link2, Newspaper, Book, Coins, BellRing, Plus, Trash2, Sun, RefreshCw, Dumbbell } from "lucide-react";
 import { SiFacebook, SiX, SiWhatsapp } from "react-icons/si";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -1202,8 +1203,8 @@ export default function Home() {
                   {/* Small Thumbnail */}
                   <div className="flex-shrink-0">
                     <img 
-                      src={getDefaultThumbnail((devotional as any)?.imageUrl)} 
-                      alt={(devotional as any)?.title || 'Daily Devotional'}
+                      src={devotionIcon}
+                      alt="Today's Devotional"
                       className="w-20 h-20 rounded-sm object-cover border-2 border-ministry-gold-exact"
                     />
                   </div>
