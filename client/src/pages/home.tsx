@@ -1331,168 +1331,103 @@ export default function Home() {
         <VatmebopChart />
       </div>
 
-      {/* Quick Access */}
+      {/* Quick Access — 2×4 icon tile grid */}
       <div className="px-6 mb-6">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-1 h-6 bg-[#FDD000] rounded-full flex-shrink-0" />
           <h2 className="text-xl font-coalition text-white uppercase tracking-widest">Popular</h2>
           <div className="flex-1 h-px bg-white/10" />
         </div>
-        
-        <div className="space-y-2">
-          <Button 
-            variant="outline"
-            className="h-16 w-full flex items-center justify-between bg-[#FDD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
+
+        <div className="grid grid-cols-2 gap-3">
+          {/* Weekly Challenge */}
+          <button
             data-testid="button-current-challenge"
             onClick={() => setShowChallengeDialog(true)}
+            className="flex flex-col items-center bg-[#FDD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all overflow-hidden glow-gold active:translate-x-0 active:translate-y-0 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
           >
-            <div className="h-full w-16 flex-shrink-0 overflow-hidden">
-              <img src={weeklyChallengeIcon} alt="Weekly Challenge" className="h-full w-full object-cover" />
+            <div className="w-full aspect-square overflow-hidden">
+              <img src={weeklyChallengeIcon} alt="Weekly Challenge" className="w-full h-full object-cover" />
             </div>
-            <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">Weekly Challenge</span>
-            <div className="pr-4">
-              <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-              </svg>
-            </div>
-          </Button>
+            <span className="w-full font-black text-xs text-black text-center py-2 px-1 uppercase tracking-wide leading-tight">Weekly Challenge</span>
+          </button>
 
-          <Link href="/videos" className="block h-16 w-full flex items-center justify-between bg-[#FDD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-watch-videos">
-            <div className="h-full w-16 flex-shrink-0 overflow-hidden">
-              <img src={watchVideosIcon} alt="Watch Videos" className="h-full w-full object-cover" />
+          {/* Watch Videos */}
+          <Link href="/videos" data-testid="button-watch-videos" className="flex flex-col items-center bg-[#FDD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all overflow-hidden glow-gold active:translate-x-0 active:translate-y-0 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+            <div className="w-full aspect-square overflow-hidden">
+              <img src={watchVideosIcon} alt="Watch Videos" className="w-full h-full object-cover" />
             </div>
-            <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">Watch Videos</span>
-            <div className="pr-4">
-              <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-              </svg>
-            </div>
-          </Link>
-          
-          <Link href="/fitness" className="block h-16 w-full flex items-center justify-between bg-[#FDD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-fitness">
-            <div className="h-full w-16 flex-shrink-0 overflow-hidden">
-              <img src={fitnessIcon} alt="Fitness" className="h-full w-full object-cover" />
-            </div>
-            <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">Fitness</span>
-            <div className="pr-4">
-              <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-              </svg>
-            </div>
+            <span className="w-full font-black text-xs text-black text-center py-2 px-1 uppercase tracking-wide leading-tight">Watch Videos</span>
           </Link>
 
-          <Link href="/community" className="block h-16 w-full flex items-center justify-between bg-[#FDD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-join-discussion">
-            <div className="h-full w-16 flex-shrink-0 overflow-hidden">
-              <img src={joinDiscussionIcon} alt="Join Discussion" className="h-full w-full object-cover" />
+          {/* Fitness */}
+          <Link href="/fitness" data-testid="button-fitness" className="flex flex-col items-center bg-[#FDD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all overflow-hidden glow-gold active:translate-x-0 active:translate-y-0 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+            <div className="w-full aspect-square overflow-hidden">
+              <img src={fitnessIcon} alt="Fitness" className="w-full h-full object-cover" />
             </div>
-            <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">Join Discussion</span>
-            <div className="pr-4">
-              <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-              </svg>
-            </div>
+            <span className="w-full font-black text-xs text-black text-center py-2 px-1 uppercase tracking-wide leading-tight">Fitness</span>
           </Link>
 
-          <Link href="/blog" className="block h-16 w-full flex items-center justify-between bg-[#FDD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold" data-testid="button-blog">
-            <div className="h-full w-16 flex-shrink-0 overflow-hidden">
-              <img src={blogIcon} alt="Blog" className="h-full w-full object-cover" />
+          {/* Join Discussion */}
+          <Link href="/community" data-testid="button-join-discussion" className="flex flex-col items-center bg-[#FDD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all overflow-hidden glow-gold active:translate-x-0 active:translate-y-0 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+            <div className="w-full aspect-square overflow-hidden">
+              <img src={joinDiscussionIcon} alt="Join Discussion" className="w-full h-full object-cover" />
             </div>
-            <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">Blog</span>
-            <div className="pr-4">
-              <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-              </svg>
-            </div>
+            <span className="w-full font-black text-xs text-black text-center py-2 px-1 uppercase tracking-wide leading-tight">Join Discussion</span>
           </Link>
 
-          <Button 
-            variant="outline"
-            className="h-16 w-full flex items-center justify-between bg-[#FDD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
+          {/* Blog */}
+          <Link href="/blog" data-testid="button-blog" className="flex flex-col items-center bg-[#FDD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all overflow-hidden glow-gold active:translate-x-0 active:translate-y-0 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+            <div className="w-full aspect-square overflow-hidden">
+              <img src={blogIcon} alt="Blog" className="w-full h-full object-cover" />
+            </div>
+            <span className="w-full font-black text-xs text-black text-center py-2 px-1 uppercase tracking-wide leading-tight">Blog</span>
+          </Link>
+
+          {/* Prayer Time */}
+          <button
             data-testid="button-prayer-time"
             onClick={() => isPraying ? endPrayerTime() : setShowPrayerDialog(true)}
+            className="flex flex-col items-center bg-[#FDD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all overflow-hidden glow-gold active:translate-x-0 active:translate-y-0 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
           >
-            <div className="h-full w-16 flex-shrink-0 overflow-hidden">
+            <div className="w-full aspect-square overflow-hidden">
               {isPraying ? (
-                <div className="h-full w-full liquid-black flex items-center justify-center">
-                  <PauseCircle className="w-6 h-6 text-white relative z-10" />
+                <div className="w-full h-full liquid-black flex items-center justify-center">
+                  <PauseCircle className="w-10 h-10 text-white" />
                 </div>
               ) : (
-                <img src={prayerTimeIcon} alt="Prayer Time" className="h-full w-full object-cover" />
+                <img src={prayerTimeIcon} alt="Prayer Time" className="w-full h-full object-cover" />
               )}
             </div>
-            <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">
+            <span className="w-full font-black text-xs text-black text-center py-2 px-1 uppercase tracking-wide leading-tight">
               {isPraying ? formatTime(prayerTimeLeft) : 'Prayer Time'}
             </span>
-            <div className="pr-4">
-              <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-              </svg>
-            </div>
-          </Button>
+          </button>
 
-          <Button 
-            variant="outline"
-            className="h-16 w-full flex items-center justify-between bg-[#FDD000] text-black hover:bg-yellow-400 border-2 border-black p-0 overflow-hidden rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all glow-gold"
+          {/* Track Progress */}
+          <button
             data-testid="button-track-progress"
             onClick={() => setShowProgressDialog(true)}
+            className="flex flex-col items-center bg-[#FDD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all overflow-hidden glow-gold active:translate-x-0 active:translate-y-0 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
           >
-            <div className="h-full w-16 flex-shrink-0 overflow-hidden">
-              <img src={trackProgressIcon} alt="Track Progress" className="h-full w-full object-cover" />
+            <div className="w-full aspect-square overflow-hidden">
+              <img src={trackProgressIcon} alt="Track Progress" className="w-full h-full object-cover" />
             </div>
-            <span className="flex-1 font-black text-sm text-black text-left px-4 uppercase tracking-wide relative z-10">Track Progress</span>
-            <div className="pr-4">
-              <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-              </svg>
-            </div>
-          </Button>
-        </div>
-      </div>
+            <span className="w-full font-black text-xs text-black text-center py-2 px-1 uppercase tracking-wide leading-tight">Track Progress</span>
+          </button>
 
-      {/* Recent Activity */}
-      <div className="px-6 mb-8">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-1 h-6 bg-[#FDD000] rounded-full flex-shrink-0" />
-          <h2 className="text-xl font-coalition text-white uppercase tracking-widest">Recent Activity</h2>
-          <div className="flex-1 h-px bg-white/10" />
-        </div>
-        
-        <div className="space-y-3">
-          {completedCount > 0 && (
-            <Card className="bg-black border-2 border-[#FDD000] rounded-sm shadow-[3px_3px_0px_0px_rgba(253,208,0,0.3)]" data-testid="activity-completed-study">
-              <CardContent className="p-4 relative z-10">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-sm bg-[#FDD000] flex items-center justify-center">
-                    <svg className="w-5 h-5 text-black relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-black text-white uppercase tracking-wide">
-                      Completed {completedCount} {completedCount === 1 ? 'study' : 'studies'}
-                    </p>
-                    <p className="text-xs text-white/70 font-medium">Keep up the great work!</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          <Card className="bg-black border-2 border-[#FDD000] rounded-sm shadow-[3px_3px_0px_0px_rgba(253,208,0,0.3)]" data-testid="activity-streak">
-            <CardContent className="p-4 relative z-10">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-sm overflow-hidden flex-shrink-0">
-                  <img src={streakIcon} alt="Streak" className="w-full h-full object-cover" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-black text-white uppercase tracking-wide">
-                    {appOpenStreak}-day streak
-                  </p>
-                  <p className="text-xs text-white/70">Consecutive days on the app</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Streak */}
+          <div
+            data-testid="activity-streak"
+            className="flex flex-col items-center bg-[#FDD000] border-2 border-black rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden glow-gold"
+          >
+            <div className="w-full aspect-square overflow-hidden">
+              <img src={streakIcon} alt="Streak" className="w-full h-full object-cover" />
+            </div>
+            <span className="w-full font-black text-xs text-black text-center py-2 px-1 uppercase tracking-wide leading-tight">
+              {appOpenStreak}-Day Streak
+            </span>
+          </div>
         </div>
       </div>
 
