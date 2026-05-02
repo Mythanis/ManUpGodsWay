@@ -30,6 +30,7 @@ import trackProgressIcon from "@assets/ChatGPT_Image_May_1,_2026,_10_49_57_PM_17
 import devotionIcon from "@assets/ChatGPT_Image_May_1,_2026,_11_06_18_PM_1777694829311.png";
 import brotherhoodJoinIcon from "@assets/ChatGPT_Image_May_1,_2026,_11_04_47_PM_1777695001089.png";
 import shareAppIcon from "@assets/ChatGPT_Image_May_1,_2026,_11_18_50_PM_1777695539807.png";
+import streakIcon from "@assets/ChatGPT_Image_May_1,_2026,_11_24_13_PM_1777695862761.png";
 import { Bell, Play, Users, BarChart3, Clock, Heart, Share2, X, PauseCircle, TrendingUp, Calendar, Target, Star, Shield, MessageSquare, HandHeart, Mail, Link2, Newspaper, Book, Coins, BellRing, Plus, Trash2, Sun, RefreshCw, Dumbbell } from "lucide-react";
 import { SiFacebook, SiX, SiWhatsapp } from "react-icons/si";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -1480,10 +1481,8 @@ export default function Home() {
           <Card className="bg-black border-2 border-[#FDD000] rounded-sm shadow-[3px_3px_0px_0px_rgba(253,208,0,0.3)]" data-testid="activity-streak">
             <CardContent className="p-4 relative z-10">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-sm bg-[#FDD000] flex items-center justify-center">
-                  <svg className="w-5 h-5 text-black relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                  </svg>
+                <div className="w-10 h-10 rounded-sm overflow-hidden flex-shrink-0">
+                  <img src={streakIcon} alt="Streak" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-black text-white uppercase tracking-wide">
