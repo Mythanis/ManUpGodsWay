@@ -23,7 +23,7 @@ import { getDefaultThumbnail } from "@/lib/default-thumbnail";
 import weeklyChallengeIcon from "@assets/ChatGPT_Image_May_1,_2026,_10_37_58_PM_1777693401898.png";
 import watchVideosIcon from "@assets/ChatGPT_Image_May_1,_2026,_10_39_09_PM_1777693583880.png";
 import fitnessIcon from "@assets/ChatGPT_Image_May_1,_2026,_10_42_56_PM_1777693643747.png";
-import joinDiscussionIcon from "@assets/ChatGPT_Image_May_1,_2026,_10_42_00_PM_1777693666007.png";
+import joinDiscussionIcon from "@assets/ChatGPT_Image_May_1,_2026,_11_04_47_PM_1777694737251.png";
 import blogIcon from "@assets/ChatGPT_Image_May_1,_2026,_10_47_02_PM_1777693753651.png";
 import prayerTimeIcon from "@assets/ChatGPT_Image_May_1,_2026,_10_48_16_PM_1777693819498.png";
 import trackProgressIcon from "@assets/ChatGPT_Image_May_1,_2026,_10_49_57_PM_1777693839748.png";
