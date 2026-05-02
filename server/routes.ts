@@ -12827,7 +12827,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .set({ content: content.trim() })
         .where(eq(schema.fitnessPostComments.id, req.params.id))
         .returning();
-      res.json(updated);
+      res.json({ ...updated, content: maskMentionIds(updated.content) });
     } catch (error) {
       console.error('Error editing fitness post comment:', error);
       res.status(500).json({ message: 'Internal server error' });
