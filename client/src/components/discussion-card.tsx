@@ -248,6 +248,13 @@ export default function DiscussionCard({
     },
   });
 
+  const pollVoteMutation = useMutation({
+    mutationFn: async (optionIndex: number) =>
+      apiRequest('POST', `/api/discussions/${discussion.id}/poll/vote`, { optionIndex }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/discussions"] }),
+    onError: (error: any) => toast({ title: "Error", description: error.message || "Failed to vote", variant: "destructive" }),
+  });
+
   const handleDeleteDiscussion = () => {
     if (window.confirm('Are you sure you want to delete this discussion? This cannot be undone.')) {
       deleteDiscussion.mutate();
@@ -593,6 +600,45 @@ export default function DiscussionCard({
                   {isExpanded ? 'Show less' : 'See more'}
                 </span>
               )}
+            </div>
+          );
+        })()}
+
+        {/* ── Poll ───────────────────────────────── */}
+        {discussion.pollOptions && Array.isArray(discussion.pollOptions) && discussion.pollOptions.length > 0 && (() => {
+          const opts = discussion.pollOptions as { id: string; text: string }[];
+          const voteCounts: Record<number, number> = discussion.pollVoteCounts || {};
+          const totalVotes = Object.values(voteCounts).reduce((s: number, v: any) => s + Number(v), 0);
+          const myVote: number | null = discussion.pollVotedIndex ?? null;
+          return (
+            <div className="px-4 pb-3 space-y-2">
+              {opts.map((opt, i) => {
+                const count = voteCounts[i] || 0;
+                const pct = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
+                const isMyVote = myVote === i;
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => pollVoteMutation.mutate(i)}
+                    disabled={pollVoteMutation.isPending}
+                    className={`w-full text-left rounded-sm border-2 overflow-hidden transition-all ${isMyVote ? 'border-[#FDD000]' : 'border-white/20 hover:border-white/40'}`}
+                  >
+                    <div className="relative px-3 py-2">
+                      <div
+                        className={`absolute inset-0 ${isMyVote ? 'bg-[#FDD000]/20' : 'bg-white/8'} transition-all`}
+                        style={{ width: myVote !== null || totalVotes > 0 ? `${pct}%` : '0%' }}
+                      />
+                      <div className="relative flex items-center justify-between">
+                        <span className={`text-xs font-semibold ${isMyVote ? 'text-[#FDD000]' : 'text-white/80'}`}>{opt.text}</span>
+                        {(myVote !== null || totalVotes > 0) && (
+                          <span className={`text-xs font-black ml-2 ${isMyVote ? 'text-[#FDD000]' : 'text-white/50'}`}>{pct}%</span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+              <p className="text-[10px] text-white/30 text-right">{totalVotes} {totalVotes === 1 ? 'vote' : 'votes'}</p>
             </div>
           );
         })()}

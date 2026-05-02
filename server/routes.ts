@@ -3214,6 +3214,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/discussions/:id/poll/vote', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const discussionId = req.params.id;
+      const { optionIndex } = req.body;
+      if (typeof optionIndex !== 'number') return res.status(400).json({ message: 'optionIndex required' });
+      const result = await storage.votePoll(discussionId, userId, optionIndex);
+      res.json(result);
+    } catch (error) {
+      console.error("Error voting on poll:", error);
+      res.status(500).json({ message: "Failed to vote on poll" });
+    }
+  });
+
   app.get('/api/discussions/:id/replies/:replyId/likers', isAuthenticated, async (req: any, res) => {
     try {
       const likers = await storage.getReplyLikers(req.params.replyId);

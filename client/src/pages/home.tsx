@@ -96,6 +96,51 @@ export default function Home() {
   const [showWelcomeIntro, setShowWelcomeIntro] = useState(false);
   const [appOpenStreak, setAppOpenStreak] = useState(0);
 
+  // ── Notification dots: track last-visit per tile, show dot when new content ──
+  const [lastVisits, setLastVisits] = useState<Record<string, number>>(() => {
+    try { return JSON.parse(localStorage.getItem('tileLastVisits') || '{}'); } catch { return {}; }
+  });
+
+  const markVisited = (key: string) => {
+    const next = { ...lastVisits, [key]: Date.now() };
+    setLastVisits(next);
+    localStorage.setItem('tileLastVisits', JSON.stringify(next));
+  };
+
+  const { data: newestDiscussion } = useQuery<any[]>({
+    queryKey: ['/api/discussions', 'newest-1'],
+    queryFn: async () => { const r = await fetch('/api/discussions?sortBy=recent&limit=1', { credentials: 'include' }); return r.json(); },
+    staleTime: 60000,
+  });
+  const { data: newestVideos } = useQuery<any[]>({
+    queryKey: ['/api/videos', 'newest-1'],
+    queryFn: async () => { const r = await fetch('/api/videos?limit=1', { credentials: 'include' }); return r.json(); },
+    staleTime: 60000,
+  });
+  const { data: newestBlogs } = useQuery<any[]>({
+    queryKey: ['/api/blogs', 'newest-1'],
+    queryFn: async () => { const r = await fetch('/api/blogs?limit=1', { credentials: 'include' }); return r.json(); },
+    staleTime: 60000,
+  });
+  const { data: currentChallenge } = useQuery<any>({
+    queryKey: ['/api/challenges/current'],
+    staleTime: 60000,
+  });
+
+  const hasNew = (key: string, newest: any[] | any | undefined): boolean => {
+    const last = lastVisits[key] || 0;
+    if (!newest) return false;
+    const item = Array.isArray(newest) ? newest[0] : newest;
+    if (!item) return false;
+    const ts = item.createdAt || item.startedAt || item.updatedAt;
+    if (!ts) return false;
+    return new Date(ts).getTime() > last;
+  };
+
+  const RedDot = () => (
+    <span className="absolute top-1.5 right-1.5 w-3 h-3 bg-red-500 rounded-full border-2 border-black z-10 animate-pulse" />
+  );
+
   // Push notifications hook (for reminder subscription prompting)
   const { isSupported: pushSupported, isSubscribed: pushSubscribed, subscribe: pushSubscribe } = usePushNotifications();
   const isIOSNotInstalled = typeof navigator !== 'undefined' &&

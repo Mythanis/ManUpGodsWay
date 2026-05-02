@@ -21,7 +21,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { getTierDisplayName } from "@/lib/utils";
-import { Plus, Users, Heart, MessageCircle, ArrowUpDown, Search, X, Send, Image, Video, Trash2, Bold, Italic, Underline, Strikethrough } from "lucide-react";
+import { Plus, Users, Heart, MessageCircle, ArrowUpDown, Search, X, Send, Image, Video, Trash2, Bold, Italic, Underline, Strikethrough, BarChart2 } from "lucide-react";
 import { HonorButton } from "@/components/honor-button";
 import { z } from "zod";
 import { DiscussionSubscriptionButton } from "@/components/discussion-subscription-button";
@@ -249,6 +249,8 @@ export default function Community() {
   const [uploadedMedia, setUploadedMedia] = useState<{ urls: string[]; types: string[] }>({ urls: [], types: [] });
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isPollMode, setIsPollMode] = useState(false);
+  const [pollOptions, setPollOptions] = useState(['', '']);
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -534,6 +536,17 @@ export default function Community() {
     const plainContent = data.content.replace(/<[^>]+>/g, '').trim();
     const autoTitle = plainContent.slice(0, 60) + (plainContent.length > 60 ? '...' : '') || 'Post';
     
+    // Validate poll
+    if (isPollMode) {
+      const validOptions = pollOptions.filter(o => o.trim());
+      if (validOptions.length < 2) {
+        toast({ title: "Error", description: "Add at least 2 poll options", variant: "destructive" });
+        return;
+      }
+    }
+
+    const validPollOptions = isPollMode ? pollOptions.filter(o => o.trim()).map((text, i) => ({ id: String(i), text })) : undefined;
+
     const discussionData = {
       title: autoTitle,
       content: normalizeHtml(data.content),
@@ -541,11 +554,14 @@ export default function Community() {
       userId: (user as any).id,
       mediaUrls: uploadedMedia.urls.length > 0 ? uploadedMedia.urls : undefined,
       mediaTypes: uploadedMedia.types.length > 0 ? uploadedMedia.types : undefined,
-      postType: uploadedMedia.urls.length > 0 ? 'media' : 'text',
+      postType: isPollMode ? 'poll' : uploadedMedia.urls.length > 0 ? 'media' : 'text',
+      pollOptions: validPollOptions,
     };
     
-    await createDiscussion.mutateAsync(discussionData);
+    await createDiscussion.mutateAsync(discussionData as any);
     setUploadedMedia({ urls: [], types: [] });
+    setIsPollMode(false);
+    setPollOptions(['', '']);
     if (contentEditableRef.current) contentEditableRef.current.innerHTML = '';
   };
 
@@ -699,12 +715,20 @@ export default function Community() {
                 <span>Video</span>
               </button>
               <button 
-                onClick={() => setDialogOpen(true)}
+                onClick={() => { setDialogOpen(true); setIsPollMode(false); }}
                 className="flex items-center gap-2 px-4 py-1.5 rounded-sm hover:bg-gray-800 transition-colors text-gray-300 text-xs font-bold uppercase tracking-wide"
                 data-testid="button-quick-post-btn"
               >
                 <Plus className="w-5 h-5 text-ministry-gold" />
                 <span>Post</span>
+              </button>
+              <button
+                onClick={() => { setDialogOpen(true); setIsPollMode(true); }}
+                className="flex items-center gap-2 px-4 py-1.5 rounded-sm hover:bg-gray-800 transition-colors text-gray-300 text-xs font-bold uppercase tracking-wide"
+                data-testid="button-quick-poll"
+              >
+                <BarChart2 className="w-5 h-5 text-blue-400" />
+                <span>Poll</span>
               </button>
             </div>
           </CardContent>
@@ -815,33 +839,88 @@ export default function Community() {
                     data-testid="input-media-upload"
                   />
                   
-                  {/* Media Upload Buttons */}
-                  <div className="flex gap-2">
+                  {/* Poll / Media toggle buttons */}
+                  <div className="flex gap-2 flex-wrap">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isUploading}
-                      className="bg-black border-2 border-black text-white hover:bg-gray-800 rounded-sm font-bold uppercase"
-                      data-testid="button-add-photo"
+                      onClick={() => { setIsPollMode(!isPollMode); if (!isPollMode) setPollOptions(['', '']); }}
+                      className={`border-2 rounded-sm font-bold uppercase ${isPollMode ? 'bg-blue-600 border-blue-600 text-white' : 'bg-black border-black text-white hover:bg-gray-800'}`}
+                      data-testid="button-toggle-poll"
                     >
-                      <Image className="w-4 h-4 mr-2" />
-                      Photo
+                      <BarChart2 className="w-4 h-4 mr-2" />
+                      Poll
                     </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isUploading}
-                      className="bg-black border-2 border-black text-white hover:bg-gray-800 rounded-sm font-bold uppercase"
-                      data-testid="button-add-video"
-                    >
-                      <Video className="w-4 h-4 mr-2" />
-                      Video
-                    </Button>
+                    {!isPollMode && (
+                      <>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={isUploading}
+                          className="bg-black border-2 border-black text-white hover:bg-gray-800 rounded-sm font-bold uppercase"
+                          data-testid="button-add-photo"
+                        >
+                          <Image className="w-4 h-4 mr-2" />
+                          Photo
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={isUploading}
+                          className="bg-black border-2 border-black text-white hover:bg-gray-800 rounded-sm font-bold uppercase"
+                          data-testid="button-add-video"
+                        >
+                          <Video className="w-4 h-4 mr-2" />
+                          Video
+                        </Button>
+                      </>
+                    )}
                   </div>
+
+                  {/* Poll options editor */}
+                  {isPollMode && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-black text-black uppercase tracking-wide">Poll Options</p>
+                      {pollOptions.map((opt, i) => (
+                        <div key={i} className="flex gap-1 items-center">
+                          <input
+                            type="text"
+                            value={opt}
+                            onChange={e => {
+                              const next = [...pollOptions];
+                              next[i] = e.target.value;
+                              setPollOptions(next);
+                            }}
+                            placeholder={`Option ${i + 1}`}
+                            className="flex-1 bg-white border-2 border-black text-black text-xs rounded-sm px-2 py-1.5 placeholder:text-gray-400 focus:outline-none"
+                          />
+                          {pollOptions.length > 2 && (
+                            <button
+                              type="button"
+                              onClick={() => setPollOptions(pollOptions.filter((_, j) => j !== i))}
+                              className="text-black/50 hover:text-red-600 p-1"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      {pollOptions.length < 6 && (
+                        <button
+                          type="button"
+                          onClick={() => setPollOptions([...pollOptions, ''])}
+                          className="flex items-center gap-1 text-xs font-bold text-black/60 hover:text-black"
+                        >
+                          <Plus className="w-3 h-3" /> Add option
+                        </button>
+                      )}
+                    </div>
+                  )}
                   
                   {/* Uploading indicator */}
                   {isUploading && (

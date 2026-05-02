@@ -275,9 +275,10 @@ export const discussions = pgTable("discussions", {
   // Media support for social posts
   mediaUrls: text("media_urls").array(), // Array of image/video URLs
   mediaTypes: text("media_types").array(), // Array of media types (image, video, gif)
-  postType: varchar("post_type").default("text"), // text, media, link, share
+  postType: varchar("post_type").default("text"), // text, media, link, share, poll
   linkUrl: varchar("link_url"), // External link if sharing a link
   linkPreview: jsonb("link_preview"), // Preview data for shared links
+  pollOptions: jsonb("poll_options"), // Array of { id, text } for poll posts
   likes: integer("likes").default(0),
   replyCount: integer("reply_count").default(0),
   isPinned: boolean("is_pinned").default(false),
