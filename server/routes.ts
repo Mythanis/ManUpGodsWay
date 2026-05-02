@@ -2901,7 +2901,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const discussionData = insertDiscussionSchema.parse({
         ...body,
         userId,
-      });
+      }) as any;
+      // Preserve pollOptions — drizzle-zod may treat jsonb as unknown and strip it
+      if (body.pollOptions !== undefined) {
+        discussionData.pollOptions = body.pollOptions;
+      }
       
       const discussion = await storage.createDiscussion(discussionData);
 

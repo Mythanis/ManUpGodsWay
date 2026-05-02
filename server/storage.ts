@@ -2559,6 +2559,7 @@ export class DatabaseStorage implements IStorage {
         mediaUrls: discussions.mediaUrls,
         mediaTypes: discussions.mediaTypes,
         postType: discussions.postType,
+        pollOptions: discussions.pollOptions,
         createdAt: discussions.createdAt,
         updatedAt: discussions.updatedAt,
         user: users,

@@ -34,6 +34,7 @@ const createDiscussionSchema = z.object({
   mediaUrls: z.array(z.string()).optional(),
   mediaTypes: z.array(z.string()).optional(),
   postType: z.string().optional(),
+  pollOptions: z.array(z.object({ id: z.string(), text: z.string() })).optional(),
 });
 
 const replySchema = z.object({
