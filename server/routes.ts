@@ -12518,6 +12518,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 title: 'New Fitness Post',
                 message: `${poster?.firstName || 'A brother'} shared something in the Fitness Community.`,
                 relatedId: post.id,
+                linkUrl: `/fitness?tab=community&post=${post.id}`,
               });
             } catch (notifErr) {
               console.error(`[FitnessCommunity] Failed to notify user ${u.id} on new post:`, notifErr);
@@ -12568,6 +12569,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               title: 'Amen! 🙏',
               message: 'Someone Amened your fitness post.',
               relatedId: postId,
+              linkUrl: `/fitness?tab=community&post=${postId}`,
             });
           } catch (e) {
             console.error('[FitnessCommunity] Failed to notify post author on like:', e);
@@ -12632,6 +12634,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               title: 'Oh Me! 😩',
               message: 'Someone reacted "Oh Me" to your fitness post.',
               relatedId: postId,
+              linkUrl: `/fitness?tab=community&post=${postId}`,
             });
           } catch (e) {
             console.error('[FitnessCommunity] Failed to notify post author on Oh Me:', e);
@@ -12737,6 +12740,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               title: '💬 New Comment',
               message: 'Someone commented on your fitness post.',
               relatedId: postId,
+              linkUrl: `/fitness?tab=community&post=${postId}`,
             });
           } catch (e) {
             console.error('[FitnessCommunity] Failed to notify post author on comment:', e);
@@ -12762,6 +12766,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 title: '💬 New Reply',
                 message: 'Someone replied on a fitness post you commented on.',
                 relatedId: postId,
+                linkUrl: `/fitness?tab=community&post=${postId}`,
               });
             } catch (e) {
               console.error('[FitnessCommunity] Failed to notify prior commenter:', e);

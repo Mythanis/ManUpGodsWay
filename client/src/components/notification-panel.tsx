@@ -306,7 +306,7 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
         break;
 
       case 'fitness_community':
-        goTo('/fitness?tab=community');
+        goTo(notification.relatedId ? `/fitness?tab=community&post=${notification.relatedId}` : '/fitness?tab=community');
         break;
 
       case 'mention':

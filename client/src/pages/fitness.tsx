@@ -601,6 +601,12 @@ export default function Fitness() {
   const [communityMedia, setCommunityMedia] = useState<{ url: string; type: string }[]>([]);
   const [communityUploading, setCommunityUploading] = useState(false);
 
+  const [targetPostId] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    return new URLSearchParams(window.location.search).get('post');
+  });
+  const [highlightedPostId, setHighlightedPostId] = useState<string | null>(null);
+
   // Nutrition tab state
   const [nutritionInputQuery, setNutritionInputQuery] = useState('');
   const [nutritionSubmittedQuery, setNutritionSubmittedQuery] = useState('');
@@ -679,6 +685,29 @@ export default function Fitness() {
     enabled: hasMembership,
     refetchInterval: 15000,
   });
+
+  useEffect(() => {
+    if (targetPostId) {
+      setHighlightedPostId(targetPostId);
+    }
+  }, [targetPostId]);
+
+  useEffect(() => {
+    if (!targetPostId || communityPosts.length === 0) return;
+    const timer = setTimeout(() => {
+      const element = document.querySelector(`[data-post-id="${targetPostId}"]`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [targetPostId, communityPosts]);
+
+  useEffect(() => {
+    if (!highlightedPostId) return;
+    const timer = setTimeout(() => setHighlightedPostId(null), 2500);
+    return () => clearTimeout(timer);
+  }, [highlightedPostId]);
 
   const createPostMutation = useMutation({
     mutationFn: async (data: { content: string; category: string; mediaUrls?: string[]; mediaTypes?: string[] }) => {
@@ -4954,7 +4983,11 @@ export default function Fitness() {
                   };
                   const isOwner = (authUser as any)?.id === post.userId || (authUser as any)?.claims?.sub === post.userId;
                   return (
-                    <div key={post.id} className="bg-zinc-900 border-2 border-zinc-700 rounded-sm overflow-hidden">
+                    <div
+                      key={post.id}
+                      data-post-id={post.id}
+                      className={`bg-zinc-900 border-2 rounded-sm overflow-hidden transition-all duration-300 ${highlightedPostId === post.id ? 'border-[#FDD000] ring-2 ring-[#FDD000]/50' : 'border-zinc-700'}`}
+                    >
                       {/* Post header */}
                       <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-700">
                         <div className="flex items-center gap-2">
