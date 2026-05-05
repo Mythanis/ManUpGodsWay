@@ -20,6 +20,7 @@ interface Notification {
   title: string;
   message: string;
   relatedId?: string;
+  linkUrl?: string;
   isRead: boolean;
   createdAt: string;
 }
@@ -112,6 +113,13 @@ export default function Notifications() {
 
   const handleNotificationClick = (n: Notification) => {
     if (!n.isRead) markRead.mutate(n.id);
+
+    // If a direct link URL is stored (e.g. fitness posts, mentions), always use it
+    if (n.linkUrl) {
+      setLocation(n.linkUrl);
+      return;
+    }
+
     switch (n.type) {
       case 'message': case 'new_message': case 'group_message':
         setLocation(n.relatedId ? `/messages?conversation=${n.relatedId}` : '/messages'); break;
@@ -132,20 +140,27 @@ export default function Notifications() {
         }
         break;
       }
+      case 'fitness_community':
+        setLocation(n.relatedId ? `/fitness?tab=community&post=${n.relatedId}` : '/fitness?tab=community'); break;
+      case 'mention':
+        setLocation(n.relatedId ? `/community?discussion=${n.relatedId}` : '/community'); break;
       case 'event': case 'new_event':
         setLocation('/events'); break;
       case 'challenge': case 'challenge_ended': case 'new_challenge':
         setLocation('/challenges'); break;
       case 'war_group':
-        setLocation('/war-groups'); break;
+        setLocation(n.relatedId ? `/war-groups/${n.relatedId}` : '/war-groups'); break;
       case 'war_room_post':
         setLocation(n.relatedId ? `/hurdle-wall?post=${n.relatedId}` : '/hurdle-wall'); break;
       case 'under_fire_post':
         setLocation(n.relatedId ? `/under-fire?request=${n.relatedId}` : '/under-fire'); break;
+      case 'brotherhood':
+        setLocation(n.relatedId ? `/users/${n.relatedId}` : '/'); break;
       case 'admin':
         break;
       default:
-        if (n.relatedId) setLocation(`/messages?conversation=${n.relatedId}`);
+        // Safe fallback — don't blindly route to messages
+        setLocation('/');
     }
   };
 
