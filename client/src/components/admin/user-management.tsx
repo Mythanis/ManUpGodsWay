@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Eye, Ban, UserCheck, Shield, CreditCard, Mail, Calendar, Activity, Trash2, AlertTriangle, Dumbbell, X, Bell, BellOff, ChevronLeft, ChevronRight, ArrowUpDown, BookOpen, CheckCircle, Circle, Unlock, Lock, ChevronDown, Clock, RefreshCw } from "lucide-react";
+import { Search, Eye, Ban, UserCheck, Shield, CreditCard, Mail, Calendar, Activity, Trash2, AlertTriangle, Dumbbell, X, Bell, BellOff, ChevronLeft, ChevronRight, ArrowUpDown, BookOpen, CheckCircle, Circle, Unlock, Lock, ChevronDown, Clock, RefreshCw, Download } from "lucide-react";
 
 const PAGE_SIZE = 100;
 
@@ -570,7 +570,20 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                 </button>
               </>
             )}
-            <span className="text-xs text-gray-400 ml-auto">{total} user{total !== 1 ? 's' : ''}</span>
+            <span className="text-xs text-gray-400">{total} user{total !== 1 ? 's' : ''}</span>
+            <button
+              onClick={() => {
+                const params = new URLSearchParams({ statusFilter, sortBy });
+                if (debouncedSearch) params.set('search', debouncedSearch);
+                if (subscriptionFilter) params.set('subscriptionFilter', subscriptionFilter);
+                window.location.href = `/api/admin/users/export-emails?${params.toString()}`;
+              }}
+              className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-0.5 rounded-full transition-colors ml-auto"
+              title="Download email list as CSV"
+            >
+              <Download className="w-3 h-3" />
+              Export Emails
+            </button>
           </div>
         </div>
         

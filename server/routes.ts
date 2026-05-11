@@ -5558,6 +5558,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Export emails for a filtered set of users (admin only) — returns CSV
+  app.get('/api/admin/users/export-emails', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const statusFilter = (req.query.statusFilter as string) || 'all';
+      const subscriptionFilter = (req.query.subscriptionFilter as string) || null;
+      const search = (req.query.search as string) || '';
+
+      // Fetch all matching users (no pagination)
+      const result = await storage.getAdminUsersPage({
+        page: 1,
+        pageSize: 100000,
+        sortBy: 'newest',
+        search,
+        statusFilter,
+        subscriptionFilter,
+      });
+
+      const rows = result.users
+        .filter(u => u.email)
+        .map(u => {
+          const name = [u.firstName, u.lastName].filter(Boolean).join(' ');
+          const safeName = `"${(name || '').replace(/"/g, '""')}"`;
+          const safeEmail = `"${(u.email || '').replace(/"/g, '""')}"`;
+          return `${safeName},${safeEmail}`;
+        });
+
+      const csv = `Name,Email\n${rows.join('\n')}`;
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="user-emails.csv"');
+      res.send(csv);
+    } catch (error) {
+      console.error("Error exporting emails:", error);
+      res.status(500).json({ message: "Failed to export emails" });
+    }
+  });
+
   // Get count of active push subscriptions for a user (admin only)
   app.get('/api/admin/users/:id/push-status', isAuthenticated, async (req: any, res) => {
     try {
