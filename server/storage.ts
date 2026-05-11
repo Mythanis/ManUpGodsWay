@@ -5559,7 +5559,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async setPromoAdActive(id: number): Promise<PromoAd> {
-    await db.update(promoAds).set({ isActive: false, updatedAt: new Date() });
     const [row] = await db.update(promoAds)
       .set({ isActive: true, updatedAt: new Date() })
       .where(eq(promoAds.id, id))
