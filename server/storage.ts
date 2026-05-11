@@ -510,6 +510,14 @@ export interface IStorage {
   getSystemSettings(): Promise<SystemSettings | undefined>;
   updateSystemSettings(systemSettings: InsertSystemSettings): Promise<SystemSettings>;
   
+  // Promo Ads
+  getActivePromoAd(): Promise<schema.PromoAd | null>;
+  getAllPromoAds(): Promise<schema.PromoAd[]>;
+  createPromoAd(data: schema.InsertPromoAd): Promise<schema.PromoAd>;
+  updatePromoAd(id: number, data: Partial<schema.InsertPromoAd>): Promise<schema.PromoAd>;
+  deletePromoAd(id: number): Promise<void>;
+  setPromoAdActive(id: number): Promise<schema.PromoAd>;
+
   // Podcast operations
   getPodcasts(options?: { search?: string; category?: string; sort?: string }): Promise<Podcast[]>;
   getAllPodcasts(): Promise<Podcast[]>;
@@ -5516,6 +5524,45 @@ export class DatabaseStorage implements IStorage {
     }
     
     return await query;
+  }
+
+  // ── Promo Ads ──────────────────────────────────────────────────────────────
+  async getActivePromoAd(): Promise<schema.PromoAd | null> {
+    const rows = await db.select().from(schema.promoAds)
+      .where(eq(schema.promoAds.isActive, true))
+      .limit(1);
+    return rows[0] ?? null;
+  }
+
+  async getAllPromoAds(): Promise<schema.PromoAd[]> {
+    return await db.select().from(schema.promoAds)
+      .orderBy(desc(schema.promoAds.createdAt));
+  }
+
+  async createPromoAd(data: schema.InsertPromoAd): Promise<schema.PromoAd> {
+    const [row] = await db.insert(schema.promoAds).values(data).returning();
+    return row;
+  }
+
+  async updatePromoAd(id: number, data: Partial<schema.InsertPromoAd>): Promise<schema.PromoAd> {
+    const [row] = await db.update(schema.promoAds)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(schema.promoAds.id, id))
+      .returning();
+    return row;
+  }
+
+  async deletePromoAd(id: number): Promise<void> {
+    await db.delete(schema.promoAds).where(eq(schema.promoAds.id, id));
+  }
+
+  async setPromoAdActive(id: number): Promise<schema.PromoAd> {
+    await db.update(schema.promoAds).set({ isActive: false, updatedAt: new Date() });
+    const [row] = await db.update(schema.promoAds)
+      .set({ isActive: true, updatedAt: new Date() })
+      .where(eq(schema.promoAds.id, id))
+      .returning();
+    return row;
   }
 
   async getAllPodcasts(): Promise<Podcast[]> {

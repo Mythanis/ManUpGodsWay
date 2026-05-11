@@ -13508,6 +13508,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Promo Ads — public
+  app.get('/api/promo-ads/active', async (req, res) => {
+    try {
+      const ad = await storage.getActivePromoAd();
+      res.json(ad ?? null);
+    } catch (e) {
+      res.status(500).json({ error: 'Failed to fetch promo ad' });
+    }
+  });
+
+  // Promo Ads — admin CRUD
+  app.get('/api/admin/promo-ads', isAuthenticated, async (req: any, res) => {
+    if (!['admin', 'owner'].includes(req.user?.role)) return res.status(403).json({ error: 'Forbidden' });
+    try {
+      const ads = await storage.getAllPromoAds();
+      res.json(ads);
+    } catch (e) {
+      res.status(500).json({ error: 'Failed to fetch promo ads' });
+    }
+  });
+
+  app.post('/api/admin/promo-ads', isAuthenticated, async (req: any, res) => {
+    if (!['admin', 'owner'].includes(req.user?.role)) return res.status(403).json({ error: 'Forbidden' });
+    try {
+      const parsed = schema.insertPromoAdSchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
+      const ad = await storage.createPromoAd(parsed.data);
+      res.status(201).json(ad);
+    } catch (e) {
+      res.status(500).json({ error: 'Failed to create promo ad' });
+    }
+  });
+
+  app.put('/api/admin/promo-ads/:id', isAuthenticated, async (req: any, res) => {
+    if (!['admin', 'owner'].includes(req.user?.role)) return res.status(403).json({ error: 'Forbidden' });
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ error: 'Invalid id' });
+      const ad = await storage.updatePromoAd(id, req.body);
+      res.json(ad);
+    } catch (e) {
+      res.status(500).json({ error: 'Failed to update promo ad' });
+    }
+  });
+
+  app.post('/api/admin/promo-ads/:id/activate', isAuthenticated, async (req: any, res) => {
+    if (!['admin', 'owner'].includes(req.user?.role)) return res.status(403).json({ error: 'Forbidden' });
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ error: 'Invalid id' });
+      const ad = await storage.setPromoAdActive(id);
+      res.json(ad);
+    } catch (e) {
+      res.status(500).json({ error: 'Failed to activate promo ad' });
+    }
+  });
+
+  app.post('/api/admin/promo-ads/:id/deactivate', isAuthenticated, async (req: any, res) => {
+    if (!['admin', 'owner'].includes(req.user?.role)) return res.status(403).json({ error: 'Forbidden' });
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ error: 'Invalid id' });
+      const ad = await storage.updatePromoAd(id, { isActive: false });
+      res.json(ad);
+    } catch (e) {
+      res.status(500).json({ error: 'Failed to deactivate promo ad' });
+    }
+  });
+
+  app.delete('/api/admin/promo-ads/:id', isAuthenticated, async (req: any, res) => {
+    if (!['admin', 'owner'].includes(req.user?.role)) return res.status(403).json({ error: 'Forbidden' });
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ error: 'Invalid id' });
+      await storage.deletePromoAd(id);
+      res.status(204).end();
+    } catch (e) {
+      res.status(500).json({ error: 'Failed to delete promo ad' });
+    }
+  });
+
   // Blog routes
   app.get('/api/blogs', async (req, res) => {
     try {

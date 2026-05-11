@@ -58,6 +58,38 @@ interface ServiceWorkerRegistrationWithTriggers extends ServiceWorkerRegistratio
   getNotifications(filter?: GetNotificationsFilter): Promise<Notification[]>;
 }
 
+function PromoAdBanner() {
+  const { data: ad } = useQuery<{ id: number; title: string; description: string | null; linkUrl: string } | null>({
+    queryKey: ["/api/promo-ads/active"],
+    queryFn: () => fetch("/api/promo-ads/active", { credentials: "include" }).then(r => r.json()),
+    staleTime: 60000,
+  });
+  if (!ad) return null;
+  return (
+    <div className="px-6 mb-8">
+      <a
+        href={ad.linkUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="w-full flex items-center justify-between p-4 bg-black border-2 border-white/20 rounded-sm shadow-[4px_4px_0px_0px_rgba(255,255,255,0.15)] hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all active:shadow-none active:translate-x-[4px] active:translate-y-[4px] block"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-sm bg-white/10 flex items-center justify-center flex-shrink-0">
+            <Link2 className="w-5 h-5 text-white/70" />
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-black text-white uppercase tracking-wide leading-tight">{ad.title}</p>
+            {ad.description && <p className="text-xs text-white/60 font-medium mt-0.5">{ad.description}</p>}
+          </div>
+        </div>
+        <svg className="w-4 h-4 text-white/50 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </a>
+    </div>
+  );
+}
+
 export default function Home() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
   const { toast } = useToast();
@@ -1555,7 +1587,7 @@ export default function Home() {
       </div>
 
       {/* Share the App */}
-      <div className="px-6 mb-8">
+      <div className="px-6 mb-3">
         <button
           onClick={handleShareApp}
           disabled={shareAppMutation.isPending}
@@ -1578,6 +1610,9 @@ export default function Home() {
           </div>
         </button>
       </div>
+
+      {/* Promo Ad Banner */}
+      <PromoAdBanner />
 
       {/* Progress Tracking Dialog */}
       <Dialog open={showProgressDialog} onOpenChange={setShowProgressDialog}>

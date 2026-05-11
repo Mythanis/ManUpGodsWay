@@ -27,6 +27,7 @@ import EventManagement from "@/components/admin/event-management";
 import SubscriptionSettingsManagement from "@/components/admin/subscription-settings-management";
 import CarouselManagement from "@/components/admin/carousel-management";
 import BlogManagement from "@/components/admin/blog-management";
+import PromoAdManagement from "@/components/admin/promo-ad-management";
 import WarGroupsManagement from "@/components/admin/war-groups-management";
 import WarGroupRegistrationsManagement from "@/components/admin/war-group-registrations-management";
 import LiveStreamManagement from "@/components/admin/live-stream-management";
@@ -74,6 +75,7 @@ const adminTabs = [
   { id: "war-groups", label: "War Groups", icon: Shield },
   { id: "rations", label: "Rations", icon: Coins },
   { id: "store", label: "Store", icon: ShoppingBag },
+  { id: "promo-ads", label: "Promo Ads", icon: ExternalLink },
   { id: "man-up-links", label: "Man Up", icon: ExternalLink },
   { id: "logo", label: "Logo", icon: Image },
   { id: "tiers", label: "Subscription", icon: DollarSign },
@@ -862,6 +864,13 @@ export default function Admin() {
             <div>
               <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Homepage Carousel Management</h2>
               <CarouselManagement />
+            </div>
+          )}
+
+          {activeTab === "promo-ads" && (
+            <div>
+              <h2 className="text-lg font-bold text-ministry-charcoal mb-4">Promo Ad Management</h2>
+              <PromoAdManagement />
             </div>
           )}
 

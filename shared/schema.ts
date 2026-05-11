@@ -3262,6 +3262,22 @@ export const insertTermsAcknowledgementSchema = createInsertSchema(termsAcknowle
 export type TermsAcknowledgement = typeof termsAcknowledgements.$inferSelect;
 export type InsertTermsAcknowledgement = z.infer<typeof insertTermsAcknowledgementSchema>;
 
+// ─── Promo Ads ────────────────────────────────────────────────────────────────
+
+export const promoAds = pgTable("promo_ads", {
+  id: serial("id").primaryKey(),
+  title: varchar("title").notNull(),
+  description: text("description"),
+  linkUrl: varchar("link_url").notNull(),
+  isActive: boolean("is_active").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPromoAdSchema = createInsertSchema(promoAds).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertPromoAd = z.infer<typeof insertPromoAdSchema>;
+export type PromoAd = typeof promoAds.$inferSelect;
+
 // ─── Stripe Test Subscription (Owner testing tool) ────────────────────────────
 
 export const stripeTestSubscriptions = pgTable("stripe_test_subscriptions", {
