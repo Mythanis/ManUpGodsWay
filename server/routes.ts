@@ -13511,11 +13511,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Promo Ads — public
   app.get('/api/promo-ads/active', async (req, res) => {
     try {
-      const ad = await storage.getActivePromoAd();
-      res.json(ad ?? null);
+      const ads = await storage.getActivePromoAds();
+      res.json(ads);
     } catch (e) {
-      console.error('[PromoAds] getActivePromoAd error:', e);
-      res.status(500).json({ error: 'Failed to fetch promo ad' });
+      console.error('[PromoAds] getActivePromoAds error:', e);
+      res.status(500).json({ error: 'Failed to fetch promo ads' });
     }
   });
 

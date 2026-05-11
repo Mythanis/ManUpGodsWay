@@ -3269,6 +3269,8 @@ export const promoAds = pgTable("promo_ads", {
   title: varchar("title").notNull(),
   description: text("description"),
   linkUrl: varchar("link_url").notNull(),
+  imageUrl: text("image_url"),
+  displayOrder: integer("display_order").default(0).notNull(),
   isActive: boolean("is_active").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

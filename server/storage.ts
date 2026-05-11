@@ -514,7 +514,7 @@ export interface IStorage {
   updateSystemSettings(systemSettings: InsertSystemSettings): Promise<SystemSettings>;
   
   // Promo Ads
-  getActivePromoAd(): Promise<PromoAd | null>;
+  getActivePromoAds(): Promise<PromoAd[]>;
   getAllPromoAds(): Promise<PromoAd[]>;
   createPromoAd(data: InsertPromoAd): Promise<PromoAd>;
   updatePromoAd(id: number, data: Partial<InsertPromoAd>): Promise<PromoAd>;
@@ -5530,11 +5530,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   // ── Promo Ads ──────────────────────────────────────────────────────────────
-  async getActivePromoAd(): Promise<PromoAd | null> {
-    const rows = await db.select().from(promoAds)
+  async getActivePromoAds(): Promise<PromoAd[]> {
+    return await db.select().from(promoAds)
       .where(eq(promoAds.isActive, true))
-      .limit(1);
-    return rows[0] ?? null;
+      .orderBy(asc(promoAds.displayOrder), asc(promoAds.createdAt));
   }
 
   async getAllPromoAds(): Promise<PromoAd[]> {

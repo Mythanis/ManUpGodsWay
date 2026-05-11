@@ -8,19 +8,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, CheckCircle, Circle, ExternalLink } from "lucide-react";
+import { Plus, Edit, Trash2, CheckCircle, Circle, ExternalLink, Image } from "lucide-react";
 
 interface PromoAd {
   id: number;
   title: string;
   description: string | null;
   linkUrl: string;
+  imageUrl: string | null;
+  displayOrder: number;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
-const emptyForm = { title: "", description: "", linkUrl: "" };
+const emptyForm = { title: "", description: "", linkUrl: "", imageUrl: "", displayOrder: 0 };
 
 export default function PromoAdManagement() {
   const { toast } = useToast();
@@ -65,7 +67,7 @@ export default function PromoAdManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/promo-ads"] });
       queryClient.invalidateQueries({ queryKey: ["/api/promo-ads/active"] });
-      toast({ title: "Ad set as active — it will now show on the home screen" });
+      toast({ title: "Ad added to carousel" });
     },
     onError: () => toast({ title: "Failed to activate ad", variant: "destructive" }),
   });
@@ -75,7 +77,7 @@ export default function PromoAdManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/promo-ads"] });
       queryClient.invalidateQueries({ queryKey: ["/api/promo-ads/active"] });
-      toast({ title: "Ad deactivated — home screen banner removed" });
+      toast({ title: "Ad removed from carousel" });
     },
     onError: () => toast({ title: "Failed to deactivate ad", variant: "destructive" }),
   });
@@ -98,7 +100,13 @@ export default function PromoAdManagement() {
 
   const openEdit = (ad: PromoAd) => {
     setEditingAd(ad);
-    setForm({ title: ad.title, description: ad.description ?? "", linkUrl: ad.linkUrl });
+    setForm({
+      title: ad.title,
+      description: ad.description ?? "",
+      linkUrl: ad.linkUrl,
+      imageUrl: ad.imageUrl ?? "",
+      displayOrder: ad.displayOrder,
+    });
     setShowDialog(true);
   };
 
@@ -107,10 +115,11 @@ export default function PromoAdManagement() {
       toast({ title: "Title and link URL are required", variant: "destructive" });
       return;
     }
+    const payload = { ...form, displayOrder: Number(form.displayOrder) || 0 };
     if (editingAd) {
-      updateMutation.mutate({ id: editingAd.id, data: form });
+      updateMutation.mutate({ id: editingAd.id, data: payload });
     } else {
-      createMutation.mutate(form);
+      createMutation.mutate(payload);
     }
   };
 
@@ -120,7 +129,7 @@ export default function PromoAdManagement() {
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-2">
         <p className="text-sm text-gray-500">
-          One ad can be active at a time. The active ad shows as a clickable banner on the home screen below "Share the App".
+          Active ads rotate in a carousel on the home screen. Use Display Order to control sequence. Thumbnails: <strong>1200 × 500px</strong> recommended.
         </p>
         <Button onClick={openCreate} className="bg-[#FDD000] text-black font-black hover:bg-yellow-400 flex items-center gap-1 shrink-0 ml-4">
           <Plus className="w-4 h-4" /> New Ad
@@ -136,43 +145,61 @@ export default function PromoAdManagement() {
       ) : (
         <div className="space-y-3">
           {ads.map(ad => (
-            <div key={ad.id} className={`border-2 rounded-sm p-4 flex items-start gap-3 ${ad.isActive ? 'border-[#FDD000] bg-yellow-50' : 'border-gray-200 bg-white'}`}>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-black text-sm text-gray-900 truncate">{ad.title}</span>
-                  {ad.isActive && <Badge className="bg-[#FDD000] text-black text-xs font-bold shrink-0">ACTIVE</Badge>}
+            <div key={ad.id} className={`border-2 rounded-sm overflow-hidden ${ad.isActive ? 'border-[#FDD000] bg-yellow-50' : 'border-gray-200 bg-white'}`}>
+              {ad.imageUrl && (
+                <div className="w-full h-28 bg-gray-100 relative overflow-hidden">
+                  <img
+                    src={ad.imageUrl}
+                    alt={ad.title}
+                    className="w-full h-full object-cover"
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
                 </div>
-                {ad.description && <p className="text-xs text-gray-500 mb-1 line-clamp-2">{ad.description}</p>}
-                <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 underline flex items-center gap-1 truncate">
-                  <ExternalLink className="w-3 h-3 shrink-0" />
-                  {ad.linkUrl}
-                </a>
-              </div>
-              <div className="flex flex-col gap-1.5 shrink-0">
-                <button
-                  onClick={() => ad.isActive ? deactivateMutation.mutate(ad.id) : activateMutation.mutate(ad.id)}
-                  disabled={activateMutation.isPending || deactivateMutation.isPending}
-                  className="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-sm border transition-colors"
-                  style={ad.isActive
-                    ? { borderColor: '#d97706', color: '#d97706' }
-                    : { borderColor: '#16a34a', color: '#16a34a' }}
-                >
-                  {ad.isActive ? <Circle className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
-                  {ad.isActive ? 'Deactivate' : 'Set Active'}
-                </button>
-                <button
-                  onClick={() => openEdit(ad)}
-                  className="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-sm border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
-                >
-                  <Edit className="w-3 h-3" /> Edit
-                </button>
-                <button
-                  onClick={() => deleteMutation.mutate(ad.id)}
-                  disabled={deleteMutation.isPending}
-                  className="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-sm border border-red-300 text-red-500 hover:bg-red-50 transition-colors"
-                >
-                  <Trash2 className="w-3 h-3" /> Delete
-                </button>
+              )}
+              <div className="p-4 flex items-start gap-3">
+                {!ad.imageUrl && (
+                  <div className="w-10 h-10 rounded-sm bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    <Image className="w-5 h-5 text-gray-400" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-black text-sm text-gray-900 truncate">{ad.title}</span>
+                    {ad.isActive && <Badge className="bg-[#FDD000] text-black text-xs font-bold shrink-0">ACTIVE</Badge>}
+                    <span className="text-xs text-gray-400 shrink-0">Order: {ad.displayOrder}</span>
+                  </div>
+                  {ad.description && <p className="text-xs text-gray-500 mb-1 line-clamp-2">{ad.description}</p>}
+                  <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 underline flex items-center gap-1 truncate">
+                    <ExternalLink className="w-3 h-3 shrink-0" />
+                    {ad.linkUrl}
+                  </a>
+                </div>
+                <div className="flex flex-col gap-1.5 shrink-0">
+                  <button
+                    onClick={() => ad.isActive ? deactivateMutation.mutate(ad.id) : activateMutation.mutate(ad.id)}
+                    disabled={activateMutation.isPending || deactivateMutation.isPending}
+                    className="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-sm border transition-colors"
+                    style={ad.isActive
+                      ? { borderColor: '#d97706', color: '#d97706' }
+                      : { borderColor: '#16a34a', color: '#16a34a' }}
+                  >
+                    {ad.isActive ? <Circle className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
+                    {ad.isActive ? 'Remove' : 'Show'}
+                  </button>
+                  <button
+                    onClick={() => openEdit(ad)}
+                    className="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-sm border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
+                  >
+                    <Edit className="w-3 h-3" /> Edit
+                  </button>
+                  <button
+                    onClick={() => deleteMutation.mutate(ad.id)}
+                    disabled={deleteMutation.isPending}
+                    className="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-sm border border-red-300 text-red-500 hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 className="w-3 h-3" /> Delete
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -202,9 +229,28 @@ export default function PromoAdManagement() {
                 id="ad-description"
                 value={form.description}
                 onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                placeholder="Short subtitle shown below the title"
+                placeholder="Short subtitle shown as overlay on the image"
                 rows={2}
               />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="ad-image">Thumbnail URL (optional)</Label>
+              <Input
+                id="ad-image"
+                value={form.imageUrl}
+                onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))}
+                placeholder="https://… (recommended: 1200×500px)"
+              />
+              {form.imageUrl && (
+                <div className="mt-2 w-full h-24 rounded-sm overflow-hidden bg-gray-100">
+                  <img
+                    src={form.imageUrl}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                </div>
+              )}
             </div>
             <div className="space-y-1">
               <Label htmlFor="ad-link">Link URL *</Label>
@@ -214,6 +260,17 @@ export default function PromoAdManagement() {
                 onChange={e => setForm(f => ({ ...f, linkUrl: e.target.value }))}
                 placeholder="https://store.manupgodsway.org"
               />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="ad-order">Display Order</Label>
+              <Input
+                id="ad-order"
+                type="number"
+                value={form.displayOrder}
+                onChange={e => setForm(f => ({ ...f, displayOrder: parseInt(e.target.value) || 0 }))}
+                placeholder="0"
+              />
+              <p className="text-xs text-gray-400">Lower numbers appear first in the carousel.</p>
             </div>
             <div className="flex gap-2 pt-2">
               <Button onClick={handleSubmit} disabled={isBusy} className="flex-1 bg-[#FDD000] text-black font-black hover:bg-yellow-400">

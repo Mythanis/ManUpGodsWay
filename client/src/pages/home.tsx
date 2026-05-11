@@ -59,33 +59,98 @@ interface ServiceWorkerRegistrationWithTriggers extends ServiceWorkerRegistratio
 }
 
 function PromoAdBanner() {
-  const { data: ad } = useQuery<{ id: number; title: string; description: string | null; linkUrl: string } | null>({
+  const { data: ads = [] } = useQuery<Array<{ id: number; title: string; description: string | null; linkUrl: string; imageUrl: string | null }>>({
     queryKey: ["/api/promo-ads/active"],
     queryFn: () => fetch("/api/promo-ads/active", { credentials: "include" }).then(r => r.json()),
     staleTime: 60000,
   });
-  if (!ad) return null;
+
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    if (ads.length <= 1) return;
+    const timer = setInterval(() => setCurrent(c => (c + 1) % ads.length), 5000);
+    return () => clearInterval(timer);
+  }, [ads.length]);
+
+  if (!ads.length) return null;
+
+  const ad = ads[current];
+
   return (
     <div className="px-6 mb-8">
-      <a
-        href={ad.linkUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="w-full flex items-center justify-between p-4 bg-black border-2 border-white/20 rounded-sm shadow-[4px_4px_0px_0px_rgba(255,255,255,0.15)] hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all active:shadow-none active:translate-x-[4px] active:translate-y-[4px] block"
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-sm bg-white/10 flex items-center justify-center flex-shrink-0">
-            <Link2 className="w-5 h-5 text-white/70" />
-          </div>
-          <div className="text-left">
-            <p className="text-sm font-black text-white uppercase tracking-wide leading-tight">{ad.title}</p>
-            {ad.description && <p className="text-xs text-white/60 font-medium mt-0.5">{ad.description}</p>}
-          </div>
-        </div>
-        <svg className="w-4 h-4 text-white/50 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-        </svg>
-      </a>
+      <div className="relative rounded-sm overflow-hidden">
+        <a
+          key={ad.id}
+          href={ad.linkUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block w-full"
+        >
+          {ad.imageUrl ? (
+            <div className="relative w-full" style={{ aspectRatio: "2.4/1" }}>
+              <img
+                src={ad.imageUrl}
+                alt={ad.title}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-3">
+                <p className="text-sm font-black text-white uppercase tracking-wide leading-tight drop-shadow">{ad.title}</p>
+                {ad.description && <p className="text-xs text-white/80 font-medium mt-0.5 drop-shadow">{ad.description}</p>}
+              </div>
+            </div>
+          ) : (
+            <div className="w-full flex items-center justify-between p-4 bg-black border-2 border-white/20 shadow-[4px_4px_0px_0px_rgba(255,255,255,0.15)]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-sm bg-white/10 flex items-center justify-center flex-shrink-0">
+                  <Link2 className="w-5 h-5 text-white/70" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-black text-white uppercase tracking-wide leading-tight">{ad.title}</p>
+                  {ad.description && <p className="text-xs text-white/60 font-medium mt-0.5">{ad.description}</p>}
+                </div>
+              </div>
+              <svg className="w-4 h-4 text-white/50 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          )}
+        </a>
+
+        {ads.length > 1 && (
+          <>
+            <button
+              onClick={() => setCurrent(c => (c - 1 + ads.length) % ads.length)}
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 transition-colors z-10"
+              aria-label="Previous"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setCurrent(c => (c + 1) % ads.length)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 transition-colors z-10"
+              aria-label="Next"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+              {ads.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrent(i)}
+                  className={`rounded-full transition-all ${i === current ? 'w-4 h-2 bg-[#FDD000]' : 'w-2 h-2 bg-white/50 hover:bg-white/80'}`}
+                  aria-label={`Slide ${i + 1}`}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
