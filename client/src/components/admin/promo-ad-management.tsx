@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, CheckCircle, Circle, ExternalLink, Image } from "lucide-react";
+import { Plus, Edit, Trash2, CheckCircle, Circle, ExternalLink, Upload, X, ImageIcon } from "lucide-react";
 
 interface PromoAd {
   id: number;
@@ -30,6 +30,8 @@ export default function PromoAdManagement() {
   const [showDialog, setShowDialog] = useState(false);
   const [editingAd, setEditingAd] = useState<PromoAd | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: ads = [], isLoading } = useQuery<PromoAd[]>({
     queryKey: ["/api/admin/promo-ads"],
@@ -92,6 +94,31 @@ export default function PromoAdManagement() {
     onError: () => toast({ title: "Failed to delete ad", variant: "destructive" }),
   });
 
+  const handleImageFile = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Please select an image file", variant: "destructive" });
+      return;
+    }
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      const res = await fetch("/api/admin/promo-ads/upload-image", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      const { imageUrl } = await res.json();
+      setForm(f => ({ ...f, imageUrl }));
+      toast({ title: "Image uploaded" });
+    } catch {
+      toast({ title: "Failed to upload image", variant: "destructive" });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const openCreate = () => {
     setEditingAd(null);
     setForm(emptyForm);
@@ -123,13 +150,13 @@ export default function PromoAdManagement() {
     }
   };
 
-  const isBusy = createMutation.isPending || updateMutation.isPending;
+  const isBusy = createMutation.isPending || updateMutation.isPending || isUploading;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-2">
         <p className="text-sm text-gray-500">
-          Active ads rotate in a carousel on the home screen. Use Display Order to control sequence. Thumbnails: <strong>1200 × 500px</strong> recommended.
+          Active ads rotate in a carousel on the home screen. Use Display Order to control sequence. Recommended thumbnail: <strong>1200 × 500px</strong>.
         </p>
         <Button onClick={openCreate} className="bg-[#FDD000] text-black font-black hover:bg-yellow-400 flex items-center gap-1 shrink-0 ml-4">
           <Plus className="w-4 h-4" /> New Ad
@@ -159,14 +186,14 @@ export default function PromoAdManagement() {
               <div className="p-4 flex items-start gap-3">
                 {!ad.imageUrl && (
                   <div className="w-10 h-10 rounded-sm bg-gray-100 flex items-center justify-center flex-shrink-0">
-                    <Image className="w-5 h-5 text-gray-400" />
+                    <ImageIcon className="w-5 h-5 text-gray-400" />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-black text-sm text-gray-900 truncate">{ad.title}</span>
                     {ad.isActive && <Badge className="bg-[#FDD000] text-black text-xs font-bold shrink-0">ACTIVE</Badge>}
-                    <span className="text-xs text-gray-400 shrink-0">Order: {ad.displayOrder}</span>
+                    <span className="text-xs text-gray-400 shrink-0">#{ad.displayOrder}</span>
                   </div>
                   {ad.description && <p className="text-xs text-gray-500 mb-1 line-clamp-2">{ad.description}</p>}
                   <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 underline flex items-center gap-1 truncate">
@@ -207,7 +234,7 @@ export default function PromoAdManagement() {
       )}
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-black uppercase tracking-wide">
               {editingAd ? "Edit Ad" : "New Ad"}
@@ -233,25 +260,73 @@ export default function PromoAdManagement() {
                 rows={2}
               />
             </div>
-            <div className="space-y-1">
-              <Label htmlFor="ad-image">Thumbnail URL (optional)</Label>
-              <Input
-                id="ad-image"
-                value={form.imageUrl}
-                onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))}
-                placeholder="https://… (recommended: 1200×500px)"
-              />
-              {form.imageUrl && (
-                <div className="mt-2 w-full h-24 rounded-sm overflow-hidden bg-gray-100">
+
+            {/* Thumbnail upload */}
+            <div className="space-y-2">
+              <Label>Thumbnail Image (optional)</Label>
+              <p className="text-xs text-gray-400">Recommended: 1200 × 500px. The image fills the banner; title and description appear as an overlay.</p>
+
+              {form.imageUrl ? (
+                <div className="relative rounded-sm overflow-hidden">
                   <img
                     src={form.imageUrl}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
+                    alt="Thumbnail preview"
+                    className="w-full object-cover rounded-sm"
+                    style={{ aspectRatio: "2.4/1" }}
                     onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
+                  <button
+                    onClick={() => setForm(f => ({ ...f, imageUrl: "" }))}
+                    className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80 transition-colors"
+                    title="Remove image"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="w-full border-2 border-dashed border-gray-300 rounded-sm py-8 flex flex-col items-center gap-2 text-gray-400 hover:border-gray-400 hover:text-gray-500 transition-colors disabled:opacity-50"
+                >
+                  {isUploading ? (
+                    <>
+                      <div className="w-6 h-6 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                      <span className="text-sm">Uploading…</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-6 h-6" />
+                      <span className="text-sm font-medium">Click to upload thumbnail</span>
+                      <span className="text-xs">JPG, PNG, WebP — max 5MB</span>
+                    </>
+                  )}
+                </button>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (file) handleImageFile(file);
+                  e.target.value = "";
+                }}
+              />
+              {form.imageUrl && (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="text-xs text-blue-500 underline"
+                >
+                  Replace image
+                </button>
               )}
             </div>
+
             <div className="space-y-1">
               <Label htmlFor="ad-link">Link URL *</Label>
               <Input

@@ -13519,6 +13519,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Promo Ads — admin image upload
+  app.post('/api/admin/promo-ads/upload-image', isAuthenticated, imageUpload.single('image'), async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || !isAdmin(user)) return res.status(403).json({ message: 'Admin access required' });
+      const file = req.file;
+      if (!file) return res.status(400).json({ message: 'No image file uploaded' });
+      const key = `promo-ads/promo_${Date.now()}_${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const imageUrl = await uploadPublicFile(file.buffer, key, file.mimetype);
+      res.json({ imageUrl });
+    } catch (e) {
+      console.error('[PromoAds] uploadImage error:', e);
+      res.status(500).json({ message: 'Failed to upload image' });
+    }
+  });
+
   // Promo Ads — admin CRUD
   app.get('/api/admin/promo-ads', isAuthenticated, async (req: any, res) => {
     try {
