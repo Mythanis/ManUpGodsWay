@@ -7,7 +7,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Shield, Check, Loader2, Clock, CreditCard, ArrowLeft, Crown } from "lucide-react";
+import { Shield, Check, Loader2, Clock, CreditCard, ArrowLeft, Crown, BookOpen, Video, Users, Flame, Star } from "lucide-react";
 
 interface SubscriptionInfo {
   monthlyPrice: string;
@@ -22,11 +22,17 @@ interface TrialEligibility {
   currentStatus: string;
 }
 
+const TESTIMONIALS = [
+  { name: "Marcus T.", quote: "This platform changed my walk with God. The studies are deep, the brotherhood is real." },
+  { name: "James R.", quote: "Best faith investment I've made. The 52-week plan gave my spiritual life structure." },
+  { name: "David K.", quote: "The War Room community held me accountable in ways I never expected. Worth every penny." },
+];
+
 export default function Subscribe() {
   const { toast } = useToast();
   const { user, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
 
   const { data: subscriptionInfo, isLoading } = useQuery<SubscriptionInfo>({
     queryKey: ["/api/subscription-settings"],
@@ -66,6 +72,7 @@ export default function Subscribe() {
   const yearlyPrice = parseFloat(subscriptionInfo?.yearlyPrice || "99.99");
   const yearlySavings = (monthlyPrice * 12 - yearlyPrice).toFixed(2);
   const savingsPercent = Math.round(((monthlyPrice * 12 - yearlyPrice) / (monthlyPrice * 12)) * 100);
+  const monthlyEquiv = (yearlyPrice / 12).toFixed(2);
   const features = subscriptionInfo?.features || [
     "Full access to all Bible studies",
     "All devotionals and blog content",
@@ -98,13 +105,14 @@ export default function Subscribe() {
           <span className="text-sm">Back</span>
         </button>
 
-        <div className="text-center mb-8">
+        {/* Hero */}
+        <div className="text-center mb-6">
           <Crown className="w-12 h-12 text-[#FDD000] mx-auto mb-3" />
           <h1 className="text-3xl font-black text-[#FDD000] uppercase tracking-wider mb-2" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
             Man Up God's Way
           </h1>
           <p className="text-white/60 text-sm">
-            Unlock full access to Bible studies, devotionals, videos, and more.
+            Join thousands of brothers growing in biblical manhood, leadership, and faith.
           </p>
         </div>
 
@@ -124,8 +132,26 @@ export default function Subscribe() {
           </Card>
         ) : (
           <>
-            <div className="flex justify-center mb-6">
-              <div className="bg-white/10 p-1 rounded-lg">
+            {/* Feature icons */}
+            <div className="grid grid-cols-3 gap-2 mb-6">
+              {[
+                { icon: BookOpen, label: "52-Week Studies" },
+                { icon: Video, label: "Videos & Podcasts" },
+                { icon: Users, label: "Brotherhood" },
+                { icon: Shield, label: "War Room" },
+                { icon: Flame, label: "Challenges" },
+                { icon: Star, label: "Weekly Devotionals" },
+              ].map(({ icon: Icon, label }) => (
+                <div key={label} className="bg-white/5 border border-white/10 rounded-sm px-2 py-3 flex flex-col items-center gap-1">
+                  <Icon className="w-5 h-5 text-[#FDD000]" />
+                  <span className="text-[10px] text-white/70 text-center leading-tight font-medium">{label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Billing toggle */}
+            <div className="flex justify-center mb-4">
+              <div className="bg-white/10 p-1 rounded-lg relative">
                 <Button
                   variant={billingCycle === "monthly" ? "default" : "ghost"}
                   size="sm"
@@ -148,9 +174,17 @@ export default function Subscribe() {
               </div>
             </div>
 
+            {/* Yearly best-value callout */}
+            {billingCycle === "yearly" && savingsPercent > 0 && (
+              <p className="text-center text-green-400 text-xs mb-3 font-semibold">
+                Best value — only ${monthlyEquiv}/month, billed yearly
+              </p>
+            )}
+
             <div className="grid gap-4 mb-6">
+              {/* Free Trial card */}
               {isTrialEligible && (
-                <Card className="bg-gradient-to-br from-[#FDD000]/10 to-[#FDD000]/5 border-2 border-[#FDD000]/40 relative overflow-hidden">
+                <Card className="bg-gradient-to-br from-[#FDD000]/10 to-[#FDD000]/5 border-2 border-[#FDD000]/60 relative overflow-hidden">
                   <div className="absolute top-0 right-0 bg-[#FDD000] text-black text-xs font-bold px-3 py-1 rounded-bl-lg">
                     RECOMMENDED
                   </div>
@@ -161,15 +195,16 @@ export default function Subscribe() {
                       </div>
                       <div>
                         <h3 className="text-lg font-black text-white">{trialDays}-Day Free Trial</h3>
-                        <p className="text-white/50 text-xs">Try everything free, cancel anytime</p>
+                        <p className="text-white/50 text-xs">Try everything free — no charge until it ends</p>
                       </div>
                     </div>
                     <div className="bg-black/30 rounded-lg p-3 mb-4">
                       <p className="text-white/70 text-sm">
-                        Get full access for {trialDays} days — your card won't be charged until the trial ends. 
-                        Then it's <span className="text-[#FDD000] font-bold">
-                          ${billingCycle === "yearly" ? yearlyPrice.toFixed(2) : monthlyPrice.toFixed(2)}/{billingCycle === "yearly" ? "year" : "month"}
+                        Full access for {trialDays} days — then{" "}
+                        <span className="text-[#FDD000] font-bold">
+                          ${billingCycle === "yearly" ? yearlyPrice.toFixed(2) : monthlyPrice.toFixed(2)}/{billingCycle === "yearly" ? "yr" : "mo"}
                         </span>.
+                        {" "}Cancel anytime.
                       </p>
                     </div>
                     <Button
@@ -180,21 +215,16 @@ export default function Subscribe() {
                       size="lg"
                     >
                       {createCheckoutMutation.isPending ? (
-                        <>
-                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                          Processing...
-                        </>
+                        <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Processing...</>
                       ) : (
-                        <>
-                          <Clock className="w-5 h-5 mr-2" />
-                          Start Free Trial
-                        </>
+                        <><Clock className="w-5 h-5 mr-2" />Start Free Trial</>
                       )}
                     </Button>
                   </CardContent>
                 </Card>
               )}
 
+              {/* Subscribe Now card */}
               <Card className="bg-white/5 border border-white/10">
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-3 mb-3">
@@ -213,7 +243,7 @@ export default function Subscribe() {
                     </div>
                     {billingCycle === "yearly" && parseFloat(yearlySavings) > 0 && (
                       <p className="text-green-400 text-sm">
-                        Save ${yearlySavings}/year (${(yearlyPrice / 12).toFixed(2)}/month)
+                        Save ${yearlySavings}/year vs monthly
                       </p>
                     )}
                   </div>
@@ -229,23 +259,18 @@ export default function Subscribe() {
                     variant={isTrialEligible ? "outline" : "default"}
                   >
                     {createCheckoutMutation.isPending ? (
-                      <>
-                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        Processing...
-                      </>
+                      <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Processing...</>
                     ) : (
-                      <>
-                        <CreditCard className="w-5 h-5 mr-2" />
-                        Subscribe Now
-                      </>
+                      <><CreditCard className="w-5 h-5 mr-2" />Subscribe — ${billingCycle === "yearly" ? yearlyPrice.toFixed(2) : monthlyPrice.toFixed(2)}/{billingCycle === "yearly" ? "yr" : "mo"}</>
                     )}
                   </Button>
                 </CardContent>
               </Card>
             </div>
 
+            {/* What's included */}
             <div className="space-y-2 mb-6">
-              <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider">What's included:</h3>
+              <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider">Everything included:</h3>
               {features.map((feature, index) => (
                 <div key={index} className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-[#FDD000] flex-shrink-0 mt-0.5" />
@@ -254,10 +279,33 @@ export default function Subscribe() {
               ))}
             </div>
 
+            {/* Testimonials */}
+            <div className="space-y-3 mb-6">
+              <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider">What brothers say:</h3>
+              {TESTIMONIALS.map(({ name, quote }) => (
+                <div key={name} className="bg-white/5 border border-white/10 rounded-sm px-4 py-3">
+                  <div className="flex gap-0.5 mb-1">
+                    {[1,2,3,4,5].map(i => <Star key={i} className="w-3 h-3 text-[#FDD000] fill-[#FDD000]" />)}
+                  </div>
+                  <p className="text-white/70 text-sm italic mb-1">"{quote}"</p>
+                  <p className="text-white/40 text-xs font-semibold">— {name}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Risk-free guarantee */}
+            <div className="bg-green-900/20 border border-green-500/30 rounded-sm px-4 py-3 mb-6 flex items-start gap-3">
+              <Shield className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-green-400 text-sm font-bold">Risk-Free Guarantee</p>
+                <p className="text-white/60 text-xs">Cancel anytime before your trial ends — you won't be charged. No questions asked.</p>
+              </div>
+            </div>
+
             <div className="text-center text-xs text-white/30 space-y-1">
               <p>Secure payment powered by Stripe</p>
-              <p>Cancel anytime — no hidden fees</p>
               {isTrialEligible && <p>Trial requires a card on file. No charge for {trialDays} days.</p>}
+              <p className="mt-1">Have a promo code? You can enter it on the next screen.</p>
             </div>
           </>
         )}

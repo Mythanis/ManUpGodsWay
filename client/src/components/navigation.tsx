@@ -1,10 +1,11 @@
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Home, BookOpen, Video, Users, MessageCircle, Settings, Headphones, Trophy, ExternalLink, FileText, UserPlus, Dumbbell, Shield, Crown, Book, Calendar, MoreHorizontal, MapPin, Flame, Bell } from "lucide-react";
+import { Home, BookOpen, Video, Users, MessageCircle, Settings, Headphones, Trophy, ExternalLink, FileText, UserPlus, Dumbbell, Shield, Crown, Book, Calendar, MoreHorizontal, MapPin, Flame, Bell, Clock } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
+import UpgradeModal from "@/components/upgrade-modal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -71,6 +72,7 @@ export default function Navigation() {
   const [location, setLocation] = useLocation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const studiesSince = getSeenTs(LS_KEY_STUDIES);
   const communitySince = getSeenTs(LS_KEY_COMMUNITY);
@@ -194,11 +196,43 @@ export default function Navigation() {
     return isNaN(n) ? 0 : n;
   };
 
+  // Trial countdown strip
+  const u = user as any;
+  const isSubActive = u?.subscriptionStatus === 'active' ||
+    (u?.subscriptionStatus === 'cancelled' && u?.subscriptionExpiresAt && new Date(u.subscriptionExpiresAt) > new Date()) ||
+    u?.role === 'admin' || u?.role === 'owner';
+  const isTrialUser = u?.subscriptionStatus === 'trial';
+  const isExpiredUser = u?.subscriptionStatus === 'expired';
+  const trialEnd = u?.trialEndDate ? new Date(u.trialEndDate) : null;
+  const trialDaysLeft = trialEnd ? Math.ceil((trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : null;
+  const showTrialStrip = !isSubActive && (isTrialUser || isExpiredUser || (!u?.stripeSubscriptionId && u?.subscriptionStatus !== 'active'));
+
   return (
-    <nav
-      className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-card border-t border-ministry-charcoal z-50 h-16"
-      data-testid="navigation-bottom"
-    >
+    <>
+      {showTrialStrip && (
+        <button
+          onClick={() => setShowUpgradeModal(true)}
+          className={`fixed bottom-16 left-1/2 -translate-x-1/2 w-full max-w-md z-40 flex items-center justify-center gap-2 px-4 py-1.5 text-xs font-bold uppercase tracking-wide transition-colors ${
+            isExpiredUser
+              ? 'bg-red-600 text-white'
+              : (trialDaysLeft !== null && trialDaysLeft <= 2)
+                ? 'bg-red-500 text-white'
+                : 'bg-[#FDD000] text-black'
+          }`}
+        >
+          <Clock className="w-3 h-3 flex-shrink-0" />
+          {isExpiredUser
+            ? 'Trial ended — Subscribe to regain access'
+            : trialDaysLeft !== null && trialDaysLeft > 0
+              ? `${trialDaysLeft} day${trialDaysLeft === 1 ? '' : 's'} left in trial — Subscribe`
+              : 'Start your free trial'}
+        </button>
+      )}
+      <UpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} />
+      <nav
+        className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-card border-t border-ministry-charcoal z-50 h-16"
+        data-testid="navigation-bottom"
+      >
       <div className="flex items-center justify-around h-full px-2">
         {primaryItems.map((item) => {
           const Icon = item.icon;
@@ -285,5 +319,6 @@ export default function Navigation() {
         </DropdownMenu>
       </div>
     </nav>
+    </>
   );
 }

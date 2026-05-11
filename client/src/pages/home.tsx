@@ -1109,25 +1109,86 @@ export default function Home() {
           </p>
         </div>
         
-        {/* Subscription Banner */}
-        {!((user as any)?.subscriptionStatus === 'active' ||
-          ((user as any)?.subscriptionStatus === 'cancelled' && (user as any)?.subscriptionExpiresAt && new Date((user as any).subscriptionExpiresAt) > new Date())) && (
-          <div className="bg-[#FDD000] glow-gold text-black rounded-sm border-2 border-black p-4 mb-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" data-testid="banner-subscription">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-black text-sm text-black uppercase tracking-tight">Subscribe Now</h3>
-                <p className="text-xs text-black/80 font-medium">Unlock all community features</p>
-              </div>
-              <Button 
-                className="bg-black text-white px-4 py-2 rounded-sm text-xs font-black uppercase tracking-wide hover:bg-gray-900 border-2 border-black"
-                data-testid="button-upgrade"
-                onClick={() => setShowUpgradeModal(true)}
+        {/* Subscription Banner — dynamic based on trial countdown vs expired */}
+        {(() => {
+          const u = user as any;
+          const isActive = u?.subscriptionStatus === 'active' ||
+            (u?.subscriptionStatus === 'cancelled' && u?.subscriptionExpiresAt && new Date(u.subscriptionExpiresAt) > new Date());
+          if (isActive) return null;
+
+          const isTrial = u?.subscriptionStatus === 'trial';
+          const trialEnd = u?.trialEndDate ? new Date(u.trialEndDate) : null;
+          const now = new Date();
+          const daysLeft = trialEnd ? Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null;
+          const isUrgent = daysLeft !== null && daysLeft <= 2;
+          const isExpired = u?.subscriptionStatus === 'expired';
+
+          if (isTrial && daysLeft !== null && daysLeft > 0) {
+            return (
+              <div
+                className={`rounded-sm border-2 border-black p-4 mb-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${isUrgent ? 'bg-red-500' : 'bg-[#FDD000]'}`}
+                data-testid="banner-subscription"
               >
-                Subscribe
-              </Button>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className={`font-black text-sm uppercase tracking-tight ${isUrgent ? 'text-white' : 'text-black'}`}>
+                      {isUrgent ? `⚠ ${daysLeft} day${daysLeft === 1 ? '' : 's'} left in your trial` : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left in your trial`}
+                    </h3>
+                    <p className={`text-xs font-medium ${isUrgent ? 'text-white/90' : 'text-black/80'}`}>
+                      {isUrgent ? "Subscribe now to keep full access" : "Lock in full access before it ends"}
+                    </p>
+                  </div>
+                  <Button
+                    className={`px-4 py-2 rounded-sm text-xs font-black uppercase tracking-wide border-2 border-black flex-shrink-0 ${isUrgent ? 'bg-white text-red-600 hover:bg-white/90' : 'bg-black text-white hover:bg-gray-900'}`}
+                    data-testid="button-upgrade"
+                    onClick={() => setShowUpgradeModal(true)}
+                  >
+                    Subscribe
+                  </Button>
+                </div>
+              </div>
+            );
+          }
+
+          if (isExpired) {
+            return (
+              <div className="bg-red-600 text-white rounded-sm border-2 border-black p-4 mb-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" data-testid="banner-subscription">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="font-black text-sm text-white uppercase tracking-tight">Your trial has ended</h3>
+                    <p className="text-xs text-white/80 font-medium">Subscribe to regain full access — cancel anytime</p>
+                  </div>
+                  <Button
+                    className="bg-[#FDD000] text-black px-4 py-2 rounded-sm text-xs font-black uppercase tracking-wide hover:bg-yellow-400 border-2 border-black flex-shrink-0"
+                    data-testid="button-upgrade"
+                    onClick={() => setShowUpgradeModal(true)}
+                  >
+                    Subscribe
+                  </Button>
+                </div>
+              </div>
+            );
+          }
+
+          // Fallback for no-stripe users
+          return (
+            <div className="bg-[#FDD000] glow-gold text-black rounded-sm border-2 border-black p-4 mb-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" data-testid="banner-subscription">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="font-black text-sm text-black uppercase tracking-tight">Start Your Free Trial</h3>
+                  <p className="text-xs text-black/80 font-medium">7 days free — unlock everything, cancel anytime</p>
+                </div>
+                <Button
+                  className="bg-black text-white px-4 py-2 rounded-sm text-xs font-black uppercase tracking-wide hover:bg-gray-900 border-2 border-black flex-shrink-0"
+                  data-testid="button-upgrade"
+                  onClick={() => setShowUpgradeModal(true)}
+                >
+                  Try Free
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
 
       {/* Daily Devotional Section */}
