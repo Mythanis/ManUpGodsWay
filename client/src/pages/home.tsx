@@ -38,7 +38,6 @@ import { Switch } from "@/components/ui/switch";
 import { apiRequest } from "@/lib/queryClient";
 import { Link, useLocation } from "wouter";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
-import { VatmebopChart } from "@/components/vatmebop-chart";
 
 // Experimental Notification Triggers API (Chrome 80+ / Android)
 interface TimestampTrigger {
@@ -1429,8 +1428,6 @@ export default function Home() {
             )}
           </>
         )}
-        {/* VATMEBOP Accountability Chart */}
-        <VatmebopChart />
       </div>
 
       {/* Quick Access — 2×4 icon tile grid */}
