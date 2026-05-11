@@ -238,6 +238,9 @@ import {
   termsAcknowledgements,
   type TermsAcknowledgement,
   type InsertTermsAcknowledgement,
+  promoAds,
+  type PromoAd,
+  type InsertPromoAd,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ilike, count, inArray, not, gte, lte, isNull, isNotNull, lt, ne, gt } from "drizzle-orm";
@@ -511,12 +514,12 @@ export interface IStorage {
   updateSystemSettings(systemSettings: InsertSystemSettings): Promise<SystemSettings>;
   
   // Promo Ads
-  getActivePromoAd(): Promise<schema.PromoAd | null>;
-  getAllPromoAds(): Promise<schema.PromoAd[]>;
-  createPromoAd(data: schema.InsertPromoAd): Promise<schema.PromoAd>;
-  updatePromoAd(id: number, data: Partial<schema.InsertPromoAd>): Promise<schema.PromoAd>;
+  getActivePromoAd(): Promise<PromoAd | null>;
+  getAllPromoAds(): Promise<PromoAd[]>;
+  createPromoAd(data: InsertPromoAd): Promise<PromoAd>;
+  updatePromoAd(id: number, data: Partial<InsertPromoAd>): Promise<PromoAd>;
   deletePromoAd(id: number): Promise<void>;
-  setPromoAdActive(id: number): Promise<schema.PromoAd>;
+  setPromoAdActive(id: number): Promise<PromoAd>;
 
   // Podcast operations
   getPodcasts(options?: { search?: string; category?: string; sort?: string }): Promise<Podcast[]>;
@@ -5527,40 +5530,40 @@ export class DatabaseStorage implements IStorage {
   }
 
   // ── Promo Ads ──────────────────────────────────────────────────────────────
-  async getActivePromoAd(): Promise<schema.PromoAd | null> {
-    const rows = await db.select().from(schema.promoAds)
-      .where(eq(schema.promoAds.isActive, true))
+  async getActivePromoAd(): Promise<PromoAd | null> {
+    const rows = await db.select().from(promoAds)
+      .where(eq(promoAds.isActive, true))
       .limit(1);
     return rows[0] ?? null;
   }
 
-  async getAllPromoAds(): Promise<schema.PromoAd[]> {
-    return await db.select().from(schema.promoAds)
-      .orderBy(desc(schema.promoAds.createdAt));
+  async getAllPromoAds(): Promise<PromoAd[]> {
+    return await db.select().from(promoAds)
+      .orderBy(desc(promoAds.createdAt));
   }
 
-  async createPromoAd(data: schema.InsertPromoAd): Promise<schema.PromoAd> {
-    const [row] = await db.insert(schema.promoAds).values(data).returning();
+  async createPromoAd(data: InsertPromoAd): Promise<PromoAd> {
+    const [row] = await db.insert(promoAds).values(data).returning();
     return row;
   }
 
-  async updatePromoAd(id: number, data: Partial<schema.InsertPromoAd>): Promise<schema.PromoAd> {
-    const [row] = await db.update(schema.promoAds)
+  async updatePromoAd(id: number, data: Partial<InsertPromoAd>): Promise<PromoAd> {
+    const [row] = await db.update(promoAds)
       .set({ ...data, updatedAt: new Date() })
-      .where(eq(schema.promoAds.id, id))
+      .where(eq(promoAds.id, id))
       .returning();
     return row;
   }
 
   async deletePromoAd(id: number): Promise<void> {
-    await db.delete(schema.promoAds).where(eq(schema.promoAds.id, id));
+    await db.delete(promoAds).where(eq(promoAds.id, id));
   }
 
-  async setPromoAdActive(id: number): Promise<schema.PromoAd> {
-    await db.update(schema.promoAds).set({ isActive: false, updatedAt: new Date() });
-    const [row] = await db.update(schema.promoAds)
+  async setPromoAdActive(id: number): Promise<PromoAd> {
+    await db.update(promoAds).set({ isActive: false, updatedAt: new Date() });
+    const [row] = await db.update(promoAds)
       .set({ isActive: true, updatedAt: new Date() })
-      .where(eq(schema.promoAds.id, id))
+      .where(eq(promoAds.id, id))
       .returning();
     return row;
   }
