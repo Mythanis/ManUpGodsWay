@@ -234,13 +234,13 @@ export default function PromoAdManagement() {
       )}
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-w-md flex flex-col max-h-[90vh] p-0">
+          <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
             <DialogTitle className="font-black uppercase tracking-wide">
               {editingAd ? "Edit Ad" : "New Ad"}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2">
+          <div className="flex-1 overflow-y-auto space-y-4 px-6 py-2">
             <div className="space-y-1">
               <Label htmlFor="ad-title">Title *</Label>
               <Input
@@ -347,12 +347,13 @@ export default function PromoAdManagement() {
               />
               <p className="text-xs text-gray-400">Lower numbers appear first in the carousel.</p>
             </div>
-            <div className="flex gap-2 pt-2">
-              <Button onClick={handleSubmit} disabled={isBusy} className="flex-1 bg-[#FDD000] text-black font-black hover:bg-yellow-400">
-                {isBusy ? "Saving…" : editingAd ? "Save Changes" : "Create Ad"}
-              </Button>
-              <Button variant="outline" onClick={() => setShowDialog(false)} className="flex-1">Cancel</Button>
-            </div>
+          </div>
+          {/* Always-visible sticky footer */}
+          <div className="shrink-0 flex gap-2 px-6 py-4 border-t bg-white">
+            <Button onClick={handleSubmit} disabled={isBusy} className="flex-1 bg-[#FDD000] text-black font-black hover:bg-yellow-400">
+              {isBusy ? (isUploading ? "Uploading…" : "Saving…") : editingAd ? "Save Changes" : "Create Ad"}
+            </Button>
+            <Button variant="outline" onClick={() => setShowDialog(false)} className="flex-1">Cancel</Button>
           </div>
         </DialogContent>
       </Dialog>
