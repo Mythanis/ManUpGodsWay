@@ -540,6 +540,7 @@ export default function UserManagement({ subscriptionFilter, onClearSubscription
                 <SelectItem value="cancelled">Cancelled</SelectItem>
                 <SelectItem value="expired">Expired</SelectItem>
                 <SelectItem value="past_due">Past Due</SelectItem>
+                <SelectItem value="non-subscriber">Never Subscribed</SelectItem>
               </SelectContent>
             </Select>
             <Select value={sortBy} onValueChange={setSortBy}>

@@ -3309,7 +3309,22 @@ export class DatabaseStorage implements IStorage {
     }
 
     if (statusFilter && statusFilter !== 'all') {
-      conditions.push(eq(users.subscriptionStatus, statusFilter));
+      if (statusFilter === 'non-subscriber') {
+        // Non-subscribers: trial or expired users who joined 7+ days ago (and no active subscriptionFilter already set)
+        if (!subscriptionFilter) {
+          conditions.push(
+            and(
+              or(
+                eq(users.subscriptionStatus, 'trial'),
+                eq(users.subscriptionStatus, 'expired')
+              ),
+              lte(users.createdAt, sevenDaysAgo)
+            )
+          );
+        }
+      } else {
+        conditions.push(eq(users.subscriptionStatus, statusFilter));
+      }
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
