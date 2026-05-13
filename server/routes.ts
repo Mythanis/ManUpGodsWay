@@ -2775,18 +2775,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Discussion routes
   app.get('/api/discussions', async (req: any, res) => {
     try {
-      const { category, limit, sortBy, search } = req.query;
-      // Get current user ID if authenticated (optional for this endpoint)
+      const { category, limit, sortBy, search, offset } = req.query;
       const currentUserId = req.user?.claims?.sub;
-      
-      const discussions = await storage.getDiscussions(
+      const pageLimit = limit ? parseInt(limit as string) : 15;
+      const pageOffset = offset ? parseInt(offset as string) : 0;
+
+      const rows = await storage.getDiscussions(
         category as string,
-        limit ? parseInt(limit as string) : undefined,
+        pageLimit,
         sortBy as string,
         search as string,
-        currentUserId
+        currentUserId,
+        pageOffset
       );
-      res.json(discussions.map((d: any) => ({ ...d, content: maskMentionIds(d.content) })));
+      const discussionList = rows.map((d: any) => ({ ...d, content: maskMentionIds(d.content) }));
+      res.json({
+        discussions: discussionList,
+        hasMore: discussionList.length === pageLimit,
+        nextOffset: pageOffset + discussionList.length,
+      });
     } catch (error) {
       console.error("Error fetching discussions:", error);
       res.status(500).json({ message: "Failed to fetch discussions" });

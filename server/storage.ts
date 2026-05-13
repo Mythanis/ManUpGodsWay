@@ -360,7 +360,7 @@ export interface IStorage {
   createDiscussionsForExistingStudies(): Promise<void>;
 
   // Discussion operations
-  getDiscussions(category?: string, limit?: number, sortBy?: string, searchTerm?: string): Promise<(Discussion & { user: User })[]>;
+  getDiscussions(category?: string, limit?: number, sortBy?: string, searchTerm?: string, currentUserId?: string, offset?: number): Promise<(Discussion & { user: User })[]>;
   getDiscussion(id: string): Promise<(Discussion & { user: User; replies: (DiscussionReply & { user: User })[] }) | undefined>;
   createDiscussion(discussion: InsertDiscussion): Promise<Discussion>;
   updateDiscussion(id: string, updates: { title?: string; content?: string }): Promise<Discussion>;
@@ -2385,7 +2385,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Discussion operations
-  async getDiscussions(category?: string, limit = 20, sortBy = 'recent', searchTerm?: string, currentUserId?: string): Promise<(Discussion & { user: User; study?: { id: string; title: string; requiredTier: string | null } | null })[]> {
+  async getDiscussions(category?: string, limit = 15, sortBy = 'recent', searchTerm?: string, currentUserId?: string, offset = 0): Promise<(Discussion & { user: User; study?: { id: string; title: string; requiredTier: string | null } | null })[]> {
     const query = db
       .select({
         id: discussions.id,
@@ -2471,9 +2471,9 @@ export class DatabaseStorage implements IStorage {
     
     let rows;
     if (conditions.length > 0) {
-      rows = await query.where(and(...conditions)).orderBy(...orderBy).limit(limit);
+      rows = await query.where(and(...conditions)).orderBy(...orderBy).offset(offset).limit(limit);
     } else {
-      rows = await query.orderBy(...orderBy).limit(limit);
+      rows = await query.orderBy(...orderBy).offset(offset).limit(limit);
     }
 
     if (rows.length === 0) {

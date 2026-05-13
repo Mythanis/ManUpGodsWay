@@ -211,6 +211,7 @@ export default function DiscussionCard({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/discussions"] });
+      window.dispatchEvent(new CustomEvent("discussion:deleted", { detail: { id: discussion.id } }));
       toast({ title: "Deleted", description: "Discussion removed successfully" });
     },
     onError: (error: any) => {

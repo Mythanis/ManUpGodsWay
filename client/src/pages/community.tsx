@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { triggerRefTagger } from "@/hooks/useRefTagger";
@@ -23,9 +23,11 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import {
   Plus, MessageCircle, Search, X, Send,
   Image, Video, Trash2, Bold, Italic, Underline,
-  Strikethrough, BarChart2,
+  Strikethrough, BarChart2, Loader2,
 } from "lucide-react";
 import { z } from "zod";
+
+const PAGE_LIMIT = 15;
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
 const createDiscussionSchema = z.object({
@@ -48,7 +50,7 @@ export default function Community() {
   const [sortBy, setSortBy]                 = useState<"recent" | "likes" | "replies">("recent");
   const [dialogOpen, setDialogOpen]         = useState(false);
   const [searchInput, setSearchInput]       = useState("");
-  const [searchQuery, setSearchQuery]       = useState(""); // debounced copy
+  const [searchQuery, setSearchQuery]       = useState("");
   const [highlightedDiscussion, setHighlightedDiscussion] = useState<string | null>(null);
 
   // ── Compose state ─────────────────────────────────────────────────────────
@@ -66,6 +68,15 @@ export default function Community() {
     new URLSearchParams(window.location.search).get("reply")
   );
 
+  // ── Paginated feed state ──────────────────────────────────────────────────
+  const [allDiscussions, setAllDiscussions] = useState<any[]>([]);
+  const [nextOffset, setNextOffset]         = useState(0);
+  const [hasMore, setHasMore]               = useState(true);
+  const [isFetching, setIsFetching]         = useState(false);
+  const [initialLoaded, setInitialLoaded]   = useState(false);
+  const isFetchingRef                       = useRef(false);
+  const sentinelRef                         = useRef<HTMLDivElement>(null);
+
   // ── Debounce search — 350 ms ──────────────────────────────────────────────
   useEffect(() => {
     const t = setTimeout(() => setSearchQuery(searchInput), 350);
@@ -75,6 +86,86 @@ export default function Community() {
   useEffect(() => {
     if (targetDiscussionId) setHighlightedDiscussion(targetDiscussionId);
   }, [targetDiscussionId]);
+
+  // ── Core fetch function ───────────────────────────────────────────────────
+  const fetchPage = useCallback(async (pageOffset: number, currentSortBy: string, currentSearch: string) => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+    setIsFetching(true);
+    try {
+      const params = new URLSearchParams({ sortBy: currentSortBy, offset: String(pageOffset), limit: String(PAGE_LIMIT) });
+      if (currentSearch) params.append("search", currentSearch);
+      const res = await fetch(`/api/discussions?${params}`, { credentials: "include" });
+      if (!res.ok) throw new Error(`${res.status}`);
+      const { discussions: newPosts, hasMore: more, nextOffset: next } = await res.json();
+      if (pageOffset === 0) {
+        setAllDiscussions(newPosts);
+      } else {
+        setAllDiscussions(prev => [...prev, ...newPosts]);
+      }
+      setHasMore(more);
+      setNextOffset(next);
+      setInitialLoaded(true);
+    } catch (e) {
+      console.error("Failed to load discussions", e);
+      setInitialLoaded(true);
+    } finally {
+      isFetchingRef.current = false;
+      setIsFetching(false);
+    }
+  }, []);
+
+  // ── Reset + reload when filters change ───────────────────────────────────
+  useEffect(() => {
+    setAllDiscussions([]);
+    setNextOffset(0);
+    setHasMore(true);
+    setInitialLoaded(false);
+    isFetchingRef.current = false;
+    fetchPage(0, sortBy, searchQuery);
+  }, [sortBy, searchQuery, fetchPage]);
+
+  // ── IntersectionObserver — load next page when sentinel is visible ────────
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isFetchingRef.current) {
+          fetchPage(nextOffset, sortBy, searchQuery);
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, nextOffset, sortBy, searchQuery, fetchPage]);
+
+  // ── RefTagger after new posts appear ──────────────────────────────────────
+  useEffect(() => {
+    if (allDiscussions.length > 0) triggerRefTagger();
+  }, [allDiscussions]);
+
+  // ── Scroll to deep-linked discussion ──────────────────────────────────────
+  useEffect(() => {
+    if (!targetDiscussionId || allDiscussions.length === 0) return;
+    const t = setTimeout(() => {
+      document
+        .querySelector(`[data-discussion-id="${targetDiscussionId}"]`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 150);
+    return () => clearTimeout(t);
+  }, [targetDiscussionId, allDiscussions]);
+
+  // ── Listen for discussion deletions from DiscussionCard ───────────────────
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const id = (e as CustomEvent<{ id: string }>).detail?.id;
+      if (id) setAllDiscussions(prev => prev.filter(d => d.id !== id));
+    };
+    window.addEventListener("discussion:deleted", handler);
+    return () => window.removeEventListener("discussion:deleted", handler);
+  }, []);
 
   // ── Queries ───────────────────────────────────────────────────────────────
   const { data: communityStats } = useQuery<{
@@ -86,53 +177,6 @@ export default function Community() {
     retry: false,
     staleTime: 60_000,
   });
-
-  const { data: discussions = [], isLoading } = useQuery<any[]>({
-    queryKey: ["/api/discussions", sortBy, searchQuery || undefined],
-    queryFn: async () => {
-      const report = (msg: string) => {
-        fetch("/api/client-errors", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ message: msg, href: window.location.href }),
-        }).catch(() => {});
-      };
-      try {
-        const params = new URLSearchParams();
-        params.append("sortBy", sortBy);
-        if (searchQuery) params.append("search", searchQuery);
-        const res = await fetch(`/api/discussions?${params}`, { credentials: "include" });
-        if (!res.ok) {
-          report(`discussions fetch not-ok: ${res.status} ${res.statusText}`);
-          throw new Error(`Failed to fetch discussions: ${res.status}`);
-        }
-        const data = await res.json();
-        report(`discussions ok: isArray=${Array.isArray(data)} count=${Array.isArray(data) ? data.length : typeof data}`);
-        return data;
-      } catch (e: any) {
-        report(`discussions queryFn threw: ${e?.message}`);
-        throw e;
-      }
-    },
-    retry: 1,
-    staleTime: 30_000,
-  });
-
-  useEffect(() => {
-    if (discussions.length > 0) triggerRefTagger();
-  }, [discussions]);
-
-  // Scroll to deep-linked discussion once list loads
-  useEffect(() => {
-    if (!targetDiscussionId || discussions.length === 0) return;
-    const t = setTimeout(() => {
-      document
-        .querySelector(`[data-discussion-id="${targetDiscussionId}"]`)
-        ?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 150);
-    return () => clearTimeout(t);
-  }, [targetDiscussionId, discussions]);
 
   // ── Admin rich-text editor helpers ────────────────────────────────────────
   const isAdmin          = (user as any)?.role === "admin" || (user as any)?.role === "owner";
@@ -148,7 +192,6 @@ export default function Community() {
     });
   };
 
-  // Admin @-mention in contentEditable
   const [editorMention, setEditorMention] = useState<{ start: number; query: string } | null>(null);
 
   const getCaretOffset = (root: HTMLElement): number | null => {
@@ -229,9 +272,15 @@ export default function Community() {
     mutationFn: (data: z.infer<typeof createDiscussionSchema>) =>
       apiRequest("POST", "/api/discussions", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/discussions"] });
       toast({ title: "Posted!", description: "Your post is live in the community." });
       closeAndReset();
+      // Reset feed to top so the new post appears
+      setAllDiscussions([]);
+      setNextOffset(0);
+      setHasMore(true);
+      setInitialLoaded(false);
+      isFetchingRef.current = false;
+      fetchPage(0, sortBy, searchQuery);
     },
     onError: (error: any) => {
       if (isUnauthorizedError(error)) {
@@ -323,6 +372,8 @@ export default function Community() {
     activeToday:  communityStats?.activeToday  ?? 0,
     newPosts:     communityStats?.newPosts     ?? 0,
   };
+
+  const isLoading = !initialLoaded && isFetching;
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -459,7 +510,7 @@ export default function Community() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FDD000] mx-auto mb-4" />
             <p className="text-white/40 text-sm">Loading posts...</p>
           </div>
-        ) : discussions.length === 0 ? (
+        ) : allDiscussions.length === 0 && initialLoaded ? (
           <div
             className="text-center py-12 rounded-sm"
             style={{ background: "#0d0d0d", border: "1px solid #222" }}
@@ -491,7 +542,7 @@ export default function Community() {
           </div>
         ) : (
           <div className="space-y-4">
-            {discussions.map((discussion: any) => (
+            {allDiscussions.map((discussion: any) => (
               <div
                 key={discussion.id}
                 data-discussion-id={discussion.id}
@@ -518,6 +569,25 @@ export default function Community() {
                 </DiscussionErrorBoundary>
               </div>
             ))}
+
+            {/* ── SENTINEL + BOTTOM STATE ──────────────────────────────────── */}
+            <div ref={sentinelRef} className="py-2">
+              {isFetching && allDiscussions.length > 0 && (
+                <div className="flex items-center justify-center gap-2 py-4">
+                  <Loader2 className="w-5 h-5 text-[#FDD000] animate-spin" />
+                  <span className="text-white/40 text-xs font-bold uppercase tracking-wide">
+                    Loading more...
+                  </span>
+                </div>
+              )}
+              {!hasMore && allDiscussions.length > 0 && (
+                <div className="text-center py-6">
+                  <p className="text-white/30 text-xs font-bold uppercase tracking-widest">
+                    You're all caught up
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
