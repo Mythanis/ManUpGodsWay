@@ -2403,7 +2403,14 @@ export class DatabaseStorage implements IStorage {
         pollOptions: discussions.pollOptions,
         createdAt: discussions.createdAt,
         updatedAt: discussions.updatedAt,
-        user: users,
+        user: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+          subscriptionStatus: users.subscriptionStatus,
+          subscriptionTier: users.subscriptionTier,
+        },
         study: {
           id: studies.id,
           title: studies.title,
@@ -2574,7 +2581,14 @@ export class DatabaseStorage implements IStorage {
         pollOptions: discussions.pollOptions,
         createdAt: discussions.createdAt,
         updatedAt: discussions.updatedAt,
-        user: users,
+        user: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+          subscriptionStatus: users.subscriptionStatus,
+          subscriptionTier: users.subscriptionTier,
+        },
         study: {
           id: studies.id,
           title: studies.title,
@@ -2598,7 +2612,14 @@ export class DatabaseStorage implements IStorage {
         likes: discussionReplies.likes,
         createdAt: discussionReplies.createdAt,
         updatedAt: discussionReplies.updatedAt,
-        user: users,
+        user: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+          subscriptionStatus: users.subscriptionStatus,
+          subscriptionTier: users.subscriptionTier,
+        },
       })
       .from(discussionReplies)
       .innerJoin(users, eq(discussionReplies.userId, users.id));
@@ -2731,7 +2752,14 @@ export class DatabaseStorage implements IStorage {
         likes: discussionReplies.likes,
         createdAt: discussionReplies.createdAt,
         updatedAt: discussionReplies.updatedAt,
-        user: users,
+        user: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+          subscriptionStatus: users.subscriptionStatus,
+          subscriptionTier: users.subscriptionTier,
+        },
       })
       .from(discussionReplies)
       .innerJoin(users, eq(discussionReplies.userId, users.id))
