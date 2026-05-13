@@ -74,28 +74,28 @@ export default function Navigation() {
   const queryClient = useQueryClient();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
-  const studiesSince = getSeenTs(LS_KEY_STUDIES);
-  const communitySince = getSeenTs(LS_KEY_COMMUNITY);
-  const warRoomSince = getSeenTs(LS_KEY_WAR_ROOM);
-  const underFireSince = getSeenTs(LS_KEY_UNDER_FIRE);
-
   const { data: badges, refetch: refetchBadges } = useQuery<{ studies: number; community: number; warRoom: number; underFire: number }>({
-    queryKey: ['/api/nav/badges/v2', studiesSince, communitySince, warRoomSince, underFireSince],
+    queryKey: ['/api/nav/badges'],
     queryFn: async () => {
+      const sSince = getSeenTs(LS_KEY_STUDIES);
+      const cSince = getSeenTs(LS_KEY_COMMUNITY);
+      const wSince = getSeenTs(LS_KEY_WAR_ROOM);
+      const uSince = getSeenTs(LS_KEY_UNDER_FIRE);
       const res = await fetch(
-        `/api/nav/badges?studiesSince=${studiesSince}&communitySince=${communitySince}&warRoomSince=${warRoomSince}&underFireSince=${underFireSince}`,
+        `/api/nav/badges?studiesSince=${sSince}&communitySince=${cSince}&warRoomSince=${wSince}&underFireSince=${uSince}`,
         { credentials: "include" }
       );
       if (!res.ok) return { studies: 0, community: 0, warRoom: 0, underFire: 0 };
       return res.json();
     },
+    refetchInterval: 5 * 60 * 1000,
     staleTime: 60 * 1000,
     retry: false,
   });
 
   const { data: unreadData } = useQuery<{ count: number }>({
     queryKey: ['/api/notifications/unread-count'],
-    staleTime: 30 * 1000,
+    staleTime: 60 * 1000,
     retry: false,
   });
 
