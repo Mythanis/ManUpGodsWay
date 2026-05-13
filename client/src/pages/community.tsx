@@ -77,6 +77,10 @@ export default function Community() {
   const [loadError, setLoadError]           = useState(false);
   const isFetchingRef                       = useRef(false);
   const sentinelRef                         = useRef<HTMLDivElement>(null);
+  const nextOffsetRef                       = useRef(0);
+  const hasMoreRef                          = useRef(true);
+  const sortByRef                           = useRef(sortBy);
+  const searchQueryRef                      = useRef(searchQuery);
 
   // ── Debounce search — 350 ms ──────────────────────────────────────────────
   useEffect(() => {
@@ -118,7 +122,9 @@ export default function Community() {
         setAllDiscussions(prev => [...prev, ...newPosts]);
       }
       setHasMore(more);
+      hasMoreRef.current = more;
       setNextOffset(next);
+      nextOffsetRef.current = next;
       setInitialLoaded(true);
     } catch (e) {
       console.error("Failed to load discussions", e);
@@ -135,28 +141,37 @@ export default function Community() {
     if (authLoading) return; // wait for auth to settle before firing
     setAllDiscussions([]);
     setNextOffset(0);
+    nextOffsetRef.current = 0;
     setHasMore(true);
+    hasMoreRef.current = true;
     setInitialLoaded(false);
     setLoadError(false);
     isFetchingRef.current = false;
     fetchPage(0, sortBy, searchQuery);
   }, [authLoading, sortBy, searchQuery, fetchPage]);
 
-  // ── IntersectionObserver — load next page when sentinel is visible ────────
+  useEffect(() => { sortByRef.current = sortBy; }, [sortBy]);
+  useEffect(() => { searchQueryRef.current = searchQuery; }, [searchQuery]);
+
+  // ── IntersectionObserver — created once, reads live values from refs ─────
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isFetchingRef.current) {
-          fetchPage(nextOffset, sortBy, searchQuery);
+        if (
+          entries[0].isIntersecting &&
+          hasMoreRef.current &&
+          !isFetchingRef.current
+        ) {
+          fetchPage(nextOffsetRef.current, sortByRef.current, searchQueryRef.current);
         }
       },
       { threshold: 0.1 }
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [hasMore, nextOffset, sortBy, searchQuery, fetchPage]);
+  }, []); // empty — created once, reads live values from refs
 
   // ── RefTagger after new posts appear ──────────────────────────────────────
   useEffect(() => {
