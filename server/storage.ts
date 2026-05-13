@@ -782,7 +782,7 @@ export interface IStorage {
   // Accountability requests operations
   getAccountabilityRequests(currentUserId?: string): Promise<any[]>;
   getAccountabilityRequestById(id: string): Promise<any | undefined>;
-  createAccountabilityRequest(request: { userId: string; content: string }): Promise<any>;
+  createAccountabilityRequest(request: { userId: string; content: string; isAnonymous?: boolean }): Promise<any>;
   markAccountabilityRequestAssisted(requestId: string, assisterId: string): Promise<any>;
   unassistAccountabilityRequest(requestId: string): Promise<any>;
   deleteAccountabilityRequest(id: string): Promise<void>;
@@ -8116,12 +8116,12 @@ export class DatabaseStorage implements IStorage {
         }
         return {
           ...request,
-          user: user ? {
+          user: (request.isAnonymous) ? null : (user ? {
             id: user.id,
             firstName: user.firstName,
             lastName: user.lastName,
             profileImageUrl: user.profileImageUrl,
-          } : null,
+          } : null),
           assister: assister ? {
             id: assister.id,
             firstName: assister.firstName,
@@ -8171,12 +8171,13 @@ export class DatabaseStorage implements IStorage {
     return request;
   }
 
-  async createAccountabilityRequest(request: { userId: string; content: string }): Promise<AccountabilityRequest> {
+  async createAccountabilityRequest(request: { userId: string; content: string; isAnonymous?: boolean }): Promise<AccountabilityRequest> {
     const [newRequest] = await db
       .insert(accountabilityRequests)
       .values({
         userId: request.userId,
         content: request.content,
+        isAnonymous: request.isAnonymous === true,
       })
       .returning();
     return newRequest;
