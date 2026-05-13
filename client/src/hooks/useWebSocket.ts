@@ -60,7 +60,6 @@ export function useWebSocket(userId?: string) {
         }));
         startPing();
         queryClient.invalidateQueries({ queryKey: ['/api/brotherhood-requests'] });
-        queryClient.refetchQueries({ queryKey: ['/api/brotherhood-requests'] });
         queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
       };
 
@@ -89,9 +88,6 @@ export function useWebSocket(userId?: string) {
             queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
             queryClient.invalidateQueries({ queryKey: ['/api/brothers'] });
             
-            // Force immediate refresh of brotherhood requests data to update profile views
-            queryClient.refetchQueries({ queryKey: ['/api/brotherhood-requests'] });
-            
             // Also force refresh of user profile data if we're viewing profiles
             queryClient.invalidateQueries({ queryKey: ['/api/users'] });
             break;
@@ -111,9 +107,6 @@ export function useWebSocket(userId?: string) {
               queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
               queryClient.invalidateQueries({ queryKey: ['/api/brothers'] });
               
-              // Force immediate refresh of brotherhood requests data to update profile views
-              queryClient.refetchQueries({ queryKey: ['/api/brotherhood-requests'] });
-              
               // Also force refresh of user profile data if we're viewing profiles
               queryClient.invalidateQueries({ queryKey: ['/api/users'] });
             }
@@ -123,10 +116,6 @@ export function useWebSocket(userId?: string) {
             // Invalidate both brotherhood requests and brothers list to update UI
             queryClient.invalidateQueries({ queryKey: ['/api/brotherhood-requests'] });
             queryClient.invalidateQueries({ queryKey: ['/api/brothers'] });
-            
-            // Force immediate refresh to ensure real-time updates on Brothers page
-            queryClient.refetchQueries({ queryKey: ['/api/brothers'] });
-            queryClient.refetchQueries({ queryKey: ['/api/brotherhood-requests'] });
             
             // Show toast notification
             toast({
