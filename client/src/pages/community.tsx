@@ -13,6 +13,7 @@ import {
   findActiveMention,
 } from "@/components/mention-textarea";
 import DiscussionCard from "@/components/discussion-card";
+import { DiscussionErrorBoundary } from "@/components/discussion-error-boundary";
 import { BackButton } from "@/components/BackButton";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -482,19 +483,21 @@ export default function Community() {
                     : ""
                 }
               >
-                <DiscussionCard
-                  discussion={discussion}
-                  onStartDirectMessage={(userId: string) =>
-                    createDirectConversation.mutate(userId)
-                  }
-                  currentUserTier={(user as any)?.subscriptionTier || "free"}
-                  currentUserSubscriptionStatus={(user as any)?.subscriptionStatus || "trial"}
-                  autoOpenReplies={!!targetReplyId && discussion.id === targetDiscussionId}
-                  highlightReplyId={
-                    discussion.id === targetDiscussionId ? targetReplyId ?? undefined : undefined
-                  }
-                  data-testid={`discussion-${discussion.id}`}
-                />
+                <DiscussionErrorBoundary discussionId={discussion.id}>
+                  <DiscussionCard
+                    discussion={discussion}
+                    onStartDirectMessage={(userId: string) =>
+                      createDirectConversation.mutate(userId)
+                    }
+                    currentUserTier={(user as any)?.subscriptionTier || "free"}
+                    currentUserSubscriptionStatus={(user as any)?.subscriptionStatus || "trial"}
+                    autoOpenReplies={!!targetReplyId && discussion.id === targetDiscussionId}
+                    highlightReplyId={
+                      discussion.id === targetDiscussionId ? targetReplyId ?? undefined : undefined
+                    }
+                    data-testid={`discussion-${discussion.id}`}
+                  />
+                </DiscussionErrorBoundary>
               </div>
             ))}
           </div>

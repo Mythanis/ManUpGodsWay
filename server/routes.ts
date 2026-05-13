@@ -433,6 +433,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
+  // ── Client-side error reporter ────────────────────────────────────────────
+  // Receives JS errors from the browser so they appear in deployment logs.
+  app.post('/api/client-errors', (req: any, res) => {
+    const { message, stack, componentStack, discussionId, href } = req.body || {};
+    console.error('[ClientError]', JSON.stringify({ message, stack, componentStack, discussionId, href }));
+    res.status(204).end();
+  });
+
   // ── Public media proxy ────────────────────────────────────────────────────
   // Serves public files stored in GCS (thumbnails, images, community media).
   // GCS direct URLs are not publicly accessible (uniform bucket-level ACL),
