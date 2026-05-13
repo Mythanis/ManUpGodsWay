@@ -42,7 +42,7 @@ const createDiscussionSchema = z.object({
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function Community() {
-  const { user }        = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { toast }       = useToast();
   const queryClient     = useQueryClient();
 
@@ -132,6 +132,7 @@ export default function Community() {
 
   // ── Reset + reload when filters change ───────────────────────────────────
   useEffect(() => {
+    if (authLoading) return; // wait for auth to settle before firing
     setAllDiscussions([]);
     setNextOffset(0);
     setHasMore(true);
@@ -139,7 +140,7 @@ export default function Community() {
     setLoadError(false);
     isFetchingRef.current = false;
     fetchPage(0, sortBy, searchQuery);
-  }, [sortBy, searchQuery, fetchPage]);
+  }, [authLoading, sortBy, searchQuery, fetchPage]);
 
   // ── IntersectionObserver — load next page when sentinel is visible ────────
   useEffect(() => {

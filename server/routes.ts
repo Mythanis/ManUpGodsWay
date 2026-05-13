@@ -2796,8 +2796,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         hasMore: discussionList.length === pageLimit,
         nextOffset: pageOffset + discussionList.length,
       });
-    } catch (error) {
-      console.error("Error fetching discussions:", error);
+    } catch (error: any) {
+      console.error('[Discussions] GET error:', error?.message, error?.cause?.message ?? '');
       res.status(500).json({ message: "Failed to fetch discussions" });
     }
   });

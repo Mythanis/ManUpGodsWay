@@ -2491,16 +2491,19 @@ export class DatabaseStorage implements IStorage {
         ? db.select({ discussionId: discussionLikes.discussionId })
             .from(discussionLikes)
             .where(and(eq(discussionLikes.userId, currentUserId), inArray(discussionLikes.discussionId, discussionIds)))
+            .catch(() => [] as { discussionId: string }[])
         : Promise.resolve([] as { discussionId: string }[]),
       currentUserId
         ? db.select({ discussionId: discussionDislikes.discussionId })
             .from(discussionDislikes)
             .where(and(eq(discussionDislikes.userId, currentUserId), inArray(discussionDislikes.discussionId, discussionIds)))
+            .catch(() => [] as { discussionId: string }[])
         : Promise.resolve([] as { discussionId: string }[]),
       db.select({ discussionId: discussionDislikes.discussionId, count: sql<number>`count(*)` })
         .from(discussionDislikes)
         .where(inArray(discussionDislikes.discussionId, discussionIds))
-        .groupBy(discussionDislikes.discussionId),
+        .groupBy(discussionDislikes.discussionId)
+        .catch(() => [] as { discussionId: string; count: number }[]),
       currentUserId
         ? db.execute(sql.raw(`SELECT discussion_id, option_index FROM discussion_poll_votes WHERE user_id = '${currentUserId}' AND discussion_id IN (${idList})`)).catch(() => ({ rows: [] } as any))
         : Promise.resolve({ rows: [] } as any),
