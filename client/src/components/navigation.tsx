@@ -212,7 +212,8 @@ export default function Navigation() {
       {showTrialStrip && (
         <button
           onClick={() => setShowUpgradeModal(true)}
-          className={`fixed bottom-16 left-1/2 -translate-x-1/2 w-full max-w-md z-40 flex items-center justify-center gap-2 px-4 py-1.5 text-xs font-bold uppercase tracking-wide transition-colors ${
+          style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom, 0px))' }}
+          className={`fixed left-0 right-0 mx-auto w-full max-w-md z-40 flex items-center justify-center gap-2 px-4 py-1.5 text-xs font-bold uppercase tracking-wide transition-colors ${
             isExpiredUser
               ? 'bg-red-600 text-white'
               : (trialDaysLeft !== null && trialDaysLeft <= 2)
@@ -230,10 +231,11 @@ export default function Navigation() {
       )}
       <UpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} />
       <nav
-        className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-card border-t border-ministry-charcoal z-50 h-16"
+        className="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-md bg-card border-t border-ministry-charcoal z-50"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         data-testid="navigation-bottom"
       >
-      <div className="flex items-center justify-around h-full px-2">
+      <div className="flex items-center justify-around h-16 px-2">
         {primaryItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
