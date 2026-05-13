@@ -2479,36 +2479,32 @@ export class DatabaseStorage implements IStorage {
     const discussionIds = rows.map((r: any) => r.id);
     const idList = discussionIds.map((id: string) => `'${id}'`).join(',');
 
-    // Parallel batch — one round trip, all auxiliary data via IN (ids) range scans
-    const [
-      likedRows,
-      dislikedRows,
-      dislikeCounts,
-      pollVoteRowsRaw,
-      pollCountRowsRaw,
-    ] = await Promise.all([
-      currentUserId
-        ? db.select({ discussionId: discussionLikes.discussionId })
-            .from(discussionLikes)
-            .where(and(eq(discussionLikes.userId, currentUserId), inArray(discussionLikes.discussionId, discussionIds)))
-            .catch(() => [] as { discussionId: string }[])
-        : Promise.resolve([] as { discussionId: string }[]),
-      currentUserId
-        ? db.select({ discussionId: discussionDislikes.discussionId })
-            .from(discussionDislikes)
-            .where(and(eq(discussionDislikes.userId, currentUserId), inArray(discussionDislikes.discussionId, discussionIds)))
-            .catch(() => [] as { discussionId: string }[])
-        : Promise.resolve([] as { discussionId: string }[]),
-      db.select({ discussionId: discussionDislikes.discussionId, count: sql<number>`count(*)` })
-        .from(discussionDislikes)
-        .where(inArray(discussionDislikes.discussionId, discussionIds))
-        .groupBy(discussionDislikes.discussionId)
-        .catch(() => [] as { discussionId: string; count: number }[]),
-      currentUserId
-        ? db.execute(sql.raw(`SELECT discussion_id, option_index FROM discussion_poll_votes WHERE user_id = '${currentUserId}' AND discussion_id IN (${idList})`)).catch(() => ({ rows: [] } as any))
-        : Promise.resolve({ rows: [] } as any),
-      db.execute(sql.raw(`SELECT discussion_id, option_index, COUNT(*)::int AS vote_count FROM discussion_poll_votes WHERE discussion_id IN (${idList}) GROUP BY discussion_id, option_index`)).catch(() => ({ rows: [] } as any)),
-    ]);
+    // Sequential queries — avoids exhausting Neon's connection pool (was 5 simultaneous connections)
+    const likedRows = currentUserId
+      ? await db.select({ discussionId: discussionLikes.discussionId })
+          .from(discussionLikes)
+          .where(and(eq(discussionLikes.userId, currentUserId), inArray(discussionLikes.discussionId, discussionIds)))
+          .catch(() => [] as { discussionId: string }[])
+      : [] as { discussionId: string }[];
+
+    const dislikedRows = currentUserId
+      ? await db.select({ discussionId: discussionDislikes.discussionId })
+          .from(discussionDislikes)
+          .where(and(eq(discussionDislikes.userId, currentUserId), inArray(discussionDislikes.discussionId, discussionIds)))
+          .catch(() => [] as { discussionId: string }[])
+      : [] as { discussionId: string }[];
+
+    const dislikeCounts = await db.select({ discussionId: discussionDislikes.discussionId, count: sql<number>`count(*)` })
+      .from(discussionDislikes)
+      .where(inArray(discussionDislikes.discussionId, discussionIds))
+      .groupBy(discussionDislikes.discussionId)
+      .catch(() => [] as { discussionId: string; count: number }[]);
+
+    const pollVoteRowsRaw = currentUserId
+      ? await db.execute(sql.raw(`SELECT discussion_id, option_index FROM discussion_poll_votes WHERE user_id = '${currentUserId}' AND discussion_id IN (${idList})`)).catch(() => ({ rows: [] } as any))
+      : { rows: [] } as any;
+
+    const pollCountRowsRaw = await db.execute(sql.raw(`SELECT discussion_id, option_index, COUNT(*)::int AS vote_count FROM discussion_poll_votes WHERE discussion_id IN (${idList}) GROUP BY discussion_id, option_index`)).catch(() => ({ rows: [] } as any));
 
     const likedSet = new Set(likedRows.map((r) => r.discussionId));
     const dislikedSet = new Set(dislikedRows.map((r) => r.discussionId));
