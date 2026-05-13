@@ -93,12 +93,25 @@ export default function Community() {
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
     setIsFetching(true);
-    try {
+
+    const doFetch = async () => {
       const params = new URLSearchParams({ sortBy: currentSortBy, offset: String(pageOffset), limit: String(PAGE_LIMIT) });
       if (currentSearch) params.append("search", currentSearch);
       const res = await fetch(`/api/discussions?${params}`, { credentials: "include" });
       if (!res.ok) throw new Error(`${res.status}`);
-      const { discussions: newPosts, hasMore: more, nextOffset: next } = await res.json();
+      return res.json();
+    };
+
+    try {
+      // Auto-retry once on failure (handles cold-start spikes without user action)
+      let json: any;
+      try {
+        json = await doFetch();
+      } catch {
+        await new Promise(r => setTimeout(r, 1500));
+        json = await doFetch();
+      }
+      const { discussions: newPosts, hasMore: more, nextOffset: next } = json;
       if (pageOffset === 0) {
         setAllDiscussions(newPosts);
       } else {

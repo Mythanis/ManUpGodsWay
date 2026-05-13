@@ -1,0 +1,46 @@
+We recently made frontend changes to 5 files. Community discussions are failing to load in production and I need you to check whether any of these changes could be causing conflicts or side effects.
+Please check each of the following for issues:
+subscribe.tsx
+
+Removed fake testimonials, added real one (Ben N.)
+Added social proof strip, feature icon grid, billing toggle, isAlreadyActive guard
+No backend calls were added or changed — only display logic and the POST /api/create-subscription-checkout mutation already existed
+Check: Does anything here touch shared query keys, shared state, or global providers that could affect other pages?
+
+library.tsx
+
+Changed refetchInterval: 8000 to staleTime: 1000 * 60 * 10 on series/studies queries
+Added Continue section, Start Here section, progress bars, category pills
+Check: Query keys used are /api/study-series, /api/studies, /api/progress, /api/user/active-studies, /api/bible-plans — do any of these share a key prefix with the community/discussions queries in a way that could cause cache conflicts or unexpected invalidations?
+
+hurdle-wall.tsx (War Room)
+
+Added anonymous posting toggle, collapsed compose form, floating FAB, sort pills, inline delete confirmation, extracted CommentsSection as top-level component
+Queries used: /api/hurdle-wall
+Check: No community query keys touched. Confirm useWebSocket hook usage here doesn't broadcast events that trigger refetches on the community page.
+
+under-fire.tsx (Accountability — anonymous posting now confirmed working)
+
+Added anonymous toggle, collapsed compose form, floating FAB, sort pills, inline delete confirmation
+Queries used: /api/accountability-requests
+Check: Same — confirm useWebSocket here doesn't cause side effects on community discussions. Also confirm the is_anonymous column migration has been applied to production DB, as a missing column would cause insert errors that might surface as generic 500s.
+
+user-setup-wizard.tsx
+
+Fixed prayer notification bug: now calls subscribePush() instead of just Notification.requestPermission() — this registers the push subscription with the service worker and server
+Step 5 now calls POST /api/start-trial before falling back to /subscribe
+Check: Does POST /api/start-trial exist and return a valid response? If this endpoint is missing or throwing, does the error boundary or catch block affect any shared app state (auth context, query cache) that the community page depends on?
+
+Primary suspect for community load failures (separate from the above):
+The community page itself (community.tsx) has known performance issues that are likely the actual root cause:
+
+DiscussionReplies component had refetchInterval: 3000 with refetchIntervalInBackground: true — if this renders per post, it fires N requests every 3 seconds and will overwhelm the server
+Search input has no debounce — every keystroke fires a new API call
+Approximately 200 lines of dead code (unused DiscussionReplies, DiscussionReplyForm, getTimeAgo, group dialog) were never removed after DiscussionCard replaced the inline implementation
+
+Please:
+
+Confirm the 5 changed files above have no cross-page side effects on community discussions
+Check whether DiscussionReplies still has refetchInterval: 3000 in the current production code
+Check whether the search input in community.tsx has a debounce
+If either issue exists in production, fix them — remove the refetch interval and add a 300ms debounce on search using useState + useEffect
