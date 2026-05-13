@@ -53,7 +53,7 @@ import {
   ChevronDown,
   Download,
 } from "lucide-react";
-import { usePWAInstall } from "@/hooks/usePWAInstall";
+import { useInstallPWA } from "@/components/InstallPWA";
 import { Link } from "wouter";
 
 export default function Profile() {
@@ -68,7 +68,7 @@ export default function Profile() {
 
   // PWA install — shared hook captures beforeinstallprompt at module-load time
   // so the event is never missed regardless of when the user navigates here
-  const { deferredPrompt, isInstalled, isIOSSafari, install } = usePWAInstall();
+  const { installPrompt: deferredPrompt, isInstalled, isIOS: isIOSSafari, triggerInstall: install } = useInstallPWA();
   const [showIOSSteps, setShowIOSSteps] = useState(false);
 
   // True while we're verifying the Stripe session after returning from checkout

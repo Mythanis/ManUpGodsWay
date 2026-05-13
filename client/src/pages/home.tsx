@@ -17,6 +17,7 @@ import BrotherhoodRequests from "@/components/brotherhood-requests";
 import UpgradeModal from "@/components/upgrade-modal";
 import HomeCarousel from "@/components/home-carousel";
 import { WelcomeIntro } from "@/components/WelcomeIntro";
+import { InstallPWABanner } from "@/components/InstallPWA"; // ← ADD THIS LINE
 import { formatLocalDate, formatLocalDateTime } from "@/lib/utils";
 import { stripMentionMarkdown } from "@/components/mention-textarea";
 import { getDefaultThumbnail } from "@/lib/default-thumbnail";
@@ -2745,7 +2746,8 @@ export default function Home() {
           </div>
         </DialogContent>
       </Dialog>
-
+      {/* PWA Install Banner ← ADD THIS */}
+      <InstallPWABanner />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { InstallPWAButton } from "@/components/InstallPWA";
 import { 
   BookOpen, 
   Users, 
@@ -239,6 +240,8 @@ export function WelcomeIntro({ open, onClose }: WelcomeIntroProps) {
             ))}
           </div>
 
+          <InstallPWAButton />
+          
           <Button
             onClick={nextPage}
             className="bg-[#FDD000] hover:bg-yellow-400 text-black font-bold"

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, UserPlus } from "lucide-react";
+import { InstallPWAButton } from "@/components/InstallPWA";
 
 interface User {
   id: string;
@@ -65,6 +66,8 @@ export default function ProfileMenu({
           </Button>
         </div>
       </div>
+
+      <InstallPWAButton />
 
       {/* Click outside to close */}
       <div

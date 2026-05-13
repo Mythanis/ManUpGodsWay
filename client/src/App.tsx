@@ -66,7 +66,7 @@ import { TermsReagreementGate } from "@/components/terms-reagreement-gate";
 import { NameCompletionModal } from "@/components/name-completion-modal";
 import { AccountSettingsButton } from "@/components/account-settings-button";
 import { TopRightLogo } from "@/components/top-right-logo";
-import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
+import { InstallPWABanner } from "@/components/InstallPWA";
 import { useTrialAccess } from "@/hooks/useTrialAccess";
 import TrialPaywallModal from "@/components/trial-paywall-modal";
 import { apiRequest } from "@/lib/queryClient";
@@ -357,12 +357,12 @@ function AppContent() {
           <Router />
         </div>
         {isAuthenticated && !isLoading && splashCompleted && <Navigation />}
-        <PWAInstallPrompt />
       </div>
       {/* Tour overlay — renders on top of all content during onboarding */}
       {isAuthenticated && <AppTour />}
       {/* Fitness tour overlay — appears on the Fitness page only (the Fitness page wires the tab sync) */}
       {isAuthenticated && <FitnessTour />}
+      {isAuthenticated && <InstallPWABanner />}
     </div>
   );
 }
