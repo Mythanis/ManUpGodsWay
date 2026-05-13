@@ -1,0 +1,32 @@
+Community discussions are returning a 500 error when the page loads. The browser console shows:
+Failed to load discussions Error: 500
+This is a backend error, not a frontend issue. Please do the following:
+1. Check the server logs
+Look at the Replit console/logs for the actual error message when GET /api/discussions is called. The 500 means the route handler is throwing — the real error message will be there, not in the browser.
+2. Check the discussions route handler (server/routes.ts)
+Find the GET /api/discussions handler and look for:
+
+Any reference to columns that may not exist in the database (common after a schema change)
+Any .join() or relation that references a table that doesn't exist in production
+Any missing null checks on req.query parameters
+Whether currentUserId from the session could be undefined and is being passed raw into a query that expects a string
+
+3. Check storage.getDiscussions() in server/storage.ts
+
+Look at the Drizzle query — if any column referenced in the select, where, orderBy, or join doesn't exist in the production database schema, it will throw a 500
+Specifically check: was any schema migration run recently that added or renamed a column? If the migration ran locally but not in production, the query will fail in prod only
+Check whether offset was recently added as a parameter — if the function signature was updated but the route still passes undefined, that could cause issues depending on how Drizzle handles it
+
+4. Check for a missing DB migration
+Run this query against the production database to check for recently added columns that might be missing:
+sqlSELECT column_name FROM information_schema.columns
+WHERE table_name = 'discussions'
+ORDER BY ordinal_position;
+Also check:
+sqlSELECT column_name FROM information_schema.columns
+WHERE table_name = 'accountability_requests'
+ORDER BY ordinal_position;
+The accountability_requests table should have an is_anonymous column — if it's missing, that's a sign migrations aren't running in production and the discussions table may also be missing columns.
+5. Quick test
+Hit GET /api/discussions directly (e.g. via the Replit shell with curl http://localhost:5000/api/discussions) and look at the full error response body — it will contain the actual database or runtime error message that the browser isn't showing.
+The fix is almost certainly either a missing DB column/migration in production, or a null/undefined value being passed into a query that doesn't handle it gracefully.
