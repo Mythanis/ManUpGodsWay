@@ -206,7 +206,7 @@ export default function Home() {
 
   const { data: newestDiscussion } = useQuery<any[]>({
     queryKey: ['/api/discussions', 'newest-1'],
-    queryFn: async () => { const r = await fetch('/api/discussions?sortBy=recent&limit=1', { credentials: 'include' }); return r.json(); },
+    queryFn: async () => { const r = await fetch('/api/discussions?sortBy=recent&limit=1', { credentials: 'include' }); const data = await r.json(); return data.discussions ?? data; },
     staleTime: 60000,
   });
   const { data: newestVideos } = useQuery<any[]>({
@@ -625,7 +625,8 @@ export default function Home() {
     queryFn: async () => {
       const response = await fetch('/api/discussions?sortBy=recent&limit=1', { credentials: 'include' });
       if (!response.ok) throw new Error('Failed to fetch discussions');
-      return response.json();
+      const data = await response.json();
+      return data.discussions ?? data;
     },
     retry: false,
     refetchInterval: 60000,
