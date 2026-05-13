@@ -2416,6 +2416,17 @@ export class DatabaseStorage implements IStorage {
           title: studies.title,
           requiredTier: studies.requiredTier,
         },
+        likedByMe: currentUserId
+          ? sql<boolean>`EXISTS(SELECT 1 FROM discussion_likes dl WHERE dl.discussion_id = ${discussions.id} AND dl.user_id = ${currentUserId})`
+          : sql<boolean>`false`,
+        dislikedByMe: currentUserId
+          ? sql<boolean>`EXISTS(SELECT 1 FROM discussion_dislikes dd WHERE dd.discussion_id = ${discussions.id} AND dd.user_id = ${currentUserId})`
+          : sql<boolean>`false`,
+        dislikes: sql<number>`(SELECT COUNT(*)::int FROM discussion_dislikes dd WHERE dd.discussion_id = ${discussions.id})`,
+        pollVotedIndex: currentUserId
+          ? sql<number | null>`(SELECT option_index FROM discussion_poll_votes WHERE discussion_id = ${discussions.id} AND user_id = ${currentUserId} LIMIT 1)`
+          : sql<number | null>`NULL`,
+        pollVoteCounts: sql<Record<string, number>>`COALESCE((SELECT json_object_agg(t.option_index::text, t.cnt) FROM (SELECT option_index, COUNT(*)::int AS cnt FROM discussion_poll_votes WHERE discussion_id = ${discussions.id} GROUP BY option_index) t), '{}'::json)`,
       })
       .from(discussions)
       .innerJoin(users, eq(discussions.userId, users.id))
@@ -2460,12 +2471,10 @@ export class DatabaseStorage implements IStorage {
       );
     }
     
-    // Filter out silenced users — inline subquery so no extra round trip
+    // Filter out silenced users — NOT EXISTS is faster than NOT IN and handles NULLs correctly
     if (currentUserId) {
       conditions.push(
-        sql`${discussions.userId} NOT IN (
-          SELECT silenced_id FROM user_silences WHERE silencer_id = ${currentUserId}
-        )`
+        sql`NOT EXISTS (SELECT 1 FROM user_silences WHERE silencer_id = ${currentUserId} AND silenced_id = ${discussions.userId})`
       );
     }
     
@@ -2476,64 +2485,15 @@ export class DatabaseStorage implements IStorage {
       rows = await query.orderBy(...orderBy).offset(offset).limit(limit);
     }
 
-    if (rows.length === 0) {
-      return [];
-    }
-
-    const discussionIds = rows.map((r: any) => r.id);
-    const idList = discussionIds.map((id: string) => `'${id}'`).join(',');
-
-    // Run all auxiliary queries in a single parallel batch — one round trip to Neon
-    const [
-      likedRows,
-      dislikedRows,
-      dislikeCounts,
-      pollVoteRowsRaw,
-      pollCountRowsRaw,
-    ] = await Promise.all([
-      currentUserId
-        ? db.select({ discussionId: discussionLikes.discussionId })
-            .from(discussionLikes)
-            .where(and(eq(discussionLikes.userId, currentUserId), inArray(discussionLikes.discussionId, discussionIds)))
-        : Promise.resolve([] as { discussionId: string }[]),
-      currentUserId
-        ? db.select({ discussionId: discussionDislikes.discussionId })
-            .from(discussionDislikes)
-            .where(and(eq(discussionDislikes.userId, currentUserId), inArray(discussionDislikes.discussionId, discussionIds)))
-        : Promise.resolve([] as { discussionId: string }[]),
-      db.select({ discussionId: discussionDislikes.discussionId, count: sql<number>`count(*)` })
-        .from(discussionDislikes)
-        .where(inArray(discussionDislikes.discussionId, discussionIds))
-        .groupBy(discussionDislikes.discussionId),
-      currentUserId
-        ? db.execute(sql.raw(`SELECT discussion_id, option_index FROM discussion_poll_votes WHERE user_id = '${currentUserId}' AND discussion_id IN (${idList})`)).catch(() => ({ rows: [] } as any))
-        : Promise.resolve({ rows: [] } as any),
-      db.execute(sql.raw(`SELECT discussion_id, option_index, COUNT(*)::int AS vote_count FROM discussion_poll_votes WHERE discussion_id IN (${idList}) GROUP BY discussion_id, option_index`)).catch(() => ({ rows: [] } as any)),
-    ]);
-
-    const likedSet = new Set(likedRows.map((r) => r.discussionId));
-    const dislikedSet = new Set(dislikedRows.map((r) => r.discussionId));
-    const dislikeCountMap: Record<string, number> = {};
-    for (const row of dislikeCounts) { dislikeCountMap[row.discussionId] = Number(row.count); }
-
-    const myVoteMap: Record<string, number> = {};
-    const pollCountMap: Record<string, Record<number, number>> = {};
-    for (const row of (pollVoteRowsRaw.rows || pollVoteRowsRaw as any[])) {
-      myVoteMap[(row as any).discussion_id] = (row as any).option_index;
-    }
-    for (const row of (pollCountRowsRaw.rows || pollCountRowsRaw as any[])) {
-      const did = (row as any).discussion_id;
-      if (!pollCountMap[did]) pollCountMap[did] = {};
-      pollCountMap[did][(row as any).option_index] = Number((row as any).vote_count);
-    }
-
+    // All auxiliary data (likes, dislikes, poll votes) is embedded in the main query above.
+    // Single round trip to Neon — no secondary batch needed.
     return rows.map((r: any) => ({
       ...r,
-      likedByMe: likedSet.has(r.id),
-      dislikedByMe: dislikedSet.has(r.id),
-      dislikes: dislikeCountMap[r.id] || 0,
-      pollVotedIndex: myVoteMap[r.id] ?? null,
-      pollVoteCounts: pollCountMap[r.id] || {},
+      likedByMe: Boolean(r.likedByMe),
+      dislikedByMe: Boolean(r.dislikedByMe),
+      dislikes: Number(r.dislikes) || 0,
+      pollVotedIndex: r.pollVotedIndex ?? null,
+      pollVoteCounts: r.pollVoteCounts || {},
     }));
   }
 

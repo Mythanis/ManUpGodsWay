@@ -74,6 +74,7 @@ export default function Community() {
   const [hasMore, setHasMore]               = useState(true);
   const [isFetching, setIsFetching]         = useState(false);
   const [initialLoaded, setInitialLoaded]   = useState(false);
+  const [loadError, setLoadError]           = useState(false);
   const isFetchingRef                       = useRef(false);
   const sentinelRef                         = useRef<HTMLDivElement>(null);
 
@@ -108,6 +109,7 @@ export default function Community() {
       setInitialLoaded(true);
     } catch (e) {
       console.error("Failed to load discussions", e);
+      if (pageOffset === 0) setLoadError(true);
       setInitialLoaded(true);
     } finally {
       isFetchingRef.current = false;
@@ -121,6 +123,7 @@ export default function Community() {
     setNextOffset(0);
     setHasMore(true);
     setInitialLoaded(false);
+    setLoadError(false);
     isFetchingRef.current = false;
     fetchPage(0, sortBy, searchQuery);
   }, [sortBy, searchQuery, fetchPage]);
@@ -519,6 +522,35 @@ export default function Community() {
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FDD000] mx-auto mb-4" />
             <p className="text-white/40 text-sm">Loading posts...</p>
+          </div>
+        ) : loadError && allDiscussions.length === 0 ? (
+          <div
+            className="text-center py-12 rounded-sm"
+            style={{ background: "#0d0d0d", border: "1px solid #222" }}
+          >
+            <div
+              className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
+              style={{ background: "rgba(253,208,0,0.08)" }}
+            >
+              <MessageCircle className="w-7 h-7 text-[#FDD000]" />
+            </div>
+            <h3 className="text-white font-black text-lg uppercase tracking-tight mb-2">
+              Connection Issue
+            </h3>
+            <p className="text-sm max-w-xs mx-auto mb-5" style={{ color: "rgba(255,255,255,0.4)" }}>
+              Couldn't load posts. Check your connection and try again.
+            </p>
+            <button
+              onClick={() => {
+                setLoadError(false);
+                setInitialLoaded(false);
+                fetchPage(0, sortBy, searchQuery);
+              }}
+              className="px-6 py-2.5 rounded-sm font-black uppercase tracking-wide text-black text-sm"
+              style={{ background: "#FDD000", border: "2px solid #000" }}
+            >
+              Retry
+            </button>
           </div>
         ) : allDiscussions.length === 0 && initialLoaded ? (
           <div
