@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
+import { usePushNotifications } from '@/hooks/use-push-notifications';
 import {
   Select,
   SelectContent,
@@ -169,6 +170,10 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
   // ── PWA install hook ──
   const { canInstall } = useInstallPWA();
 
+  // ── Push notifications — subscribePush handles both browser permission
+  //    AND service worker push subscription registration in one call ──
+  const { subscribe: subscribePush } = usePushNotifications();
+
   // ── Mutations ──────────────────────────────────────────────────────────────
   const updateProfileMutation = useMutation({
     mutationFn: (data: SetupData) =>
@@ -216,29 +221,29 @@ export function UserSetupWizard({ onComplete }: { onComplete: () => void }) {
     if (checked) {
       setShowNotificationDialog(true);
     } else {
-      setSetupData({ ...setupData, prayerPermissionsGranted: false });
+      setSetupData(prev => ({ ...prev, prayerPermissionsGranted: false }));
     }
   };
 
+  // Uses subscribePush() which handles BOTH Notification.requestPermission()
+  // AND push subscription registration with the service worker + server.
+  // Previously only called requestPermission, leaving the push subscription
+  // unregistered and causing prayer timer alerts to fail.
   const handleAcceptNotificationPermission = async () => {
     setShowNotificationDialog(false);
-    if ("Notification" in window) {
-      const permission = await Notification.requestPermission();
-      if (permission === "granted") {
-        setSetupData((prev) => ({ ...prev, prayerPermissionsGranted: true })); // ← fix
-        toast({
-          title: "Notifications Enabled",
-          description: "You'll receive prayer time alerts.",
-        });
-      } else {
-        setSetupData((prev) => ({ ...prev, prayerPermissionsGranted: false })); // ← fix
-        toast({
-          title: "Notifications Not Enabled",
-          description: "You can enable these later in settings.",
-        });
-      }
+    const success = await subscribePush();
+    if (success) {
+      setSetupData(prev => ({ ...prev, prayerPermissionsGranted: true }));
+      toast({
+        title: "Notifications Enabled",
+        description: "You'll receive prayer time alerts.",
+      });
     } else {
-      setSetupData((prev) => ({ ...prev, prayerPermissionsGranted: false })); // ← fix
+      setSetupData(prev => ({ ...prev, prayerPermissionsGranted: false }));
+      toast({
+        title: "Notifications Not Enabled",
+        description: "You can enable these later in settings.",
+      });
     }
   };
 
