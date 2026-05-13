@@ -415,7 +415,7 @@ export default function Community() {
     newPosts:     communityStats?.newPosts     ?? 0,
   };
 
-  const isLoading = !initialLoaded && isFetching;
+  const isLoading = !initialLoaded;
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (

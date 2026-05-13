@@ -1,0 +1,73 @@
+Fix four issues causing community discussions to appear broken:
+Fix 1 — client/src/pages/community.tsx: Fix blank page during auth loading
+Find this line (near the bottom of the state declarations):
+typescriptconst isLoading = !initialLoaded && isFetching;
+Change it to:
+typescriptconst isLoading = !initialLoaded;
+Without this fix, the page shows completely blank for 3-4 seconds while auth resolves, making users think discussions aren't loading.
+Fix 2 — client/src/pages/community.tsx: Fix IntersectionObserver duplicate fetches
+Add these 4 refs directly after the existing isFetchingRef and sentinelRef lines:
+typescriptconst nextOffsetRef  = useRef(0);
+const hasMoreRef     = useRef(true);
+const sortByRef      = useRef(sortBy);
+const searchQueryRef = useRef(searchQuery);
+Add these two effects after the debounce effect:
+typescriptuseEffect(() => { sortByRef.current = sortBy; }, [sortBy]);
+useEffect(() => { searchQueryRef.current = searchQuery; }, [searchQuery]);
+Inside fetchPage, after setHasMore(more) and setNextOffset(next), add:
+typescripthasMoreRef.current = more;
+nextOffsetRef.current = next;
+Inside the reset useEffect, after setNextOffset(0) and setHasMore(true), add:
+typescriptnextOffsetRef.current = 0;
+hasMoreRef.current = true;
+Replace the entire IntersectionObserver useEffect with:
+typescriptuseEffect(() => {
+  const sentinel = sentinelRef.current;
+  if (!sentinel) return;
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting && hasMoreRef.current && !isFetchingRef.current) {
+        fetchPage(nextOffsetRef.current, sortByRef.current, searchQueryRef.current);
+      }
+    },
+    { threshold: 0.1 }
+  );
+  observer.observe(sentinel);
+  return () => observer.disconnect();
+}, []);
+Fix 3 — client/src/pages/home.tsx: Remove polling refetchIntervals
+Find and update these 4 queries:
+typescript// /api/progress — remove refetchInterval: 10000, refetchIntervalInBackground: true, staleTime: 5000
+// replace with:
+staleTime: 1000 * 30,
+
+// /api/challenges/current — remove refetchInterval: 8000, refetchIntervalInBackground: true
+// replace with:
+staleTime: 1000 * 60 * 5,
+
+// /api/challenges/.../participant-count — remove refetchInterval: 5000
+// replace with:
+staleTime: 1000 * 60,
+
+// /api/progress/weekly-completions — remove refetchInterval: 30000, refetchIntervalInBackground: true
+// replace with:
+staleTime: 1000 * 60,
+Fix 4 — Database: Add missing indexes
+Run against the production database:
+sqlCREATE INDEX IF NOT EXISTS idx_discussions_study_created
+ON discussions (study_id, is_pinned DESC, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_discussions_study_likes
+ON discussions (study_id, is_pinned DESC, likes DESC, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_discussions_study_replies
+ON discussions (study_id, is_pinned DESC, reply_count DESC, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_user_silences_lookup
+ON user_silences (silencer_id, silenced_id);
+
+CREATE INDEX IF NOT EXISTS idx_discussion_likes_user
+ON discussion_likes (user_id, discussion_id);
+
+CREATE INDEX IF NOT EXISTS idx_discussion_dislikes_lookup
+ON discussion_dislikes (discussion_id, user_id);

@@ -291,6 +291,9 @@ export const discussions = pgTable("discussions", {
   index("idx_discussions_pinned_created").on(table.isPinned, table.createdAt), // ORDER BY is_pinned DESC, created_at DESC
   index("idx_discussions_pinned_likes").on(table.isPinned, table.likes, table.createdAt), // ORDER BY is_pinned DESC, likes DESC, created_at DESC
   index("idx_discussions_pinned_replies").on(table.isPinned, table.replyCount, table.createdAt), // ORDER BY is_pinned DESC, reply_count DESC, created_at DESC
+  index("idx_discussions_study_created").on(table.studyId, table.isPinned, table.createdAt), // Study feed: ORDER BY is_pinned DESC, created_at DESC
+  index("idx_discussions_study_likes").on(table.studyId, table.isPinned, table.likes, table.createdAt), // Study feed: ORDER BY is_pinned DESC, likes DESC, created_at DESC
+  index("idx_discussions_study_replies").on(table.studyId, table.isPinned, table.replyCount, table.createdAt), // Study feed: ORDER BY is_pinned DESC, reply_count DESC, created_at DESC
 ]);
 
 // Live streams table for admin-only streaming
@@ -401,6 +404,7 @@ export const discussionLikes = pgTable("discussion_likes", {
   unique().on(table.userId, table.discussionId),
   index("idx_discussion_likes_discussion_id").on(table.discussionId),
   index("idx_discussion_likes_user_id").on(table.userId),
+  index("idx_discussion_likes_user").on(table.userId, table.discussionId), // Composite lookup: has user liked this?
 ]);
 
 export const discussionDislikes = pgTable("discussion_dislikes", {
@@ -412,6 +416,7 @@ export const discussionDislikes = pgTable("discussion_dislikes", {
   unique().on(table.userId, table.discussionId),
   index("idx_discussion_dislikes_discussion_id").on(table.discussionId),
   index("idx_discussion_dislikes_user_id").on(table.userId),
+  index("idx_discussion_dislikes_lookup").on(table.discussionId, table.userId), // Composite lookup: dislikes per post
 ]);
 
 // User testimonies
@@ -1394,9 +1399,10 @@ export const userSilences = pgTable("user_silences", {
   silencerId: varchar("silencer_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   silencedId: varchar("silenced_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   createdAt: timestamp("created_at").defaultNow(),
-}, (table) => ({
-  unique: unique().on(table.silencerId, table.silencedId),
-}));
+}, (table) => [
+  unique().on(table.silencerId, table.silencedId),
+  index("idx_user_silences_lookup").on(table.silencerId, table.silencedId), // Fast mute-list lookup
+]);
 
 export const insertUserSilenceSchema = createInsertSchema(userSilences).omit({
   id: true,
