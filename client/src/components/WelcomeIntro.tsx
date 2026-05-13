@@ -199,6 +199,15 @@ export function WelcomeIntro({ open, onClose }: WelcomeIntroProps) {
               ))}
             </div>
 
+              {/* ADD THIS — install prompt before the CTA */}
+              <div className="mb-4 p-4 bg-white/5 border border-[#FDD000]/30 rounded-sm flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-white font-bold text-sm">Add to Home Screen</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Install for the full app experience</p>
+                </div>
+                <InstallPWAButton />
+              </div>
+            
             <div className="bg-[#FDD000] p-6 text-center">
               <h3 className="text-black font-black text-xl mb-2">
                 READY TO BEGIN?
@@ -239,8 +248,6 @@ export function WelcomeIntro({ open, onClose }: WelcomeIntroProps) {
               />
             ))}
           </div>
-
-          <InstallPWAButton />
           
           <Button
             onClick={nextPage}
