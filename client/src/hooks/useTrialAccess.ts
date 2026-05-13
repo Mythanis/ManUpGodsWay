@@ -8,7 +8,7 @@ export function useTrialAccess(area: string) {
   const { data: user } = useQuery<any>({ queryKey: ["/api/auth/user"] });
   const { data: settings } = useQuery<SubscriptionSettings>({
     queryKey: ["/api/subscription-settings"],
-    staleTime: 0,
+    staleTime: 60_000,
   });
 
   // Cancelled users keep full access until their expiration date
@@ -48,7 +48,7 @@ export function useTrialAccess(area: string) {
   return {
     blocked,
     reason,
-    isLoading: !user || !settings,
+    isLoading: !user,
     isActiveSubscriber,
     isTrialUser,
   };

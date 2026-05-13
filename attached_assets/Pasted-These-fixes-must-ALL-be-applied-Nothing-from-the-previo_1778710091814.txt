@@ -1,0 +1,77 @@
+These fixes must ALL be applied. Nothing from the previous list has been applied yet — check each one carefully.
+
+Fix 1 — client/src/hooks/useTrialAccess.ts — ROOT CAUSE of the 2-3 second discussion loop
+staleTime: 0 on subscription-settings causes it to be immediately stale on every mount, triggering a background refetch. During refetch, !settings briefly becomes true, which makes isLoading: true, which hides Community in TrialPageGuard, causing it to unmount and remount. The reset effect fires on every remount and calls fetchPage(0) again — producing the 2-3 second loop.
+Make these two changes:
+typescript// CHANGE staleTime from 0 to 60 seconds:
+const { data: settings } = useQuery<SubscriptionSettings>({
+    queryKey: ["/api/subscription-settings"],
+    staleTime: 60_000,  // was: staleTime: 0
+});
+
+// CHANGE isLoading to not block on settings:
+return {
+    blocked,
+    reason,
+    isLoading: !user,  // was: !user || !settings
+    isActiveSubscriber,
+    isTrialUser,
+};
+The blocked logic already handles missing settings safely (it defaults to false if settings is undefined). Removing || !settings from isLoading means Community mounts immediately when the user is authenticated, without waiting for subscription-settings to load.
+
+Fix 2 — client/src/hooks/useWebSocket.ts — Remove force refetches (NOT YET DONE)
+In ws.onopen, remove this exact line:
+typescriptqueryClient.refetchQueries({ queryKey: ['/api/brotherhood-requests'] });
+In the brotherhood_request case handler, remove:
+typescriptqueryClient.refetchQueries({ queryKey: ['/api/brotherhood-requests'] });
+In the brotherhood_established case handler, remove both:
+typescriptqueryClient.refetchQueries({ queryKey: ['/api/brothers'] });
+queryClient.refetchQueries({ queryKey: ['/api/brotherhood-requests'] });
+
+Fix 3 — client/src/components/notification-panel.tsx — Remove polling (NOT YET DONE)
+Remove these three refetchInterval lines:
+typescriptrefetchInterval: 30000,  // on /api/notifications query
+refetchInterval: 30000,  // on /api/message-requests query  
+refetchInterval: 15000,  // on /api/notifications/unread-count query
+
+Fix 4 — client/src/pages/home.tsx — Remove refetch intervals (confirm or fix)
+Search for refetchInterval in home.tsx. Remove every instance that is not refetchInterval: false. The four that must be gone are on /api/progress, /api/challenges/current, /api/challenges/.../participant-count, and /api/progress/weekly-completions.
+
+Fix 5 — Database: Add missing fitness indexes
+Run against production database:
+sqlCREATE INDEX IF NOT EXISTS idx_fitness_posts_user_id
+  ON fitness_posts (user_id);
+CREATE INDEX IF NOT EXISTS idx_fitness_posts_created_at
+  ON fitness_posts (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_fitness_post_comments_post_id
+  ON fitness_post_comments (post_id);
+CREATE INDEX IF NOT EXISTS idx_fitness_post_comments_user_id
+  ON fitness_post_comments (user_id);
+
+Fix 6 — client/src/components/navigation.tsx — Fix 3x nav/badges calls (NOT YET DONE)
+The query key includes timestamp variables that change on every navigation, creating multiple cache entries. Move the timestamp reads inside the queryFn and use a stable query key:
+Remove these 4 lines from the component body:
+typescriptconst studiesSince = getSeenTs(LS_KEY_STUDIES);
+const communitySince = getSeenTs(LS_KEY_COMMUNITY);
+const warRoomSince = getSeenTs(LS_KEY_WAR_ROOM);
+const underFireSince = getSeenTs(LS_KEY_UNDER_FIRE);
+Change the query to:
+typescriptconst { data: badges, refetch: refetchBadges } = useQuery<{ studies: number; community: number; warRoom: number; underFire: number }>({
+  queryKey: ['/api/nav/badges'],
+  queryFn: async () => {
+    const sSince = getSeenTs(LS_KEY_STUDIES);
+    const cSince = getSeenTs(LS_KEY_COMMUNITY);
+    const wSince = getSeenTs(LS_KEY_WAR_ROOM);
+    const uSince = getSeenTs(LS_KEY_UNDER_FIRE);
+    const res = await fetch(
+      `/api/nav/badges?studiesSince=${sSince}&communitySince=${cSince}&warRoomSince=${wSince}&underFireSince=${uSince}`,
+      { credentials: "include" }
+    );
+    if (!res.ok) return { studies: 0, community: 0, warRoom: 0, underFire: 0 };
+    return res.json();
+  },
+  refetchInterval: 5 * 60 * 1000,
+  staleTime: 60 * 1000,
+  retry: false,
+});
+Also remove the refetchInterval from the unread-count query in the same file — change it to staleTime: 60 * 1000 only.

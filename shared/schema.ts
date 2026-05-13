@@ -2876,7 +2876,9 @@ export const fitnessPosts = pgTable("fitness_posts", {
   likes: integer("likes").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => [
-  index("idx_fitness_posts_created").on(table.createdAt), // Feed ordering
+  index("idx_fitness_posts_created").on(table.createdAt), // Feed ordering (ASC)
+  index("idx_fitness_posts_created_at").on(table.createdAt), // Feed ordering (DESC queries)
+  index("idx_fitness_posts_user_id").on(table.userId), // User profile posts
 ]);
 
 export const fitnessPostLikes = pgTable("fitness_post_likes", {
@@ -2916,7 +2918,10 @@ export const fitnessPostComments = pgTable("fitness_post_comments", {
   parentCommentId: varchar("parent_comment_id"), // null = top-level, set = reply
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (table) => [
+  index("idx_fitness_post_comments_post_id").on(table.postId), // Load comments per post
+  index("idx_fitness_post_comments_user_id").on(table.userId), // User comment history
+]);
 
 export const insertFitnessPostCommentSchema = createInsertSchema(fitnessPostComments).omit({
   id: true,
