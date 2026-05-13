@@ -32,8 +32,7 @@ export default function BrotherhoodRequests() {
 
   const { data: requests, isLoading } = useQuery<BrotherhoodRequest[]>({
     queryKey: ['/api/brotherhood-requests'],
-    refetchInterval: 5000, // Refresh every 5 seconds for real-time updates
-    refetchIntervalInBackground: true,
+    staleTime: 1000 * 60 * 2,
   });
 
   const respondMutation = useMutation({

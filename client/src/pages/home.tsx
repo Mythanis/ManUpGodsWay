@@ -446,16 +446,13 @@ export default function Home() {
   const { data: progress = [], isLoading: progressLoading } = useQuery({
     queryKey: ["/api/progress"],
     retry: false,
-    refetchInterval: 10000, // Real-time updates for user progress
-    refetchIntervalInBackground: true,
-    staleTime: 5000, // Keep data fresh for 5 seconds to prevent flicker
+    staleTime: 1000 * 30,
   });
 
   const { data: currentChallenge } = useQuery({
     queryKey: ["/api/challenges/current"],
     retry: false,
-    refetchInterval: 8000, // Real-time updates for current challenge
-    refetchIntervalInBackground: true,
+    staleTime: 1000 * 60 * 5,
   });
 
   // Get challenge participant count
@@ -463,7 +460,7 @@ export default function Home() {
     queryKey: ["/api/challenges", (currentChallenge as any)?.id, "participant-count"],
     enabled: !!(currentChallenge as any)?.id,
     retry: false,
-    refetchInterval: 5000, // Update count every 5 seconds
+    staleTime: 1000 * 60,
   });
 
   // Check if user accepted the challenge
@@ -636,8 +633,7 @@ export default function Home() {
   const { data: weeklyCompletions } = useQuery({
     queryKey: ["/api/progress/weekly-completions"],
     retry: false,
-    refetchInterval: 30000, // Update every 30 seconds
-    refetchIntervalInBackground: true,
+    staleTime: 1000 * 60,
   });
 
   // Fetch user's War Room posts
