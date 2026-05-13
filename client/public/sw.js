@@ -1,4 +1,4 @@
-const CACHE_NAME = 'man-up-gods-way-v11';
+const CACHE_NAME = 'man-up-gods-way-v12';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -47,27 +47,8 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
 
   if (url.pathname.startsWith('/api/')) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseClone);
-            });
-          }
-          return response;
-        })
-        .catch(() => {
-          return caches.match(request).then((cached) => {
-            if (cached) return cached;
-            return new Response(JSON.stringify({ error: 'offline', message: 'You are currently offline' }), {
-              headers: { 'Content-Type': 'application/json' },
-              status: 503
-            });
-          });
-        })
-    );
+    // API calls are authenticated and must never be served from cache.
+    // Pass straight through to the network — no caching, no stale fallback.
     return;
   }
 
