@@ -1,0 +1,60 @@
+Four fixes needed. Apply all of them:
+Fix 1 — client/src/pages/community.tsx: Fix IntersectionObserver never attaching
+With isLoading = !initialLoaded, the sentinel div is inside the loading branch and not in the DOM when the observer effect runs on mount. The observer never attaches and infinite scroll is permanently broken.
+Move the sentinelRef div OUTSIDE the main conditional so it's always in the DOM. Find the else branch that contains the discussions list and the sentinel, and restructure to this:
+tsx<div className="px-4">
+  {isLoading ? (
+    <div className="text-center py-12">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FDD000] mx-auto mb-4" />
+      <p className="text-white/40 text-sm">Loading posts...</p>
+    </div>
+  ) : loadError && allDiscussions.length === 0 ? (
+    /* existing error state JSX unchanged */
+  ) : allDiscussions.length === 0 && initialLoaded ? (
+    /* existing empty state JSX unchanged */
+  ) : (
+    <div className="space-y-4">
+      {allDiscussions.map((discussion: any) => (
+        /* existing map JSX unchanged */
+      ))}
+    </div>
+  )}
+
+  {/* Sentinel ALWAYS in DOM so IntersectionObserver attaches on mount */}
+  <div ref={sentinelRef} className="py-2">
+    {isFetching && allDiscussions.length > 0 && (
+      <div className="flex items-center justify-center gap-2 py-4">
+        <Loader2 className="w-5 h-5 text-[#FDD000] animate-spin" />
+        <span className="text-white/40 text-xs font-bold uppercase tracking-wide">Loading more...</span>
+      </div>
+    )}
+    {!hasMore && allDiscussions.length > 0 && (
+      <div className="text-center py-6">
+        <p className="text-white/30 text-xs font-bold uppercase tracking-widest">You're all caught up</p>
+      </div>
+    )}
+  </div>
+</div>
+Fix 2 — client/src/hooks/useWebSocket.ts: Remove force refetches
+These three refetchQueries calls bypass staleTime: Infinity and fire network requests on every WebSocket reconnection. Remove them:
+In ws.onopen, remove: queryClient.refetchQueries({ queryKey: ['/api/brotherhood-requests'] });
+In brotherhood_request case, remove: queryClient.refetchQueries({ queryKey: ['/api/brotherhood-requests'] });
+In brotherhood_established case, remove both: queryClient.refetchQueries({ queryKey: ['/api/brothers'] }); and queryClient.refetchQueries({ queryKey: ['/api/brotherhood-requests'] });
+Fix 3 — Database indexes (most important — this is why discussions take 2-3 seconds)
+Run against the production database. These will bring query time from 2-3 seconds to under 100ms:
+sqlCREATE INDEX IF NOT EXISTS idx_discussions_study_created
+  ON discussions (study_id, is_pinned DESC, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_discussions_study_likes
+  ON discussions (study_id, is_pinned DESC, likes DESC, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_discussions_study_replies
+  ON discussions (study_id, is_pinned DESC, reply_count DESC, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_user_silences_lookup
+  ON user_silences (silencer_id, silenced_id);
+CREATE INDEX IF NOT EXISTS idx_discussion_likes_user
+  ON discussion_likes (user_id, discussion_id);
+CREATE INDEX IF NOT EXISTS idx_discussion_dislikes_lookup
+  ON discussion_dislikes (discussion_id, user_id);
+CREATE INDEX IF NOT EXISTS idx_fitness_community_posts_created
+  ON fitness_community_posts (created_at DESC);
+Fix 4 — client/src/pages/home.tsx: Confirm refetch intervals removed
+Search home.tsx for refetchInterval — confirm all four instances on /api/progress, /api/challenges/current, /api/challenges/.../participant-count, and /api/progress/weekly-completions have been removed. If any remain, remove them now and replace with staleTime values.

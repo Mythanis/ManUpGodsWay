@@ -2875,7 +2875,9 @@ export const fitnessPosts = pgTable("fitness_posts", {
   category: varchar("category", { length: 50 }).notNull().default('encouragement'),
   likes: integer("likes").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => [
+  index("idx_fitness_posts_created").on(table.createdAt), // Feed ordering
+]);
 
 export const fitnessPostLikes = pgTable("fitness_post_likes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

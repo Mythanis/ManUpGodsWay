@@ -641,26 +641,27 @@ export default function Community() {
               </div>
             ))}
 
-            {/* ── SENTINEL + BOTTOM STATE ──────────────────────────────────── */}
-            <div ref={sentinelRef} className="py-2">
-              {isFetching && allDiscussions.length > 0 && (
-                <div className="flex items-center justify-center gap-2 py-4">
-                  <Loader2 className="w-5 h-5 text-[#FDD000] animate-spin" />
-                  <span className="text-white/40 text-xs font-bold uppercase tracking-wide">
-                    Loading more...
-                  </span>
-                </div>
-              )}
-              {!hasMore && allDiscussions.length > 0 && (
-                <div className="text-center py-6">
-                  <p className="text-white/30 text-xs font-bold uppercase tracking-widest">
-                    You're all caught up
-                  </p>
-                </div>
-              )}
-            </div>
           </div>
         )}
+
+        {/* Sentinel ALWAYS in DOM so IntersectionObserver attaches on mount */}
+        <div ref={sentinelRef} className="py-2">
+          {isFetching && allDiscussions.length > 0 && (
+            <div className="flex items-center justify-center gap-2 py-4">
+              <Loader2 className="w-5 h-5 text-[#FDD000] animate-spin" />
+              <span className="text-white/40 text-xs font-bold uppercase tracking-wide">
+                Loading more...
+              </span>
+            </div>
+          )}
+          {!hasMore && allDiscussions.length > 0 && (
+            <div className="text-center py-6">
+              <p className="text-white/30 text-xs font-bold uppercase tracking-widest">
+                You're all caught up
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── COMPOSE DIALOG ─────────────────────────────────────────────────── */}
