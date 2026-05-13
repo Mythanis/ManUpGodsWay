@@ -290,7 +290,6 @@ export default function ChallengeManagement() {
       return response.json();
     },
     staleTime: 0,
-    refetchInterval: 5000,
   });
 
   const { data: currentWeekChallenge } = useQuery({
@@ -306,7 +305,6 @@ export default function ChallengeManagement() {
     staleTime: 0,
     gcTime: 0,
     refetchOnWindowFocus: true,
-    refetchInterval: 3000,
   });
 
   const createChallengeMutation = useMutation({
@@ -371,8 +369,6 @@ export default function ChallengeManagement() {
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ['admin', 'challenges'] });
     queryClient.invalidateQueries({ queryKey: ['api', 'challenges'] });
-    queryClient.refetchQueries({ queryKey: ['admin', 'challenges'] });
-    queryClient.refetchQueries({ queryKey: ['api', 'challenges', 'current'] });
   };
 
   const handleEdit = useCallback((challenge: Challenge) => {

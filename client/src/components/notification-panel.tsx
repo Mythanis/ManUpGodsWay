@@ -90,19 +90,16 @@ export function NotificationPanel({ variant = 'icon' }: NotificationPanelProps) 
   // Get notifications
   const { data: notifications = [] } = useQuery<Notification[]>({
     queryKey: ['/api/notifications'],
-    refetchInterval: 30000, // Poll every 30 seconds
   });
 
   // Get message requests
   const { data: messageRequests = [] } = useQuery<MessageRequest[]>({
     queryKey: ['/api/message-requests'],
-    refetchInterval: 30000,
   });
 
   // Get unread count
   const { data: unreadData } = useQuery<{ count: number }>({
     queryKey: ['/api/notifications/unread-count'],
-    refetchInterval: 15000, // Poll every 15 seconds
   });
 
   const filteredNotifications = notifications;

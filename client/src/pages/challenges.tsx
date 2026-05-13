@@ -44,7 +44,6 @@ export default function Challenges() {
       return response.json();
     },
     staleTime: 0,
-    refetchInterval: 5000,
   });
 
   // Fetch current week's challenge
@@ -64,7 +63,6 @@ export default function Challenges() {
     staleTime: 0,
     gcTime: 0,
     refetchOnWindowFocus: true,
-    refetchInterval: 3000,
   });
 
   // Fetch participant count for current challenge
@@ -76,7 +74,6 @@ export default function Challenges() {
       return response.json();
     },
     enabled: !!currentWeekChallenge?.id,
-    refetchInterval: 3000,
   });
 
   // Fetch participant count for selected challenge in dialog
@@ -99,7 +96,6 @@ export default function Challenges() {
       return response.json();
     },
     enabled: !!currentWeekChallenge?.id && !!user,
-    refetchInterval: 3000,
   });
 
   // Check if user has accepted the selected challenge
@@ -122,7 +118,6 @@ export default function Challenges() {
       return res.json();
     },
     enabled: !!currentWeekChallenge?.id && !!user,
-    refetchInterval: 5000,
   });
 
   const checkinMutation = useMutation({

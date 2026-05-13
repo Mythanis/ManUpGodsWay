@@ -89,14 +89,12 @@ export default function Navigation() {
       if (!res.ok) return { studies: 0, community: 0, warRoom: 0, underFire: 0 };
       return res.json();
     },
-    refetchInterval: 5 * 60 * 1000,
     staleTime: 60 * 1000,
     retry: false,
   });
 
   const { data: unreadData } = useQuery<{ count: number }>({
     queryKey: ['/api/notifications/unread-count'],
-    refetchInterval: 60 * 1000,
     staleTime: 30 * 1000,
     retry: false,
   });

@@ -32,12 +32,10 @@ interface Podcast {
 export function RiversideIntegrationPanel() {
   const { data: podcasts = [], isLoading } = useQuery<Podcast[]>({
     queryKey: ['/api/admin/podcasts'],
-    refetchInterval: 10000, // Refresh every 10 seconds for real-time updates
   });
 
   const { data: liveStreams = [] } = useQuery<Podcast[]>({
     queryKey: ['/api/livestreams'],
-    refetchInterval: 5000, // More frequent updates for live streams
   });
 
   const formatTimeElapsed = (startTime: string) => {

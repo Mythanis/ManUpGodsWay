@@ -38,7 +38,6 @@ export function LiveStreamBanner() {
 
   const { data: stream } = useQuery<LiveStream | null>({
     queryKey: ["/api/live-streams/active"],
-    refetchInterval: 30000,
   });
 
   if (!stream || stream.status !== "live") return null;

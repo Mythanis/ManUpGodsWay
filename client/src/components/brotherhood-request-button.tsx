@@ -34,8 +34,6 @@ export default function BrotherhoodRequestButton({
   // Check for incoming requests from this user - refresh every 5 seconds to catch missed WebSocket notifications
   const { data: brotherhoodRequests } = useQuery<any[]>({
     queryKey: ['/api/brotherhood-requests'],
-    refetchInterval: 5000, // Auto-refresh every 5 seconds for real-time updates
-    refetchIntervalInBackground: true, // Keep refreshing even when tab is not active
   });
 
   const currentUserId = currentUser?.id;
@@ -68,7 +66,6 @@ export default function BrotherhoodRequestButton({
       });
       // Force immediate refresh to update UI in real-time
       queryClient.invalidateQueries({ queryKey: ['/api/brotherhood-requests'] });
-      queryClient.refetchQueries({ queryKey: ['/api/brotherhood-requests'] });
       queryClient.invalidateQueries({ queryKey: ['/api/brothers'] });
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
     },

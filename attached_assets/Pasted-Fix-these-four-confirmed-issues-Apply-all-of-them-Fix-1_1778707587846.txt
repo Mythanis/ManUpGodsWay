@@ -1,0 +1,49 @@
+Fix these four confirmed issues. Apply all of them:
+Fix 1 — client/src/components/notification-panel.tsx: Remove polling
+Find and remove these three refetchInterval lines:
+typescript// On the /api/notifications query — remove:
+refetchInterval: 30000,
+
+// On the /api/message-requests query — remove:
+refetchInterval: 30000,
+
+// On the /api/notifications/unread-count query — remove:
+refetchInterval: 15000,
+The WebSocket connection already handles real-time notification updates via invalidateQueries. These polling intervals are redundant and add 4+ server requests per minute per user.
+Fix 2 — client/src/hooks/useWebSocket.ts: Remove force refetches
+In ws.onopen, remove this line:
+typescriptqueryClient.refetchQueries({ queryKey: ['/api/brotherhood-requests'] });
+In the brotherhood_request case handler, remove:
+typescriptqueryClient.refetchQueries({ queryKey: ['/api/brotherhood-requests'] });
+In the brotherhood_established case handler, remove both:
+typescriptqueryClient.refetchQueries({ queryKey: ['/api/brothers'] });
+queryClient.refetchQueries({ queryKey: ['/api/brotherhood-requests'] });
+Fix 3 — client/src/pages/community.tsx: Fix IntersectionObserver never attaching
+With isLoading = !initialLoaded, the spinner shows on mount and the sentinel div is hidden inside the loading branch. The IntersectionObserver effect runs once on mount with [] deps, finds sentinelRef.current = null, returns early, and the observer never attaches. Infinite scroll never works.
+Move the <div ref={sentinelRef}> outside the main conditional so it is always in the DOM. In the feed section, restructure so the sentinel sits after the conditional block rather than inside the else branch:
+tsx{/* All the existing conditional branches unchanged */}
+{isLoading ? ( ... ) : loadError ? ( ... ) : allDiscussions.length === 0 && initialLoaded ? ( ... ) : (
+  <div className="space-y-4">
+    {allDiscussions.map(...)}
+  </div>
+)}
+
+{/* Sentinel ALWAYS rendered so IntersectionObserver attaches on mount */}
+<div ref={sentinelRef} className="py-2">
+  {isFetching && allDiscussions.length > 0 && (
+    <div className="flex items-center justify-center gap-2 py-4">
+      <Loader2 className="w-5 h-5 text-[#FDD000] animate-spin" />
+      <span className="text-white/40 text-xs font-bold uppercase tracking-wide">Loading more...</span>
+    </div>
+  )}
+  {!hasMore && allDiscussions.length > 0 && (
+    <div className="text-center py-6">
+      <p className="text-white/30 text-xs font-bold uppercase tracking-widest">You're all caught up</p>
+    </div>
+  )}
+</div>
+Fix 4 — client/src/pages/home.tsx: Confirm refetch intervals removed
+Search for refetchInterval in home.tsx. There should be zero results. If any remain on /api/progress, /api/challenges/current, /api/challenges/.../participant-count, or /api/progress/weekly-completions — remove them now.
+Also search the entire client/src/ directory for any remaining refetchInterval that is not refetchInterval: false:
+grep -rn "refetchInterval" client/src/ | grep -v "refetchInterval: false" | grep -v "node_modules"
+Fix every result found.

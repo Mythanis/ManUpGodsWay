@@ -203,7 +203,6 @@ function StripePage({ onBack }: { onBack: () => void }) {
       if (!res.ok) throw new Error('Failed to fetch test subscription');
       return res.json();
     },
-    refetchInterval: (data: any) => (data && data?.status === 'active') ? 30000 : false,
   });
 
   const createIntentMutation = useMutation({

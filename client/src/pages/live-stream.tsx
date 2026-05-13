@@ -124,7 +124,6 @@ function MuxPlayer({ playbackId }: { playbackId: string }) {
 export default function LiveStreamPage() {
   const { data: stream, isLoading, isError } = useQuery<LiveStream | null>({
     queryKey: ["/api/live-streams/active"],
-    refetchInterval: 10000,
   });
 
   if (isLoading) {

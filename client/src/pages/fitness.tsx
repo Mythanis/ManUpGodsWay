@@ -683,7 +683,6 @@ export default function Fitness() {
   const { data: communityPosts = [], refetch: refetchCommunityPosts } = useQuery<any[]>({
     queryKey: ['/api/fitness/community/posts'],
     enabled: hasMembership,
-    refetchInterval: 15000,
   });
 
   useEffect(() => {
@@ -1223,7 +1222,6 @@ export default function Fitness() {
       return response.json();
     },
     staleTime: 0,
-    refetchInterval: 8000, // Poll every 8 seconds for real-time updates
   });
 
   // Build filter params for API
