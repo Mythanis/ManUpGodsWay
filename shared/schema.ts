@@ -1925,6 +1925,7 @@ export const accountabilityRequests = pgTable("accountability_requests", {
   content: text("content").notNull(),
   assistedById: varchar("assisted_by_id").references(() => users.id),
   assistedAt: timestamp("assisted_at"),
+  isAnonymous: boolean("is_anonymous").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
