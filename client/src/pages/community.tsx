@@ -2,343 +2,136 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { triggerRefTagger } from "@/hooks/useRefTagger";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { MentionTextarea, MentionText, MentionDropdown, useMentionDropdown, findActiveMention } from "@/components/mention-textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  MentionTextarea,
+  MentionDropdown,
+  useMentionDropdown,
+  findActiveMention,
+} from "@/components/mention-textarea";
 import DiscussionCard from "@/components/discussion-card";
 import { BackButton } from "@/components/BackButton";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertDiscussionSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { getTierDisplayName } from "@/lib/utils";
-import { Plus, Users, Heart, MessageCircle, ArrowUpDown, Search, X, Send, Image, Video, Trash2, Bold, Italic, Underline, Strikethrough, BarChart2 } from "lucide-react";
-import { HonorButton } from "@/components/honor-button";
+import {
+  Plus, MessageCircle, Search, X, Send,
+  Image, Video, Trash2, Bold, Italic, Underline,
+  Strikethrough, BarChart2,
+} from "lucide-react";
 import { z } from "zod";
-import { DiscussionSubscriptionButton } from "@/components/discussion-subscription-button";
 
-
+// ─── Schema ───────────────────────────────────────────────────────────────────
 const createDiscussionSchema = z.object({
-  title: z.string().optional(),
-  content: z.string().min(1, "Content is required"),
-  category: z.string().optional(),
-  mediaUrls: z.array(z.string()).optional(),
-  mediaTypes: z.array(z.string()).optional(),
-  postType: z.string().optional(),
+  title:       z.string().optional(),
+  content:     z.string().min(1, "Content is required"),
+  category:    z.string().optional(),
+  mediaUrls:   z.array(z.string()).optional(),
+  mediaTypes:  z.array(z.string()).optional(),
+  postType:    z.string().optional(),
   pollOptions: z.array(z.object({ id: z.string(), text: z.string() })).optional(),
 });
 
-const replySchema = z.object({
-  content: z.string().min(1, "Reply content is required"),
-});
-
-// Component for displaying discussion replies
-function DiscussionReplies({ discussionId }: { discussionId: string }) {
-  const { data: replies = [], isLoading } = useQuery<any[]>({
-    queryKey: ["/api/discussions", discussionId, "replies"],
-    retry: false,
-    refetchInterval: 3000,
-    refetchIntervalInBackground: true,
-  });
-
-  if (isLoading) {
-    return (
-      <div className="text-center py-4">
-        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-ministry-gold-exact mx-auto mb-2"></div>
-        <p className="text-xs text-white/50">Loading replies...</p>
-      </div>
-    );
-  }
-
-  if (replies.length === 0) {
-    return (
-      <div className="text-center py-4">
-        <MessageCircle className="w-6 h-6 text-white/30 mx-auto mb-1" />
-        <p className="text-white/50 text-xs">No replies yet</p>
-        <p className="text-xs text-ministry-gold-exact">Be the first to reply!</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-2">
-      {replies.map((reply: any) => (
-        <div key={reply.id} className="flex items-start space-x-2 p-2 bg-white rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-          <img 
-            src={reply.user?.profileImageUrl || `https://ui-avatars.com/api/?name=${reply.user?.firstName}+${reply.user?.lastName}&background=000&color=FCD000&size=32`}
-            alt={`${reply.user?.firstName} ${reply.user?.lastName}`}
-            className="w-7 h-7 rounded-sm object-cover border-2 border-black"
-          />
-          <div className="flex-1">
-            <div className="flex items-center space-x-2 mb-1">
-              <span className="font-bold text-xs text-black uppercase">
-                {reply.user?.firstName} {reply.user?.lastName?.charAt(0)}.
-              </span>
-              <span className="text-xs text-black/50">
-                • {getTimeAgo(reply.createdAt)}
-              </span>
-            </div>
-            <p className="text-xs text-black whitespace-pre-wrap"><MentionText text={reply.content} /></p>
-            <div className="mt-1">
-              <HonorButton
-                type="reply"
-                id={reply.id}
-                initialCount={reply.likes || 0}
-                variant="ghost"
-                size="sm"
-                showText={true}
-              />
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// Component for adding new replies
-function DiscussionReplyForm({ discussionId, currentUserSubscriptionStatus, discussion }: { 
-  discussionId: string; 
-  currentUserSubscriptionStatus: string; 
-  discussion: any;
-}) {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  const form = useForm({
-    resolver: zodResolver(replySchema),
-    defaultValues: {
-      content: '',
-    },
-  });
-
-  const createReply = useMutation({
-    mutationFn: async (data: z.infer<typeof replySchema>) => {
-      const response = await apiRequest('POST', `/api/discussions/${discussionId}/replies`, data);
-      return response;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/discussions"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/discussions", discussionId, "replies"] });
-      toast({
-        title: "Success",
-        description: "Reply posted successfully!",
-      });
-      form.reset();
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: `Failed to post reply: ${error.message || 'Please try again.'}`,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const onSubmitReply = async (data: z.infer<typeof replySchema>) => {
-    if (!(user as any)?.id) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to reply",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free') {
-      if (currentUserSubscriptionStatus !== 'active') {
-        toast({
-          title: "Access Restricted",
-          description: "This study discussion requires an active subscription to participate.",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-    
-    await createReply.mutateAsync(data);
-  };
-
-  // Check if user has access to reply
-  const hasReplyAccess = discussion.studyId && discussion.study?.requiredTier && discussion.study.requiredTier !== 'free' ?
-    currentUserSubscriptionStatus === 'active' : true;
-
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmitReply)} className="space-y-3">
-        <FormField
-          control={form.control}
-          name="content"
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <MentionTextarea
-                  placeholder={hasReplyAccess ? "Write your reply... Type @ to mention a brother." : "Subscription required to reply"}
-                  className="min-h-[80px] resize-none"
-                  disabled={!hasReplyAccess || createReply.isPending}
-                  value={field.value || ''}
-                  onChange={field.onChange}
-                  name={field.name}
-                  onBlur={field.onBlur}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={createReply.isPending || !hasReplyAccess}
-            style={{
-              backgroundColor: 'hsl(0 0% 0%)',
-              color: 'white',
-              border: '1px solid hsl(0 0% 0%)',
-              borderRadius: '0.375rem',
-              padding: '0.375rem 0.75rem',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.25rem',
-              cursor: (createReply.isPending || !hasReplyAccess) ? 'default' : 'pointer',
-              opacity: (createReply.isPending || !hasReplyAccess) ? 0.6 : 1,
-              transition: 'opacity 0.2s'
-            }}
-          >
-            <Send className="w-3 h-3" />
-            {createReply.isPending ? "Posting..." : "Post Reply"}
-          </button>
-        </div>
-      </form>
-    </Form>
-  );
-}
-
-// Helper function for time formatting (moved to top level)
-function getTimeAgo(date: string) {
-  const now = new Date();
-  const posted = new Date(date);
-  const diffInHours = Math.floor((now.getTime() - posted.getTime()) / (1000 * 60 * 60));
-  
-  if (diffInHours < 1) return 'Just now';
-  if (diffInHours < 24) return `${diffInHours}h ago`;
-  const diffInDays = Math.floor(diffInHours / 24);
-  return `${diffInDays}d ago`;
-}
-
+// ─── Main Component ───────────────────────────────────────────────────────────
 export default function Community() {
-  const [sortBy, setSortBy] = useState<string>('recent');
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [showNewGroupDialog, setShowNewGroupDialog] = useState(false);
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [groupName, setGroupName] = useState("");
-  const [groupDescription, setGroupDescription] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
+  const { user }        = useAuth();
+  const { toast }       = useToast();
+  const queryClient     = useQueryClient();
+
+  // ── UI state ──────────────────────────────────────────────────────────────
+  const [sortBy, setSortBy]                 = useState<"recent" | "likes" | "replies">("recent");
+  const [dialogOpen, setDialogOpen]         = useState(false);
+  const [searchInput, setSearchInput]       = useState("");
+  const [searchQuery, setSearchQuery]       = useState(""); // debounced copy
   const [highlightedDiscussion, setHighlightedDiscussion] = useState<string | null>(null);
-  const [uploadedMedia, setUploadedMedia] = useState<{ urls: string[]; types: string[] }>({ urls: [], types: [] });
-  const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isPollMode, setIsPollMode] = useState(false);
-  const [pollOptions, setPollOptions] = useState(['', '']);
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  
-  // Handle discussion + reply query parameters from URL — extract once on mount
-  const [targetDiscussionId] = useState<string | null>(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('discussion');
-  });
-  const [targetReplyId] = useState<string | null>(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('reply');
-  });
+
+  // ── Compose state ─────────────────────────────────────────────────────────
+  const [uploadedMedia, setUploadedMedia]   = useState<{ urls: string[]; types: string[] }>({ urls: [], types: [] });
+  const [isUploading, setIsUploading]       = useState(false);
+  const fileInputRef                        = useRef<HTMLInputElement>(null);
+  const [isPollMode, setIsPollMode]         = useState(false);
+  const [pollOptions, setPollOptions]       = useState(["", ""]);
+
+  // ── URL deep-link params (read once) ─────────────────────────────────────
+  const [targetDiscussionId] = useState<string | null>(() =>
+    new URLSearchParams(window.location.search).get("discussion")
+  );
+  const [targetReplyId] = useState<string | null>(() =>
+    new URLSearchParams(window.location.search).get("reply")
+  );
+
+  // ── Debounce search — 350 ms ──────────────────────────────────────────────
+  useEffect(() => {
+    const t = setTimeout(() => setSearchQuery(searchInput), 350);
+    return () => clearTimeout(t);
+  }, [searchInput]);
 
   useEffect(() => {
-    if (targetDiscussionId) {
-      setHighlightedDiscussion(targetDiscussionId);
-    }
+    if (targetDiscussionId) setHighlightedDiscussion(targetDiscussionId);
   }, [targetDiscussionId]);
 
-  // Fetch real community stats with live updates
+  // ── Queries ───────────────────────────────────────────────────────────────
   const { data: communityStats } = useQuery<{
     totalMembers: number;
     activeToday: number;
     newPosts: number;
-    categoryStats: { [key: string]: number };
   }>({
     queryKey: ["/api/community/stats"],
     retry: false,
-    staleTime: 60000,
+    staleTime: 60_000,
   });
 
   const { data: discussions = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/discussions", sortBy, searchQuery || undefined],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (sortBy) params.append('sortBy', sortBy);
-      if (searchQuery) params.append('search', searchQuery);
-      
-      const url = `/api/discussions${params.toString() ? '?' + params.toString() : ''}`;
-      const response = await fetch(url, { credentials: 'include' });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch discussions');
-      }
-      
-      return response.json();
+      params.append("sortBy", sortBy);
+      if (searchQuery) params.append("search", searchQuery);
+      const res = await fetch(`/api/discussions?${params}`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch discussions");
+      return res.json();
     },
     retry: 1,
-    staleTime: 60000,
+    staleTime: 30_000,
   });
-  
+
   useEffect(() => {
-    if (discussions.length > 0) {
-      triggerRefTagger();
-    }
+    if (discussions.length > 0) triggerRefTagger();
   }, [discussions]);
 
-  // Scroll to highlighted discussion once discussions are loaded
+  // Scroll to deep-linked discussion once list loads
   useEffect(() => {
     if (!targetDiscussionId || discussions.length === 0) return;
-    const timer = setTimeout(() => {
-      const element = document.querySelector(`[data-discussion-id="${targetDiscussionId}"]`);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+    const t = setTimeout(() => {
+      document
+        .querySelector(`[data-discussion-id="${targetDiscussionId}"]`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
     }, 150);
-    return () => clearTimeout(timer);
+    return () => clearTimeout(t);
   }, [targetDiscussionId, discussions]);
 
-  const isAdmin = (user as any)?.role === 'admin' || (user as any)?.role === 'owner';
+  // ── Admin rich-text editor helpers ────────────────────────────────────────
+  const isAdmin          = (user as any)?.role === "admin" || (user as any)?.role === "owner";
   const contentEditableRef = useRef<HTMLDivElement>(null);
-
-  const normalizeHtml = (html: string) =>
-    html.replace(/&nbsp;/g, ' ').replace(/\u00a0/g, ' ').trim();
+  const normalizeHtml    = (html: string) =>
+    html.replace(/&nbsp;/g, " ").replace(/\u00a0/g, " ").trim();
 
   const applyFormat = (command: string) => {
     contentEditableRef.current?.focus();
     document.execCommand(command, false);
-    const html = normalizeHtml(contentEditableRef.current?.innerHTML || '');
-    form.setValue('content', html, { shouldValidate: true });
+    form.setValue("content", normalizeHtml(contentEditableRef.current?.innerHTML || ""), {
+      shouldValidate: true,
+    });
   };
 
-  // ----- @-mention support for the admin contentEditable editor -----
+  // Admin @-mention in contentEditable
   const [editorMention, setEditorMention] = useState<{ start: number; query: string } | null>(null);
 
-  // Compute caret offset within the contentEditable's textContent.
   const getCaretOffset = (root: HTMLElement): number | null => {
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0) return null;
@@ -354,65 +147,46 @@ export default function Community() {
     const root = contentEditableRef.current;
     if (!root) return;
     const caret = getCaretOffset(root);
-    if (caret == null) {
-      setEditorMention(null);
-      return;
-    }
-    const text = root.textContent ?? '';
-    setEditorMention(findActiveMention(text, caret));
+    if (caret == null) { setEditorMention(null); return; }
+    setEditorMention(findActiveMention(root.textContent ?? "", caret));
   };
 
-  // Insert a mention at the current @-trigger by replacing the matching range.
   const insertEditorMention = (display: string, token: string) => {
     const root = contentEditableRef.current;
     if (!root || !editorMention) return;
     const caret = getCaretOffset(root);
     if (caret == null) return;
-
-    // Walk text nodes to map character offsets back to DOM positions.
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-    let startNode: Text | null = null;
-    let startOffsetInNode = 0;
-    let endNode: Text | null = null;
-    let endOffsetInNode = 0;
+    let startNode: Text | null = null, startOffsetInNode = 0;
+    let endNode: Text | null = null,   endOffsetInNode = 0;
     let consumed = 0;
     let node: Node | null = walker.nextNode();
     while (node) {
       const t = node as Text;
       const len = t.data.length;
       if (!startNode && editorMention.start <= consumed + len) {
-        startNode = t;
-        startOffsetInNode = editorMention.start - consumed;
+        startNode = t; startOffsetInNode = editorMention.start - consumed;
       }
       if (!endNode && caret <= consumed + len) {
-        endNode = t;
-        endOffsetInNode = caret - consumed;
+        endNode = t; endOffsetInNode = caret - consumed;
       }
       if (startNode && endNode) break;
       consumed += len;
       node = walker.nextNode();
     }
-
     if (!startNode || !endNode) return;
-
     const range = document.createRange();
     range.setStart(startNode, startOffsetInNode);
     range.setEnd(endNode, endOffsetInNode);
     range.deleteContents();
-    const insertText = `@[${display}](mention:${token}) `;
-    const textNode = document.createTextNode(insertText);
+    const textNode = document.createTextNode(`@[${display}](mention:${token}) `);
     range.insertNode(textNode);
-
-    // Move caret to right after the inserted text.
     const newRange = document.createRange();
     newRange.setStartAfter(textNode);
     newRange.collapse(true);
-    const sel = window.getSelection();
-    sel?.removeAllRanges();
-    sel?.addRange(newRange);
-
-    const html = normalizeHtml(root.innerHTML);
-    form.setValue('content', html, { shouldValidate: true });
+    window.getSelection()?.removeAllRanges();
+    window.getSelection()?.addRange(newRange);
+    form.setValue("content", normalizeHtml(root.innerHTML), { shouldValidate: true });
     setEditorMention(null);
   };
 
@@ -421,333 +195,340 @@ export default function Community() {
   const handleEditorKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (editorMention) {
       if (editorMentionDropdown.onKeyNav(e)) return;
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        setEditorMention(null);
-      }
+      if (e.key === "Escape") { e.preventDefault(); setEditorMention(null); }
     }
   };
 
+  // ── Form ──────────────────────────────────────────────────────────────────
   const form = useForm({
     resolver: zodResolver(createDiscussionSchema),
-    defaultValues: {
-      title: '',
-      content: '',
-      category: 'miscellaneous',
-    },
+    defaultValues: { title: "", content: "", category: "miscellaneous" },
   });
 
+  // ── Mutations ─────────────────────────────────────────────────────────────
   const createDiscussion = useMutation({
-    mutationFn: async (data: z.infer<typeof createDiscussionSchema>) => {
-      const response = await apiRequest('POST', '/api/discussions', data);
-      return response;
-    },
+    mutationFn: (data: z.infer<typeof createDiscussionSchema>) =>
+      apiRequest("POST", "/api/discussions", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/discussions"] });
-      toast({
-        title: "Success",
-        description: "Discussion created successfully!",
-      });
-      setDialogOpen(false);
-      form.reset();
+      toast({ title: "Posted!", description: "Your post is live in the community." });
+      closeAndReset();
     },
-    onError: (error) => {
-      console.error("Discussion creation error:", error);
+    onError: (error: any) => {
       if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
+        toast({ title: "Session expired", description: "Logging you back in...", variant: "destructive" });
+        setTimeout(() => { window.location.href = "/api/login"; }, 500);
         return;
       }
-      toast({
-        title: "Error",
-        description: `Failed to create discussion: ${error.message || 'Please try again.'}`,
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to post. Please try again.", variant: "destructive" });
     },
   });
 
-  // Handle media file upload
-  const handleMediaUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-    
+  const createDirectConversation = useMutation({
+    mutationFn: (targetUserId: string) =>
+      apiRequest("POST", "/api/conversations/direct", { targetUserId }),
+    onSuccess: () =>
+      toast({ title: "DM started", description: "Check your Messages page." }),
+    onError: (error: any) =>
+      toast({ title: "Error", description: error.message || "Failed to start conversation", variant: "destructive" }),
+  });
+
+  // ── Handlers ──────────────────────────────────────────────────────────────
+  const closeAndReset = () => {
+    setDialogOpen(false);
+    form.reset();
+    if (contentEditableRef.current) contentEditableRef.current.innerHTML = "";
+    setUploadedMedia({ urls: [], types: [] });
+    setIsPollMode(false);
+    setPollOptions(["", ""]);
+  };
+
+  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files?.length) return;
     setIsUploading(true);
     const formData = new FormData();
-    Array.from(files).forEach(file => {
-      formData.append('media', file);
-    });
-    
+    Array.from(files).forEach((f) => formData.append("media", f));
     try {
-      const response = await fetch('/api/community/upload-media', {
-        method: 'POST',
-        credentials: 'include',
-        body: formData,
+      const res = await fetch("/api/community/upload-media", {
+        method: "POST", credentials: "include", body: formData,
       });
-      
-      if (!response.ok) throw new Error('Failed to upload media');
-      
-      const result = await response.json();
-      setUploadedMedia({
-        urls: [...uploadedMedia.urls, ...result.mediaUrls],
-        types: [...uploadedMedia.types, ...result.mediaTypes],
-      });
-      toast({
-        title: "Success",
-        description: `${files.length} file(s) uploaded successfully!`,
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to upload media. Please try again.",
-        variant: "destructive",
-      });
+      if (!res.ok) throw new Error();
+      const result = await res.json();
+      setUploadedMedia((prev) => ({
+        urls:  [...prev.urls,  ...result.mediaUrls],
+        types: [...prev.types, ...result.mediaTypes],
+      }));
+    } catch {
+      toast({ title: "Upload failed", description: "Please try again.", variant: "destructive" });
     } finally {
       setIsUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
-  
-  const removeMedia = (index: number) => {
-    setUploadedMedia({
-      urls: uploadedMedia.urls.filter((_, i) => i !== index),
-      types: uploadedMedia.types.filter((_, i) => i !== index),
-    });
+
+  const removeMedia = (idx: number) => {
+    setUploadedMedia((prev) => ({
+      urls:  prev.urls.filter((_, i) => i !== idx),
+      types: prev.types.filter((_, i) => i !== idx),
+    }));
   };
 
   const onSubmit = async (data: { title?: string; content: string; category?: string }) => {
     if (!(user as any)?.id) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to create a discussion",
-        variant: "destructive",
-      });
+      toast({ title: "Sign in required", variant: "destructive" });
       return;
     }
-
-    const plainContent = data.content.replace(/<[^>]+>/g, '').trim();
-    const autoTitle = plainContent.slice(0, 60) + (plainContent.length > 60 ? '...' : '') || 'Post';
-    
-    // Validate poll
-    if (isPollMode) {
-      const validOptions = pollOptions.filter(o => o.trim());
-      if (validOptions.length < 2) {
-        toast({ title: "Error", description: "Add at least 2 poll options", variant: "destructive" });
-        return;
-      }
+    if (isPollMode && pollOptions.filter((o) => o.trim()).length < 2) {
+      toast({ title: "Add at least 2 poll options", variant: "destructive" });
+      return;
     }
-
-    const validPollOptions = isPollMode ? pollOptions.filter(o => o.trim()).map((text, i) => ({ id: String(i), text })) : undefined;
-
-    const discussionData = {
-      title: autoTitle,
-      content: normalizeHtml(data.content),
-      category: 'miscellaneous',
-      userId: (user as any).id,
-      mediaUrls: uploadedMedia.urls.length > 0 ? uploadedMedia.urls : undefined,
+    const plain     = data.content.replace(/<[^>]+>/g, "").trim();
+    const autoTitle = plain.slice(0, 60) + (plain.length > 60 ? "..." : "") || "Post";
+    const validPoll = isPollMode
+      ? pollOptions.filter((o) => o.trim()).map((text, i) => ({ id: String(i), text }))
+      : undefined;
+    createDiscussion.mutate({
+      title:      autoTitle,
+      content:    normalizeHtml(data.content),
+      category:   "miscellaneous",
+      mediaUrls:  uploadedMedia.urls.length  > 0 ? uploadedMedia.urls  : undefined,
       mediaTypes: uploadedMedia.types.length > 0 ? uploadedMedia.types : undefined,
-      postType: isPollMode ? 'poll' : uploadedMedia.urls.length > 0 ? 'media' : 'text',
-      pollOptions: validPollOptions,
-    };
-    
-    await createDiscussion.mutateAsync(discussionData as any);
-    setUploadedMedia({ urls: [], types: [] });
-    setIsPollMode(false);
-    setPollOptions(['', '']);
-    if (contentEditableRef.current) contentEditableRef.current.innerHTML = '';
+      postType:   isPollMode ? "poll" : uploadedMedia.urls.length > 0 ? "media" : "text",
+      pollOptions: validPoll,
+    } as any);
   };
 
-  // Create direct conversation mutation for profile interactions
-  const createDirectConversationMutation = useMutation({
-    mutationFn: async (targetUserId: string) => {
-      return await apiRequest("POST", "/api/conversations/direct", { targetUserId });
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Direct message started successfully! Check your Messages page.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to start conversation",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Create group conversation mutation
-  const createGroupConversationMutation = useMutation({
-    mutationFn: async (data: { name: string; description: string; participantIds: string[] }) => {
-      return await apiRequest("POST", "/api/conversations/group", data);
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Group chat created successfully! Check your Messages page.",
-      });
-      setShowNewGroupDialog(false);
-      setGroupName("");
-      setGroupDescription("");
-      setSelectedUsers([]);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create group",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleStartDirectMessage = (userId: string) => {
-    createDirectConversationMutation.mutate(userId);
-  };
-
-  const handleAddToGroup = (userId: string) => {
-    if (!selectedUsers.includes(userId)) {
-      setSelectedUsers([...selectedUsers, userId]);
-    }
-    setShowNewGroupDialog(true);
-  };
-
-  const handleCreateGroup = () => {
-    if (!groupName.trim() || selectedUsers.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please provide a group name and select at least one member",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    createGroupConversationMutation.mutate({
-      name: groupName,
-      description: groupDescription,
-      participantIds: selectedUsers,
-    });
-  };
-
-  // Use real community stats
   const stats = {
-    totalMembers: communityStats?.totalMembers || 0,
-    activeToday: communityStats?.activeToday || 0,
-    newPosts: communityStats?.newPosts || 0,
+    totalMembers: communityStats?.totalMembers ?? 0,
+    activeToday:  communityStats?.activeToday  ?? 0,
+    newPosts:     communityStats?.newPosts     ?? 0,
   };
 
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="pb-20">
-      {/* Header */}
+
+      {/* ── HEADER ─────────────────────────────────────────────────────────── */}
       <div className="liquid-header text-white px-6 pt-12 pb-6">
         <BackButton />
-        <h1 className="text-4xl font-black mb-2 tracking-tighter uppercase" data-testid="text-community-title">Community</h1>
-        <p className="text-[#FDD000] text-xs font-bold tracking-widest uppercase" data-testid="text-community-subtitle">
+        <h1
+          className="text-4xl font-black mb-2 tracking-tighter uppercase"
+          data-testid="text-community-title"
+        >
+          Community
+        </h1>
+        <p
+          className="text-[#FDD000] text-xs font-bold tracking-widest uppercase"
+          data-testid="text-community-subtitle"
+        >
           Iron Sharpens Iron Among Brothers
         </p>
       </div>
 
-      {/* Community Stats */}
-      <div className="px-6 -mt-3 relative z-10 mb-4">
-        <Card className="shadow-[3px_3px_0px_0px_rgba(253,208,0,1)] liquid-black-white border-2 border-ministry-gold-exact rounded-sm" data-testid="card-stats">
-          <CardContent className="p-3 relative z-10">
-            <div className="grid grid-cols-3 gap-3 text-center">
-              <div className="border-r border-ministry-gold-exact/30">
-                <p className="text-xl font-black text-ministry-gold-exact" data-testid="text-total-members">
-                  {stats.totalMembers.toLocaleString()}
-                </p>
-                <p className="text-xs text-white font-bold uppercase tracking-wide">Members</p>
-              </div>
-              <div className="border-r border-ministry-gold-exact/30">
-                <p className="text-xl font-black text-ministry-gold-exact" data-testid="text-active-today">
-                  {stats.activeToday}
-                </p>
-                <p className="text-xs text-white font-bold uppercase tracking-wide">Active</p>
-              </div>
-              <div>
-                <p className="text-xl font-black text-ministry-gold-exact" data-testid="text-new-posts">
-                  {stats.newPosts}
-                </p>
-                <p className="text-xs text-white font-bold uppercase tracking-wide">Posts</p>
-              </div>
+      {/* ── STATS STRIP ────────────────────────────────────────────────────── */}
+      <div className="px-4 -mt-3 relative z-10 mb-4">
+        <div
+          className="grid grid-cols-3 gap-0 overflow-hidden rounded-sm"
+          style={{ border: "1px solid #222" }}
+          data-testid="card-stats"
+        >
+          {[
+            { value: stats.totalMembers.toLocaleString(), label: "Members",    testId: "text-total-members" },
+            { value: stats.activeToday.toString(),        label: "Active Today", testId: "text-active-today" },
+            { value: stats.newPosts.toString(),           label: "Posts Today", testId: "text-new-posts" },
+          ].map((s, i) => (
+            <div
+              key={s.label}
+              className="flex flex-col items-center py-3 px-2"
+              style={{ background: "#0d0d0d", borderRight: i < 2 ? "1px solid #222" : "none" }}
+            >
+              <span
+                className="font-black text-lg leading-tight text-[#FDD000]"
+                data-testid={s.testId}
+              >
+                {s.value}
+              </span>
+              <span className="text-[10px] text-white/40 text-center leading-tight mt-0.5 uppercase tracking-wide font-bold">
+                {s.label}
+              </span>
             </div>
-          </CardContent>
-        </Card>
+          ))}
+        </div>
       </div>
-      
-      {/* Facebook-style Quick Post Card */}
-      <div className="px-6 mb-4">
-        <Card className="shadow-[4px_4px_0px_0px_rgba(253,208,0,0.5)] liquid-black border-2 border-ministry-gold-exact rounded-sm" data-testid="card-quick-post">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-0">
+
+      {/* ── COMPOSE TRIGGER ────────────────────────────────────────────────── */}
+      <div className="px-4 mb-4">
+        <button
+          onClick={() => setDialogOpen(true)}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-sm text-left transition-all"
+          style={{
+            background: "#111",
+            border: "2px solid rgba(253,208,0,0.3)",
+            boxShadow: "3px 3px 0px 0px rgba(253,208,0,0.15)",
+          }}
+          data-testid="button-quick-post"
+        >
+          <div
+            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: "rgba(253,208,0,0.12)" }}
+          >
+            <Plus className="w-4 h-4 text-[#FDD000]" />
+          </div>
+          <span className="text-sm font-medium" style={{ color: "rgba(255,255,255,0.4)" }}>
+            How is God shaping you right now?
+          </span>
+        </button>
+      </div>
+
+      {/* ── SEARCH + SORT PILLS ────────────────────────────────────────────── */}
+      <div className="px-4 mb-4">
+        <div className="flex gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black" />
+            <Input
+              placeholder="SEARCH..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="pl-9 border-2 border-black bg-[#FDD000] rounded-sm text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide font-medium text-sm"
+            />
+            {searchInput && (
+              <button
+                onClick={() => { setSearchInput(""); setSearchQuery(""); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2"
+              >
+                <X className="w-3.5 h-3.5 text-black/60" />
+              </button>
+            )}
+          </div>
+          <div className="flex gap-1">
+            {([ 
+              { value: "recent",  label: "New"  },
+              { value: "likes",   label: "Top"  },
+              { value: "replies", label: "Hot"  },
+            ] as const).map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setSortBy(opt.value)}
+                className="px-3 py-2 rounded-sm text-[10px] font-black uppercase tracking-wide transition-all flex-shrink-0"
+                style={{
+                  background: sortBy === opt.value ? "#FDD000" : "rgba(255,255,255,0.07)",
+                  color:      sortBy === opt.value ? "#000"    : "rgba(255,255,255,0.4)",
+                  border:     sortBy === opt.value ? "1px solid #000" : "1px solid transparent",
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── FEED HEADING ───────────────────────────────────────────────────── */}
+      <div className="px-4 mb-3 flex items-center gap-3">
+        <div className="w-1 h-5 bg-[#FDD000] rounded-full flex-shrink-0" />
+        <span className="text-sm font-black text-white uppercase tracking-[0.15em]">
+          {searchQuery ? `"${searchQuery}"` : "All Posts"}
+        </span>
+        <div className="flex-1 h-px bg-white/10" />
+      </div>
+
+      {/* ── FEED ───────────────────────────────────────────────────────────── */}
+      <div className="px-4">
+        {isLoading ? (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FDD000] mx-auto mb-4" />
+            <p className="text-white/40 text-sm">Loading posts...</p>
+          </div>
+        ) : discussions.length === 0 ? (
+          <div
+            className="text-center py-12 rounded-sm"
+            style={{ background: "#0d0d0d", border: "1px solid #222" }}
+            data-testid="empty-discussions"
+          >
+            <div
+              className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
+              style={{ background: "rgba(253,208,0,0.1)" }}
+            >
+              <MessageCircle className="w-7 h-7 text-[#FDD000]" />
+            </div>
+            <h3 className="text-white font-black text-lg uppercase tracking-tight mb-2">
+              {searchQuery ? "No Results" : "Be the First"}
+            </h3>
+            <p className="text-sm max-w-xs mx-auto mb-5" style={{ color: "rgba(255,255,255,0.4)" }}>
+              {searchQuery
+                ? `No posts match "${searchQuery}".`
+                : "Start the conversation. Share how God is working in your life right now."}
+            </p>
+            {!searchQuery && (
               <button
                 onClick={() => setDialogOpen(true)}
-                className="w-full text-left px-4 py-2.5 rounded-sm bg-white text-gray-500 hover:bg-gray-100 transition-colors text-sm font-medium uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
-                data-testid="button-quick-post"
+                className="px-6 py-2.5 rounded-sm font-black uppercase tracking-wide text-black text-sm"
+                style={{ background: "#FDD000", border: "2px solid #000" }}
               >
-                <span className="block text-black font-black">Post Here</span>
-                <span className="block text-gray-400 text-xs">How is God shaping you right now?</span>
+                Post First
               </button>
-            </div>
-            <div className="flex justify-between mt-3 pt-3 border-t-2 border-gray-700">
-              <button 
-                onClick={() => { setDialogOpen(true); }}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-sm hover:bg-gray-800 transition-colors text-gray-300 text-xs font-bold uppercase tracking-wide"
-                data-testid="button-quick-photo"
+            )}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {discussions.map((discussion: any) => (
+              <div
+                key={discussion.id}
+                data-discussion-id={discussion.id}
+                className={
+                  highlightedDiscussion === discussion.id
+                    ? "ring-2 ring-[#FDD000]/50 rounded-sm"
+                    : ""
+                }
               >
-                <Image className="w-5 h-5 text-green-500" />
-                <span>Photo</span>
-              </button>
-              <button 
-                onClick={() => { setDialogOpen(true); }}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-sm hover:bg-gray-800 transition-colors text-gray-300 text-xs font-bold uppercase tracking-wide"
-                data-testid="button-quick-video"
-              >
-                <Video className="w-5 h-5 text-red-500" />
-                <span>Video</span>
-              </button>
-              <button 
-                onClick={() => { setDialogOpen(true); setIsPollMode(false); }}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-sm hover:bg-gray-800 transition-colors text-gray-300 text-xs font-bold uppercase tracking-wide"
-                data-testid="button-quick-post-btn"
-              >
-                <Plus className="w-5 h-5 text-ministry-gold" />
-                <span>Post</span>
-              </button>
-              <button
-                onClick={() => { setDialogOpen(true); setIsPollMode(true); }}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-sm hover:bg-gray-800 transition-colors text-gray-300 text-xs font-bold uppercase tracking-wide"
-                data-testid="button-quick-poll"
-              >
-                <BarChart2 className="w-5 h-5 text-blue-400" />
-                <span>Poll</span>
-              </button>
-            </div>
-          </CardContent>
-        </Card>
+                <DiscussionCard
+                  discussion={discussion}
+                  onStartDirectMessage={(userId: string) =>
+                    createDirectConversation.mutate(userId)
+                  }
+                  currentUserTier={(user as any)?.subscriptionTier || "free"}
+                  currentUserSubscriptionStatus={(user as any)?.subscriptionStatus || "trial"}
+                  autoOpenReplies={!!targetReplyId && discussion.id === targetDiscussionId}
+                  highlightReplyId={
+                    discussion.id === targetDiscussionId ? targetReplyId ?? undefined : undefined
+                  }
+                  data-testid={`discussion-${discussion.id}`}
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
+      {/* ── COMPOSE DIALOG ─────────────────────────────────────────────────── */}
+      <Dialog
+        open={dialogOpen}
+        onOpenChange={(open) => { if (!open) closeAndReset(); else setDialogOpen(true); }}
+      >
+        <DialogContent
+          className="max-w-md mx-auto rounded-sm overflow-hidden flex flex-col max-h-[90vh]"
+          style={{
+            background: "#FDD000",
+            border: "2px solid #000",
+            boxShadow: "4px 4px 0px 0px rgba(0,0,0,1)",
+          }}
+          data-testid="dialog-new-discussion"
+        >
+          <DialogHeader className="flex-shrink-0">
+            <DialogTitle className="text-black text-xl font-black uppercase tracking-tight">
+              Create Post
+            </DialogTitle>
+          </DialogHeader>
 
-      {/* Post Dialog */}
-      <div className="px-6">
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-md mx-auto bg-[#FDD000] border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden flex flex-col max-h-[90vh]" data-testid="dialog-new-discussion">
-            <DialogHeader className="flex-shrink-0">
-              <DialogTitle className="text-black text-xl font-black uppercase tracking-tight">Create Post</DialogTitle>
-            </DialogHeader>
-            <Form {...form}>
-              <form 
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="flex flex-col flex-1 min-h-0"
-              >
-                <div className="flex-1 overflow-y-auto space-y-4 pr-0.5">
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="flex flex-col flex-1 min-h-0"
+            >
+              <div className="flex-1 overflow-y-auto space-y-3 pr-0.5">
+
+                {/* Content field */}
                 <FormField
                   control={form.control}
                   name="content"
@@ -755,14 +536,17 @@ export default function Community() {
                     <FormItem>
                       <FormControl>
                         <div>
+                          {/* Admin formatting toolbar */}
                           {isAdmin && (
                             <div className="flex items-center gap-1 mb-1.5 p-1 bg-black/10 rounded-sm border border-black/20">
-                              {[
-                                { cmd: 'bold', Icon: Bold, title: 'Bold' },
-                                { cmd: 'italic', Icon: Italic, title: 'Italic' },
-                                { cmd: 'underline', Icon: Underline, title: 'Underline' },
-                                { cmd: 'strikeThrough', Icon: Strikethrough, title: 'Strikethrough' },
-                              ].map(({ cmd, Icon, title }) => (
+                              {(
+                                [
+                                  { cmd: "bold",          Icon: Bold,          title: "Bold"          },
+                                  { cmd: "italic",        Icon: Italic,        title: "Italic"        },
+                                  { cmd: "underline",     Icon: Underline,     title: "Underline"     },
+                                  { cmd: "strikeThrough", Icon: Strikethrough, title: "Strikethrough" },
+                                ] as const
+                              ).map(({ cmd, Icon, title }) => (
                                 <button
                                   key={cmd}
                                   type="button"
@@ -774,9 +558,13 @@ export default function Community() {
                                   <Icon className="w-3.5 h-3.5" />
                                 </button>
                               ))}
-                              <span className="ml-auto text-[10px] text-black/40 font-bold uppercase tracking-wide pr-1">Admin Styling</span>
+                              <span className="ml-auto text-[10px] text-black/40 font-bold uppercase tracking-wide pr-1">
+                                Admin
+                              </span>
                             </div>
                           )}
+
+                          {/* Admin: contentEditable with mentions */}
                           {isAdmin ? (
                             <div className="relative">
                               <div
@@ -784,18 +572,18 @@ export default function Community() {
                                 contentEditable
                                 suppressContentEditableWarning
                                 onInput={() => {
-                                  const html = normalizeHtml(contentEditableRef.current?.innerHTML || '');
-                                  form.setValue('content', html, { shouldValidate: true });
+                                  form.setValue(
+                                    "content",
+                                    normalizeHtml(contentEditableRef.current?.innerHTML || ""),
+                                    { shouldValidate: true }
+                                  );
                                   detectEditorMention();
                                 }}
                                 onKeyDown={handleEditorKeyDown}
                                 onKeyUp={detectEditorMention}
                                 onClick={detectEditorMention}
-                                onBlur={() => {
-                                  // Defer so dropdown click handlers can run first
-                                  setTimeout(() => setEditorMention(null), 150);
-                                }}
-                                data-placeholder="Share your thoughts, photos, videos, or memes... Type @ to mention a brother."
+                                onBlur={() => setTimeout(() => setEditorMention(null), 150)}
+                                data-placeholder="Share your thoughts... Type @ to mention a brother."
                                 className="min-h-[120px] max-h-[40vh] overflow-y-auto bg-white border-2 border-black text-black rounded-sm p-2.5 text-sm leading-relaxed focus:outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400"
                                 data-testid="div-discussion-content"
                               />
@@ -809,10 +597,11 @@ export default function Community() {
                               />
                             </div>
                           ) : (
+                            /* Standard: MentionTextarea */
                             <MentionTextarea
-                              placeholder="Share your thoughts, photos, videos, or memes... Type @ to mention a brother."
+                              placeholder="Share your thoughts... Type @ to mention a brother."
                               className="min-h-[120px] max-h-[40vh] bg-white border-2 border-black text-black placeholder:text-gray-500 rounded-sm resize-none"
-                              value={field.value || ''}
+                              value={field.value || ""}
                               onChange={field.onChange}
                               name={field.name}
                               onBlur={field.onBlur}
@@ -826,251 +615,150 @@ export default function Community() {
                   )}
                 />
 
-                {/* Media Upload Section */}
-                <div className="space-y-3">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleMediaUpload}
-                    accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm"
-                    multiple
-                    className="hidden"
-                    data-testid="input-media-upload"
-                  />
-                  
-                  {/* Poll / Media toggle buttons */}
-                  <div className="flex gap-2 flex-wrap">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => { setIsPollMode(!isPollMode); if (!isPollMode) setPollOptions(['', '']); }}
-                      className={`border-2 rounded-sm font-bold uppercase ${isPollMode ? 'bg-blue-600 border-blue-600 text-white' : 'bg-black border-black text-white hover:bg-gray-800'}`}
-                      data-testid="button-toggle-poll"
-                    >
-                      <BarChart2 className="w-4 h-4 mr-2" />
-                      Poll
-                    </Button>
-                    {!isPollMode && (
-                      <>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => fileInputRef.current?.click()}
-                          disabled={isUploading}
-                          className="bg-black border-2 border-black text-white hover:bg-gray-800 rounded-sm font-bold uppercase"
-                          data-testid="button-add-photo"
-                        >
-                          <Image className="w-4 h-4 mr-2" />
-                          Photo
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => fileInputRef.current?.click()}
-                          disabled={isUploading}
-                          className="bg-black border-2 border-black text-white hover:bg-gray-800 rounded-sm font-bold uppercase"
-                          data-testid="button-add-video"
-                        >
-                          <Video className="w-4 h-4 mr-2" />
-                          Video
-                        </Button>
-                      </>
-                    )}
-                  </div>
+                {/* Media/Poll toggle buttons */}
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    type="button" size="sm"
+                    onClick={() => { setIsPollMode(!isPollMode); if (!isPollMode) setPollOptions(["", ""]); }}
+                    className={`rounded-sm font-bold uppercase border-2 text-xs ${
+                      isPollMode
+                        ? "bg-blue-600 border-blue-700 text-white"
+                        : "bg-black border-black text-white"
+                    }`}
+                    data-testid="button-toggle-poll"
+                  >
+                    <BarChart2 className="w-3.5 h-3.5 mr-1.5" /> Poll
+                  </Button>
+                  {!isPollMode && (
+                    <>
+                      <Button
+                        type="button" size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading}
+                        className="bg-black border-2 border-black text-white rounded-sm font-bold uppercase text-xs"
+                        data-testid="button-add-photo"
+                      >
+                        <Image className="w-3.5 h-3.5 mr-1.5" /> Photo
+                      </Button>
+                      <Button
+                        type="button" size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading}
+                        className="bg-black border-2 border-black text-white rounded-sm font-bold uppercase text-xs"
+                        data-testid="button-add-video"
+                      >
+                        <Video className="w-3.5 h-3.5 mr-1.5" /> Video
+                      </Button>
+                    </>
+                  )}
+                </div>
 
-                  {/* Poll options editor */}
-                  {isPollMode && (
-                    <div className="space-y-2">
-                      <p className="text-xs font-black text-black uppercase tracking-wide">Poll Options</p>
-                      {pollOptions.map((opt, i) => (
-                        <div key={i} className="flex gap-1 items-center">
-                          <input
-                            type="text"
-                            value={opt}
-                            onChange={e => {
-                              const next = [...pollOptions];
-                              next[i] = e.target.value;
-                              setPollOptions(next);
-                            }}
-                            placeholder={`Option ${i + 1}`}
-                            className="flex-1 bg-white border-2 border-black text-black text-xs rounded-sm px-2 py-1.5 placeholder:text-gray-400 focus:outline-none"
-                          />
-                          {pollOptions.length > 2 && (
-                            <button
-                              type="button"
-                              onClick={() => setPollOptions(pollOptions.filter((_, j) => j !== i))}
-                              className="text-black/50 hover:text-red-600 p-1"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                      {pollOptions.length < 6 && (
-                        <button
-                          type="button"
-                          onClick={() => setPollOptions([...pollOptions, ''])}
-                          className="flex items-center gap-1 text-xs font-bold text-black/60 hover:text-black"
-                        >
-                          <Plus className="w-3 h-3" /> Add option
-                        </button>
-                      )}
-                    </div>
-                  )}
-                  
-                  {/* Uploading indicator */}
-                  {isUploading && (
-                    <div className="flex items-center gap-2 text-gray-400 text-sm">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-ministry-gold"></div>
-                      Uploading...
-                    </div>
-                  )}
-                  
-                  {/* Media Preview */}
-                  {uploadedMedia.urls.length > 0 && (
-                    <div className="grid grid-cols-3 gap-2">
-                      {uploadedMedia.urls.map((url, index) => (
-                        <div key={index} className="relative group">
-                          {uploadedMedia.types[index] === 'video' ? (
-                            <video 
-                              src={url} 
-                              className="w-full h-20 object-cover rounded-lg"
-                            />
-                          ) : (
-                            <img 
-                              src={url} 
-                              alt={`Upload ${index + 1}`}
-                              className="w-full h-20 object-cover rounded-lg"
-                            />
-                          )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  onChange={handleMediaUpload}
+                  accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm"
+                  multiple
+                  className="hidden"
+                  data-testid="input-media-upload"
+                />
+
+                {/* Poll options editor */}
+                {isPollMode && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-black text-black uppercase tracking-wide">Poll Options</p>
+                    {pollOptions.map((opt, i) => (
+                      <div key={i} className="flex gap-1 items-center">
+                        <input
+                          type="text"
+                          value={opt}
+                          onChange={(e) => {
+                            const next = [...pollOptions];
+                            next[i] = e.target.value;
+                            setPollOptions(next);
+                          }}
+                          placeholder={`Option ${i + 1}`}
+                          className="flex-1 bg-white border-2 border-black text-black text-xs rounded-sm px-2 py-1.5 placeholder:text-gray-400 focus:outline-none"
+                        />
+                        {pollOptions.length > 2 && (
                           <button
                             type="button"
-                            onClick={() => removeMedia(index)}
-                            className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                            data-testid={`button-remove-media-${index}`}
+                            onClick={() => setPollOptions(pollOptions.filter((_, j) => j !== i))}
+                            className="text-black/50 hover:text-red-600 p-1"
                           >
-                            <Trash2 className="w-3 h-3" />
+                            <X className="w-3.5 h-3.5" />
                           </button>
-                          <span className="absolute bottom-1 left-1 bg-black/70 text-white text-xs px-1 rounded">
-                            {uploadedMedia.types[index]}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                </div>
+                        )}
+                      </div>
+                    ))}
+                    {pollOptions.length < 6 && (
+                      <button
+                        type="button"
+                        onClick={() => setPollOptions([...pollOptions, ""])}
+                        className="flex items-center gap-1 text-xs font-bold text-black/60 hover:text-black"
+                      >
+                        <Plus className="w-3 h-3" /> Add option
+                      </button>
+                    )}
+                  </div>
+                )}
 
-                <div className="flex space-x-2 flex-shrink-0 pt-3 border-t border-black/20">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setDialogOpen(false);
-                      setUploadedMedia({ urls: [], types: [] });
-                    }}
-                    className="flex-1 bg-white border-2 border-black text-black hover:bg-gray-100 rounded-sm font-black uppercase tracking-wide"
-                    data-testid="button-cancel-discussion"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={createDiscussion.isPending || isUploading}
-                    className="flex-1 bg-black text-white hover:bg-gray-800 font-black uppercase tracking-wide rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                    data-testid="button-create-discussion"
-                  >
-                    {createDiscussion.isPending ? "Creating..." : "Post"}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
-      </div>
+                {/* Upload progress */}
+                {isUploading && (
+                  <div className="flex items-center gap-2 text-black/70 text-xs">
+                    <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-black" />
+                    Uploading...
+                  </div>
+                )}
 
-      {/* Search + Sort bar */}
-      <div className="px-4 mb-4 flex items-center gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 w-4 h-4" />
-          <Input
-            placeholder="Search discussions..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 pr-8 h-9 bg-white/10 border border-white/15 text-white placeholder:text-white/35 text-sm rounded-full focus:border-[#FDD000]/50 [&]:bg-white/10"
-            style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
-          />
-          {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2">
-              <X className="w-3.5 h-3.5 text-white/40" />
-            </button>
-          )}
-        </div>
-        <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger
-            className="w-28 h-9 border border-white/15 text-white text-xs font-bold rounded-full"
-            style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
-            data-testid="select-sort-by"
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="bg-[#1a1a1a] border border-white/15 text-white">
-            <SelectItem value="recent" className="text-white focus:bg-white/10 focus:text-white">Recent</SelectItem>
-            <SelectItem value="likes" className="text-white focus:bg-white/10 focus:text-white">Top Liked</SelectItem>
-            <SelectItem value="replies" className="text-white focus:bg-white/10 focus:text-white">Most Replies</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Feed heading */}
-      <div className="px-4 mb-3 flex items-center gap-3">
-        <div className="w-1 h-5 bg-[#FDD000] rounded-full flex-shrink-0" />
-        <span className="text-sm font-black text-white uppercase tracking-[0.15em]">
-          {searchQuery ? `"${searchQuery}"` : 'All Posts'}
-        </span>
-        <div className="flex-1 h-px bg-white/10" />
-      </div>
-
-      {/* Recent Discussions */}
-      <div className="px-4">
-        
-        {isLoading ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ministry-navy mx-auto mb-4"></div>
-            <p className="text-ministry-slate">Loading discussions...</p>
-          </div>
-        ) : discussions.length === 0 ? (
-          <div className="text-center py-8" data-testid="empty-discussions">
-            <MessageCircle className="w-12 h-12 text-ministry-slate mx-auto mb-4" />
-            <p className="text-ministry-slate mb-4">No discussions yet</p>
-            <p className="text-sm text-ministry-slate">Be the first to start a conversation!</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {discussions.map((discussion: any) => (
-              <div 
-                key={discussion.id}
-                data-discussion-id={discussion.id}
-                className={`w-full ${highlightedDiscussion === discussion.id ? 'ring-2 ring-ministry-gold ring-opacity-50 rounded-lg' : ''}`}
-              >
-                <DiscussionCard 
-                  discussion={discussion}
-                  onStartDirectMessage={handleStartDirectMessage}
-                  onAddToGroup={handleAddToGroup}
-                  currentUserTier={(user as any)?.subscriptionTier || 'free'}
-                  currentUserSubscriptionStatus={(user as any)?.subscriptionStatus || 'trial'}
-                  autoOpenReplies={!!targetReplyId && discussion.id === targetDiscussionId}
-                  highlightReplyId={discussion.id === targetDiscussionId ? targetReplyId ?? undefined : undefined}
-                  data-testid={`discussion-${discussion.id}`}
-                />
+                {/* Media previews */}
+                {uploadedMedia.urls.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2">
+                    {uploadedMedia.urls.map((url, i) => (
+                      <div key={i} className="relative group rounded-sm overflow-hidden border-2 border-black">
+                        {uploadedMedia.types[i] === "video" ? (
+                          <video src={url} className="w-full h-20 object-cover" />
+                        ) : (
+                          <img src={url} alt={`Upload ${i + 1}`} className="w-full h-20 object-cover" />
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeMedia(i)}
+                          className="absolute top-1 right-1 bg-red-600 text-white p-0.5 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                          data-testid={`button-remove-media-${i}`}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+
+              {/* Dialog footer */}
+              <div className="flex gap-2 flex-shrink-0 pt-3 mt-3 border-t border-black/20">
+                <Button
+                  type="button"
+                  onClick={closeAndReset}
+                  className="flex-1 bg-white border-2 border-black text-black hover:bg-gray-100 rounded-sm font-black uppercase tracking-wide"
+                  data-testid="button-cancel-discussion"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createDiscussion.isPending || isUploading}
+                  className="flex-1 bg-black text-white font-black uppercase tracking-wide rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50"
+                  data-testid="button-create-discussion"
+                >
+                  <Send className="w-3.5 h-3.5 mr-2" />
+                  {createDiscussion.isPending ? "Posting..." : "Post"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
