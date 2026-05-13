@@ -288,7 +288,9 @@ export const discussions = pgTable("discussions", {
   index("idx_discussions_user_id").on(table.userId), // User profile discussions
   index("idx_discussions_created_at").on(table.createdAt), // Feed ordering
   index("idx_discussions_study_id").on(table.studyId), // studyId IS NULL filter
-  index("idx_discussions_pinned_created").on(table.isPinned, table.createdAt), // Feed sort
+  index("idx_discussions_pinned_created").on(table.isPinned, table.createdAt), // ORDER BY is_pinned DESC, created_at DESC
+  index("idx_discussions_pinned_likes").on(table.isPinned, table.likes, table.createdAt), // ORDER BY is_pinned DESC, likes DESC, created_at DESC
+  index("idx_discussions_pinned_replies").on(table.isPinned, table.replyCount, table.createdAt), // ORDER BY is_pinned DESC, reply_count DESC, created_at DESC
 ]);
 
 // Live streams table for admin-only streaming

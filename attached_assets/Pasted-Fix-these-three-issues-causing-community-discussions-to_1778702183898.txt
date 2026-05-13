@@ -1,0 +1,71 @@
+Fix these three issues causing community discussions to load slowly or appear broken:
+Fix 1 — home.tsx: Remove all polling refetchIntervals
+Find and replace these 4 queries:
+typescript// /api/progress — change to:
+staleTime: 1000 * 30,
+// remove: refetchInterval: 10000, refetchIntervalInBackground: true, staleTime: 5000
+
+// /api/challenges/current — change to:
+staleTime: 1000 * 60 * 5,
+// remove: refetchInterval: 8000, refetchIntervalInBackground: true
+
+// /api/challenges/.../participant-count — change to:
+staleTime: 1000 * 60,
+// remove: refetchInterval: 5000
+
+// /api/progress/weekly-completions — change to:
+staleTime: 1000 * 60,
+// remove: refetchInterval: 30000, refetchIntervalInBackground: true
+Also check components/brotherhood-requests.tsx — if it has a refetchInterval on /api/brotherhood-requests, remove it and add staleTime: 1000 * 60 * 2.
+Fix 2 — community.tsx: Fix IntersectionObserver so it doesn't trigger duplicate fetches
+Add these 4 refs directly after the existing isFetchingRef and sentinelRef declarations:
+typescriptconst nextOffsetRef  = useRef(0);
+const hasMoreRef     = useRef(true);
+const sortByRef      = useRef(sortBy);
+const searchQueryRef = useRef(searchQuery);
+Add these two effects to keep the refs in sync (place after the existing debounce effect):
+typescriptuseEffect(() => { sortByRef.current = sortBy; }, [sortBy]);
+useEffect(() => { searchQueryRef.current = searchQuery; }, [searchQuery]);
+Inside the fetchPage callback, after setHasMore(more) and setNextOffset(next), add ref syncs:
+typescriptsetHasMore(more);
+hasMoreRef.current = more;
+setNextOffset(next);
+nextOffsetRef.current = next;
+Inside the reset useEffect (the one with [authLoading, sortBy, searchQuery, fetchPage] deps), after setNextOffset(0) and setHasMore(true), sync the refs:
+typescriptsetNextOffset(0);
+nextOffsetRef.current = 0;
+setHasMore(true);
+hasMoreRef.current = true;
+Replace the entire IntersectionObserver useEffect with this (empty dep array):
+typescriptuseEffect(() => {
+  const sentinel = sentinelRef.current;
+  if (!sentinel) return;
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (
+        entries[0].isIntersecting &&
+        hasMoreRef.current &&
+        !isFetchingRef.current
+      ) {
+        fetchPage(nextOffsetRef.current, sortByRef.current, searchQueryRef.current);
+      }
+    },
+    { threshold: 0.1 }
+  );
+  observer.observe(sentinel);
+  return () => observer.disconnect();
+}, []);
+Fix 3 — Database: Add indexes on the discussions table
+Run these against the production database:
+sqlCREATE INDEX IF NOT EXISTS idx_discussions_pinned_created
+ON discussions (is_pinned DESC, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_discussions_pinned_likes
+ON discussions (is_pinned DESC, likes DESC, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_discussions_pinned_replies
+ON discussions (is_pinned DESC, reply_count DESC, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_discussions_user_id
+ON discussions (user_id);
+These cover all three sort modes (recent/likes/replies). The query currently does a full table scan on every request, causing 1-3 second response times.
