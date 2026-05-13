@@ -367,8 +367,9 @@ export default function DiscussionCard({
       const response = await apiRequest('PATCH', `/api/discussions/${discussion.id}`, data);
       return response;
     },
-    onSuccess: () => {
+    onSuccess: (_responseData, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/discussions"] });
+      window.dispatchEvent(new CustomEvent("discussion:updated", { detail: { id: discussion.id, patch: variables } }));
       toast({
         title: "Success",
         description: "Discussion updated successfully!",

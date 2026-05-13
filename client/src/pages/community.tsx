@@ -167,6 +167,16 @@ export default function Community() {
     return () => window.removeEventListener("discussion:deleted", handler);
   }, []);
 
+  // ── Listen for discussion edits from DiscussionCard ───────────────────────
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { id, patch } = (e as CustomEvent<{ id: string; patch: Record<string, any> }>).detail ?? {};
+      if (id && patch) setAllDiscussions(prev => prev.map(d => d.id === id ? { ...d, ...patch } : d));
+    };
+    window.addEventListener("discussion:updated", handler);
+    return () => window.removeEventListener("discussion:updated", handler);
+  }, []);
+
   // ── Queries ───────────────────────────────────────────────────────────────
   const { data: communityStats } = useQuery<{
     totalMembers: number;

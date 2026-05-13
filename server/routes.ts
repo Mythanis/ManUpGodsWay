@@ -2777,8 +2777,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { category, limit, sortBy, search, offset } = req.query;
       const currentUserId = req.user?.claims?.sub;
-      const pageLimit = limit ? parseInt(limit as string) : 15;
-      const pageOffset = offset ? parseInt(offset as string) : 0;
+      const rawLimit = parseInt(limit as string);
+      const rawOffset = parseInt(offset as string);
+      const pageLimit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 50) : 15;
+      const pageOffset = Number.isFinite(rawOffset) ? Math.max(rawOffset, 0) : 0;
 
       const rows = await storage.getDiscussions(
         category as string,
