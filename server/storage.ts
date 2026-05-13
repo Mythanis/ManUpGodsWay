@@ -2453,12 +2453,13 @@ export class DatabaseStorage implements IStorage {
       );
     }
     
-    // Filter out silenced users if currentUserId is provided
+    // Filter out silenced users — inline subquery so no extra round trip
     if (currentUserId) {
-      const silencedUserIds = await this.getUserSilences(currentUserId);
-      if (silencedUserIds.length > 0) {
-        conditions.push(not(inArray(discussions.userId, silencedUserIds)));
-      }
+      conditions.push(
+        sql`${discussions.userId} NOT IN (
+          SELECT silenced_id FROM user_silences WHERE silencer_id = ${currentUserId}
+        )`
+      );
     }
     
     let rows;

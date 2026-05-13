@@ -6913,6 +6913,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Trial without Card
+  app.post('/api/start-trial', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      const hasUsedTrial = !!(user as any).trialStartDate || 
+                           (user as any).subscriptionStatus === 'active';
+      if (hasUsedTrial) {
+        return res.status(400).json({ message: "Trial already used" });
+      }
+
+      const subSettings = await storage.getSubscriptionSettings();
+      const trialDays = subSettings?.trialDurationDays || 7;
+      const now = new Date();
+      const trialEnd = new Date(now);
+      trialEnd.setDate(now.getDate() + trialDays);
+
+      await storage.updateUserSubscriptionDetails(user.id, {
+        subscriptionStatus: 'trial',
+        subscriptionTier: 'trial',
+        trialStartDate: now,
+        trialEndDate: trialEnd,
+      });
+
+      res.json({ success: true, trialEndDate: trialEnd.toISOString(), trialDays });
+    } catch (error) {
+      console.error("Error starting trial:", error);
+      res.status(500).json({ message: "Failed to start trial" });
+    }
+  });
+  
   // Check if user is eligible for a free trial
   app.get('/api/subscription/trial-eligibility', isAuthenticated, async (req: any, res) => {
     try {

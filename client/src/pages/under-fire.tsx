@@ -1,27 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MentionTextarea, MentionText } from '@/components/mention-textarea';
-import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { triggerRefTagger } from '@/hooks/useRefTagger';
 import { formatDistanceToNow } from 'date-fns';
-import { Trash2, Search, SortDesc, Shield, HandHelping, CheckCircle, MessageSquare, Send, Pencil, Flame, User } from 'lucide-react';
+import {
+  Trash2, Search, Shield, HandHelping, CheckCircle,
+  MessageSquare, Send, Pencil, Flame, User, Plus, X,
+  ChevronDown, ChevronUp, AlertTriangle, EyeOff, Eye
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Link, useLocation } from 'wouter';
 import { BackButton } from "@/components/BackButton";
 import { ReactorList } from '@/components/reactor-list';
 
+// ─── Types ────────────────────────────────────────────────────────────────────
 interface AccountabilityRequest {
   id: string;
   userId: string;
   content: string;
+  isAnonymous?: boolean;
   assistedById: string | null;
   assistedAt: string | null;
   createdAt: string;
@@ -47,9 +50,50 @@ interface Comment {
   authorProfilePicture?: string;
 }
 
-// ─── CommentsSection is a TOP-LEVEL component (outside UnderFire) ─────────────
-// This prevents React from seeing it as a new component type on every render
-// of the parent, which would cause inputs to lose focus on every keystroke.
+// ─── Inline delete confirmation ───────────────────────────────────────────────
+function DeleteConfirm({ onConfirm, onCancel, label = "Delete" }: {
+  onConfirm: () => void;
+  onCancel: () => void;
+  label?: string;
+}) {
+  return (
+    <div className="flex items-center gap-2 bg-red-950 border border-red-500/40 rounded-sm px-3 py-1.5">
+      <AlertTriangle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+      <span className="text-red-300 text-xs font-medium">Are you sure?</span>
+      <button onClick={onConfirm} className="text-xs font-black text-red-400 hover:text-red-300 uppercase tracking-wide">
+        {label}
+      </button>
+      <button onClick={onCancel} className="text-xs text-white/40 hover:text-white/70">
+        <X className="w-3 h-3" />
+      </button>
+    </div>
+  );
+}
+
+// ─── Reaction button ──────────────────────────────────────────────────────────
+function ReactionBtn({ active, onClick, disabled, children, activeStyle }: {
+  active: boolean;
+  onClick: () => void;
+  disabled?: boolean;
+  children: React.ReactNode;
+  activeStyle?: React.CSSProperties;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm border-2 border-black text-xs font-bold transition-all disabled:opacity-50"
+      style={active
+        ? { background: "#FDD000", color: "#000", boxShadow: "2px 2px 0px 0px rgba(0,0,0,1)", ...activeStyle }
+        : { background: "transparent", color: "rgba(255,255,255,0.6)", boxShadow: "2px 2px 0px 0px rgba(0,0,0,1)" }
+      }
+    >
+      {children}
+    </button>
+  );
+}
+
+// ─── CommentsSection (top-level to prevent re-mount on parent render) ─────────
 interface CommentsSectionProps {
   requestId: string;
   currentUserId?: string;
@@ -58,51 +102,50 @@ interface CommentsSectionProps {
 
 function CommentsSection({ requestId, currentUserId, isMod }: CommentsSectionProps) {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
-  const [commentText, setCommentText] = useState('');
-  const [replyToId, setReplyToId] = useState<string | null>(null);
-  const [replyText, setReplyText] = useState('');
+  const { toast }   = useToast();
+  const [commentText, setCommentText]         = useState('');
+  const [replyToId, setReplyToId]             = useState<string | null>(null);
+  const [replyText, setReplyText]             = useState('');
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editCommentText, setEditCommentText] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const { data: comments = [], isLoading } = useQuery<Comment[]>({
     queryKey: ['/api/accountability-requests', requestId, 'comments'],
   });
 
   const addCommentMutation = useMutation({
-    mutationFn: async ({ content, parentCommentId }: { content: string; parentCommentId?: string }) =>
+    mutationFn: ({ content, parentCommentId }: { content: string; parentCommentId?: string }) =>
       apiRequest('POST', `/api/accountability-requests/${requestId}/comments`, { content, parentCommentId }),
     onSuccess: () => {
-      setCommentText('');
-      setReplyToId(null);
-      setReplyText('');
+      setCommentText(''); setReplyToId(null); setReplyText('');
       queryClient.invalidateQueries({ queryKey: ['/api/accountability-requests', requestId, 'comments'] });
       queryClient.invalidateQueries({ queryKey: ['/api/accountability-requests'] });
     },
-    onError: (error: any) => toast({ title: "Error", description: error.response?.data?.message || "Failed to post comment", variant: "destructive" }),
+    onError: () => toast({ title: "Error", description: "Failed to post comment", variant: "destructive" }),
   });
 
   const deleteCommentMutation = useMutation({
-    mutationFn: async (commentId: string) => apiRequest('DELETE', `/api/accountability-requests/comments/${commentId}`),
+    mutationFn: (commentId: string) => apiRequest('DELETE', `/api/accountability-requests/comments/${commentId}`),
     onSuccess: () => {
+      setConfirmDeleteId(null);
       queryClient.invalidateQueries({ queryKey: ['/api/accountability-requests', requestId, 'comments'] });
       queryClient.invalidateQueries({ queryKey: ['/api/accountability-requests'] });
     },
-    onError: (error: any) => toast({ title: "Error", description: error.response?.data?.message || "Failed to delete comment", variant: "destructive" }),
+    onError: () => toast({ title: "Error", description: "Failed to delete comment", variant: "destructive" }),
   });
 
   const editCommentMutation = useMutation({
-    mutationFn: async ({ commentId, content }: { commentId: string; content: string }) =>
+    mutationFn: ({ commentId, content }: { commentId: string; content: string }) =>
       apiRequest('PATCH', `/api/accountability-requests/comments/${commentId}`, { content }),
     onSuccess: () => {
-      setEditingCommentId(null);
-      setEditCommentText('');
+      setEditingCommentId(null); setEditCommentText('');
       queryClient.invalidateQueries({ queryKey: ['/api/accountability-requests', requestId, 'comments'] });
     },
-    onError: (error: any) => toast({ title: "Error", description: error.response?.data?.message || "Failed to edit comment", variant: "destructive" }),
+    onError: () => toast({ title: "Error", description: "Failed to edit comment", variant: "destructive" }),
   });
 
-  const topLevel = comments.filter(c => !c.parentCommentId);
+  const topLevel   = comments.filter(c => !c.parentCommentId);
   const repliesMap: Record<string, Comment[]> = {};
   comments.filter(c => c.parentCommentId).forEach(c => {
     if (!repliesMap[c.parentCommentId!]) repliesMap[c.parentCommentId!] = [];
@@ -144,6 +187,14 @@ function CommentsSection({ requestId, currentUserId, isMod }: CommentsSectionPro
         ) : (
           <p className="text-white/80 text-xs break-words whitespace-pre-wrap">{c.content}</p>
         )}
+        {confirmDeleteId === c.id && (
+          <div className="mt-1">
+            <DeleteConfirm
+              onConfirm={() => deleteCommentMutation.mutate(c.id)}
+              onCancel={() => setConfirmDeleteId(null)}
+            />
+          </div>
+        )}
         {!isReply && editingCommentId !== c.id && (
           <button
             onClick={() => { setReplyToId(replyToId === c.id ? null : c.id); setReplyText(''); }}
@@ -153,21 +204,19 @@ function CommentsSection({ requestId, currentUserId, isMod }: CommentsSectionPro
           </button>
         )}
       </div>
-      {editingCommentId !== c.id && (c.userId === currentUserId || isMod) && (
+      {editingCommentId !== c.id && confirmDeleteId !== c.id && (c.userId === currentUserId || isMod) && (
         <div className="flex gap-1 flex-shrink-0">
           {c.userId === currentUserId && (
             <button
               onClick={() => { setEditingCommentId(c.id); setEditCommentText(c.content); }}
               className="text-zinc-600 hover:text-zinc-300"
-              title="Edit"
             >
               <Pencil className="w-3 h-3" />
             </button>
           )}
           <button
-            onClick={() => deleteCommentMutation.mutate(c.id)}
+            onClick={() => setConfirmDeleteId(c.id)}
             className="text-zinc-600 hover:text-red-400"
-            title="Delete"
           >
             <Trash2 className="w-3 h-3" />
           </button>
@@ -177,11 +226,11 @@ function CommentsSection({ requestId, currentUserId, isMod }: CommentsSectionPro
   );
 
   return (
-    <div className="border-t-2 border-ministry-gold-exact/30 pt-4 space-y-3">
+    <div className="pt-4 space-y-3" style={{ borderTop: "1px solid rgba(253,208,0,0.2)" }}>
       {isLoading ? (
         <p className="text-white/40 text-xs">Loading comments…</p>
       ) : topLevel.length === 0 ? (
-        <p className="text-white/40 text-xs">No comments yet. Be the first!</p>
+        <p className="text-white/40 text-xs">No comments yet — be the first to encourage this brother.</p>
       ) : (
         <div className="space-y-3">
           {topLevel.map(c => (
@@ -200,7 +249,7 @@ function CommentsSection({ requestId, currentUserId, isMod }: CommentsSectionPro
                         addCommentMutation.mutate({ content: replyText.trim(), parentCommentId: c.id });
                     }}
                     placeholder={`Reply to ${c.authorName}…`}
-                    className="flex-1 bg-zinc-800 border border-zinc-700 rounded-sm text-white text-xs px-2 py-1 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500"
+                    className="flex-1 bg-zinc-800 border border-zinc-700 rounded-sm text-white text-xs px-2 py-1 placeholder:text-zinc-600 focus:outline-none"
                   />
                   <button
                     onClick={() => addCommentMutation.mutate({ content: replyText.trim(), parentCommentId: c.id })}
@@ -225,8 +274,8 @@ function CommentsSection({ requestId, currentUserId, isMod }: CommentsSectionPro
             if (e.key === 'Enter' && commentText.trim())
               addCommentMutation.mutate({ content: commentText.trim() });
           }}
-          placeholder="Write a comment…"
-          className="flex-1 bg-zinc-800 border border-zinc-700 rounded-sm text-white text-xs px-3 py-1.5 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500"
+          placeholder="Encourage your brother…"
+          className="flex-1 bg-zinc-800 border border-zinc-700 rounded-sm text-white text-xs px-3 py-1.5 placeholder:text-zinc-600 focus:outline-none"
         />
         <button
           onClick={() => addCommentMutation.mutate({ content: commentText.trim() })}
@@ -239,17 +288,22 @@ function CommentsSection({ requestId, currentUserId, isMod }: CommentsSectionPro
     </div>
   );
 }
-// ─────────────────────────────────────────────────────────────────────────────
 
+// ─── Main Component ───────────────────────────────────────────────────────────
 export default function UnderFire() {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { toast }     = useToast();
+  const queryClient   = useQueryClient();
   const [, setLocation] = useLocation();
+  const formRef       = useRef<HTMLDivElement>(null);
+
   const [newRequestContent, setNewRequestContent] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'my_posts' | 'my_assisted'>('newest');
+  const [isAnonymous, setIsAnonymous]             = useState(false);
+  const [showComposeForm, setShowComposeForm]     = useState(false);
+  const [searchTerm, setSearchTerm]               = useState('');
+  const [sortBy, setSortBy]                       = useState<'newest' | 'oldest' | 'my_posts' | 'my_assisted'>('newest');
   const [highlightedRequest, setHighlightedRequest] = useState<string | null>(null);
-  const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
+  const [expandedComments, setExpandedComments]   = useState<Set<string>>(new Set());
+  const [confirmDeleteId, setConfirmDeleteId]     = useState<string | null>(null);
 
   const { data: currentUser } = useQuery<{ id: string; role?: string }>({ queryKey: ['/api/auth/user'] });
   const isMod = ['admin', 'moderator', 'owner'].includes((currentUser as any)?.role || '');
@@ -267,13 +321,12 @@ export default function UnderFire() {
   }, [allRequests]);
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const requestId = urlParams.get('request');
+    const requestId = new URLSearchParams(window.location.search).get('request');
     if (requestId) {
       setHighlightedRequest(requestId);
       setTimeout(() => {
-        const element = document.querySelector(`[data-request-id="${requestId}"]`);
-        if (element) element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        document.querySelector(`[data-request-id="${requestId}"]`)
+          ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 800);
     }
   }, [allRequests]);
@@ -281,300 +334,378 @@ export default function UnderFire() {
   const requests = React.useMemo(() => {
     let filtered = allRequests;
     if (searchTerm) filtered = filtered.filter(r => r.content.toLowerCase().includes(searchTerm.toLowerCase()));
-    if (sortBy === 'my_posts') {
-      filtered = filtered.filter(r => r.userId === currentUser?.id);
-    } else if (sortBy === 'my_assisted') {
-      filtered = filtered.filter(r => r.assistedById === currentUser?.id);
-    } else {
-      filtered = [...filtered].sort((a, b) => {
-        const da = new Date(a.createdAt).getTime();
-        const db2 = new Date(b.createdAt).getTime();
-        return sortBy === 'newest' ? db2 - da : da - db2;
-      });
-    }
+    if (sortBy === 'my_posts')    filtered = filtered.filter(r => r.userId === currentUser?.id);
+    else if (sortBy === 'my_assisted') filtered = filtered.filter(r => r.assistedById === currentUser?.id);
+    else filtered = [...filtered].sort((a, b) => {
+      const diff = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      return sortBy === 'newest' ? diff : -diff;
+    });
     return filtered;
   }, [allRequests, searchTerm, sortBy, currentUser?.id]);
 
+  // ── Mutations ─────────────────────────────────────────────────────────────
   const createRequestMutation = useMutation({
-    mutationFn: async (content: string) => apiRequest('POST', '/api/accountability-requests', { content }),
+    mutationFn: (data: { content: string; isAnonymous: boolean }) =>
+      apiRequest('POST', '/api/accountability-requests', data),
     onSuccess: () => {
-      toast({ title: "Request Posted", description: "Your accountability request has been shared" });
-      setNewRequestContent('');
+      toast({ title: "Request Posted", description: "Your request is live. A brother will step up." });
+      setNewRequestContent(''); setIsAnonymous(false); setShowComposeForm(false);
       queryClient.invalidateQueries({ queryKey: ['/api/accountability-requests'] });
     },
-    onError: (error: any) => toast({ title: "Error", description: error.response?.data?.message || "Failed to create request", variant: "destructive" }),
+    onError: () => toast({ title: "Error", description: "Failed to create request", variant: "destructive" }),
   });
 
   const assistMutation = useMutation({
-    mutationFn: async (requestId: string) => apiRequest('POST', `/api/accountability-requests/${requestId}/assist`),
+    mutationFn: (requestId: string) => apiRequest('POST', `/api/accountability-requests/${requestId}/assist`),
     onSuccess: (data: any) => {
-      toast({ title: "Accountability Accepted!", description: "A direct message has been created. Check your messages to connect." });
+      toast({ title: "You're In, Brother!", description: "A direct message has been created. Head to Messages to connect." });
       queryClient.invalidateQueries({ queryKey: ['/api/accountability-requests'] });
       if (data.conversationId) setLocation(`/messages?conversation=${data.conversationId}`);
     },
-    onError: (error: any) => toast({ title: "Error", description: error.response?.data?.message || "Failed to assist with request", variant: "destructive" }),
-  });
-
-  const deleteRequestMutation = useMutation({
-    mutationFn: async (requestId: string) => apiRequest('DELETE', `/api/accountability-requests/${requestId}`),
-    onSuccess: () => {
-      toast({ title: "Request Deleted", description: "Your accountability request has been removed" });
-      queryClient.invalidateQueries({ queryKey: ['/api/accountability-requests'] });
-    },
-    onError: (error: any) => toast({ title: "Error", description: error.response?.data?.message || "Failed to delete request", variant: "destructive" }),
+    onError: () => toast({ title: "Error", description: "Failed to accept request", variant: "destructive" }),
   });
 
   const unassistMutation = useMutation({
-    mutationFn: async (requestId: string) => apiRequest('POST', `/api/accountability-requests/${requestId}/unassist`),
+    mutationFn: (requestId: string) => apiRequest('POST', `/api/accountability-requests/${requestId}/unassist`),
     onSuccess: () => {
-      toast({ title: "Unassisted", description: "You are no longer assisting this request." });
+      toast({ title: "Unassisted" });
       queryClient.invalidateQueries({ queryKey: ['/api/accountability-requests'] });
     },
-    onError: (error: any) => toast({ title: "Error", description: error.response?.data?.message || "Failed to unassist", variant: "destructive" }),
+    onError: () => toast({ title: "Error", description: "Failed to unassist", variant: "destructive" }),
+  });
+
+  const deleteRequestMutation = useMutation({
+    mutationFn: (requestId: string) => apiRequest('DELETE', `/api/accountability-requests/${requestId}`),
+    onSuccess: () => {
+      toast({ title: "Request Deleted" });
+      setConfirmDeleteId(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/accountability-requests'] });
+    },
+    onError: () => toast({ title: "Error", description: "Failed to delete request", variant: "destructive" }),
   });
 
   const supportMutation = useMutation({
-    mutationFn: async (requestId: string) => apiRequest('POST', `/api/accountability-requests/${requestId}/support`),
+    mutationFn: (requestId: string) => apiRequest('POST', `/api/accountability-requests/${requestId}/support`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['/api/accountability-requests'] }),
-    onError: (error: any) => toast({ title: "Error", description: error.response?.data?.message || "Failed to toggle support", variant: "destructive" }),
+    onError: () => toast({ title: "Error", description: "Failed to toggle support", variant: "destructive" }),
   });
 
   const amenMutation = useMutation({
-    mutationFn: async (requestId: string) => apiRequest('POST', `/api/accountability-requests/${requestId}/amen`),
+    mutationFn: (requestId: string) => apiRequest('POST', `/api/accountability-requests/${requestId}/amen`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['/api/accountability-requests'] }),
-    onError: (error: any) => toast({ title: "Error", description: error.response?.data?.message || "Failed to toggle amen", variant: "destructive" }),
+    onError: () => toast({ title: "Error", description: "Failed to toggle amen", variant: "destructive" }),
   });
 
   const ohMeMutation = useMutation({
-    mutationFn: async (requestId: string) => apiRequest('POST', `/api/accountability-requests/${requestId}/oh-me`),
+    mutationFn: (requestId: string) => apiRequest('POST', `/api/accountability-requests/${requestId}/oh-me`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['/api/accountability-requests'] }),
-    onError: (error: any) => toast({ title: "Error", description: error.response?.data?.message || "Failed to toggle oh-me", variant: "destructive" }),
+    onError: () => toast({ title: "Error", description: "Failed to toggle oh-me", variant: "destructive" }),
   });
 
   const toggleComments = (requestId: string) => {
     setExpandedComments(prev => {
       const next = new Set(prev);
-      if (next.has(requestId)) next.delete(requestId); else next.add(requestId);
+      next.has(requestId) ? next.delete(requestId) : next.add(requestId);
       return next;
     });
   };
 
   const formatTimeAgo = (d: string) => formatDistanceToNow(new Date(d), { addSuffix: true });
 
+  // ── Loading ───────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
       <div className="pb-20">
         <div className="liquid-header text-white px-6 pt-8 pb-6">
           <div className="max-w-2xl mx-auto">
             <BackButton />
-            <h1 className="text-4xl font-black tracking-tight">Under Fire</h1>
-            <p className="text-ministry-gold-exact text-sm font-semibold">Request Accountability</p>
+            <h1 className="text-4xl font-black tracking-tighter uppercase mt-2">Under Fire</h1>
+            <p className="text-[#FDD000] text-xs font-bold tracking-widest uppercase mt-1">Request Accountability</p>
           </div>
         </div>
-        <div className="max-w-2xl mx-auto p-4">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-ministry-gold-exact rounded"></div>
-            <div className="h-32 bg-ministry-gold-exact rounded"></div>
-            <div className="h-24 bg-ministry-gold-exact rounded"></div>
-          </div>
+        <div className="max-w-2xl mx-auto p-4 space-y-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="rounded-sm animate-pulse" style={{ background: "#111", border: "1px solid #222", height: "110px" }} />
+          ))}
         </div>
       </div>
     );
   }
 
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="pb-20">
+
+      {/* ── HEADER ─────────────────────────────────────────────────────────── */}
       <div className="liquid-header text-white px-6 pt-8 pb-6">
         <div className="max-w-2xl mx-auto">
           <BackButton />
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-4xl font-black tracking-tighter uppercase">Under Fire</h1>
-          </div>
-          <p className="text-ministry-gold-exact text-xs font-bold tracking-widest uppercase">Request Accountability</p>
+          <h1 className="text-4xl font-black tracking-tighter uppercase mt-2">Under Fire</h1>
+          <p className="text-[#FDD000] text-xs font-bold tracking-widest uppercase mt-1">
+            Request Accountability
+          </p>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto p-4 space-y-6">
+      <div className="max-w-2xl mx-auto px-4 space-y-5">
 
-        <div className="flex flex-col sm:flex-row gap-4 items-center">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-black" />
-            <Input
-              placeholder="SEARCH REQUESTS..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 border-2 border-black bg-ministry-gold-exact rounded-sm text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide font-medium"
-            />
-          </div>
-          <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-            <SelectTrigger className="w-44 border-2 border-black bg-ministry-gold-exact text-black font-bold rounded-sm">
-              <SortDesc className="h-4 w-4 mr-2" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="newest">Newest</SelectItem>
-              <SelectItem value="oldest">Oldest</SelectItem>
-              <SelectItem value="my_posts">Requests I Posted</SelectItem>
-              <SelectItem value="my_assisted">Requests I Assisted With</SelectItem>
-            </SelectContent>
-          </Select>
+        {/* ── COMPOSE FORM ───────────────────────────────────────────────── */}
+        <div ref={formRef}>
+          {!showComposeForm ? (
+            <button
+              onClick={() => setShowComposeForm(true)}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-sm text-left transition-all"
+              style={{ background: "#111", border: "2px solid rgba(253,208,0,0.3)", boxShadow: "3px 3px 0px 0px rgba(253,208,0,0.15)" }}
+            >
+              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(253,208,0,0.12)" }}>
+                <Plus className="w-4 h-4 text-[#FDD000]" />
+              </div>
+              <span className="text-sm font-medium" style={{ color: "rgba(255,255,255,0.4)" }}>
+                Request accountability from your brothers...
+              </span>
+            </button>
+          ) : (
+            <div className="rounded-sm overflow-hidden" style={{ background: "#0d0d0d", border: "2px solid #FDD000", boxShadow: "4px 4px 0px 0px rgba(253,208,0,0.3)" }}>
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 py-3" style={{ background: "#FDD000" }}>
+                <span className="font-black text-black text-sm uppercase tracking-widest">Request Accountability</span>
+                <button onClick={() => setShowComposeForm(false)}><X className="w-4 h-4 text-black" /></button>
+              </div>
+
+              <div className="p-4 space-y-3">
+                <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
+                  Share what you need accountability for — a goal, a struggle, or a sin. A brother will volunteer to come alongside you privately.
+                </p>
+
+                <MentionTextarea
+                  placeholder="What do you need accountability for? Type @ to mention a brother."
+                  value={newRequestContent}
+                  onChange={setNewRequestContent}
+                  className="min-h-[100px] bg-white text-black border-2 border-black placeholder:text-black/40"
+                  data-testid="textarea-accountability-request"
+                />
+
+                {/* Anonymous toggle */}
+                <button
+                  onClick={() => setIsAnonymous(prev => !prev)}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-sm w-full transition-all"
+                  style={{
+                    background: isAnonymous ? "rgba(253,208,0,0.1)" : "rgba(255,255,255,0.04)",
+                    border: `1px solid ${isAnonymous ? "rgba(253,208,0,0.4)" : "rgba(255,255,255,0.1)"}`,
+                  }}
+                >
+                  {isAnonymous
+                    ? <EyeOff className="w-4 h-4 text-[#FDD000] flex-shrink-0" />
+                    : <Eye className="w-4 h-4 text-white/40 flex-shrink-0" />
+                  }
+                  <div className="flex-1 text-left">
+                    <p className="text-xs font-bold" style={{ color: isAnonymous ? "#FDD000" : "rgba(255,255,255,0.5)" }}>
+                      {isAnonymous ? "Posting Anonymously" : "Post with Your Name"}
+                    </p>
+                    <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.3)" }}>
+                      {isAnonymous
+                        ? "Your name won't be shown — a brother can still step up to help"
+                        : "Tap to post anonymously for sensitive requests"
+                      }
+                    </p>
+                  </div>
+                  <div className="w-8 h-4 rounded-full flex-shrink-0 relative transition-colors" style={{ background: isAnonymous ? "#FDD000" : "rgba(255,255,255,0.15)" }}>
+                    <div className="absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all" style={{ left: isAnonymous ? "calc(100% - 14px)" : "2px" }} />
+                  </div>
+                </button>
+
+                <Button
+                  onClick={() => {
+                    if (!newRequestContent.trim()) {
+                      toast({ title: "Error", description: "Please enter your accountability request", variant: "destructive" });
+                      return;
+                    }
+                    createRequestMutation.mutate({ content: newRequestContent, isAnonymous });
+                  }}
+                  disabled={createRequestMutation.isPending || !newRequestContent.trim()}
+                  className="w-full font-black uppercase tracking-wide rounded-sm text-black disabled:opacity-40"
+                  style={{ background: "#FDD000", border: "2px solid #000", boxShadow: "3px 3px 0px 0px rgba(0,0,0,1)" }}
+                  data-testid="button-share-request"
+                >
+                  {createRequestMutation.isPending ? 'Posting...' : 'Post Accountability Request'}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
-        <Card className="liquid-black-white border-2 border-ministry-gold-exact rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,1)]">
-          <CardHeader className="relative z-10">
-            <CardTitle className="text-white flex items-center gap-2 text-2xl font-black tracking-tighter uppercase">
-              <Shield className="h-6 w-6 text-ministry-gold-exact" />
-              Request Accountability
-            </CardTitle>
-            <p className="text-white/80 text-base font-medium leading-relaxed">
-              A place for men to request accountability. This can be growing closer to God, health goals, or a sin you're struggling with. Submit your request and a brother can volunteer to hold you accountable — a direct message will be created between you both.
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-4 relative z-10">
-            <div className="space-y-2">
-              <Label htmlFor="content" className="text-white font-semibold">Accountability Request</Label>
-              <MentionTextarea
-                id="content"
-                placeholder="Share what you need accountability for... Type @ to mention a brother."
-                value={newRequestContent}
-                onChange={setNewRequestContent}
-                className="min-h-[100px] bg-white text-black border-2 border-black placeholder:text-black/50"
-                data-testid="textarea-accountability-request"
-              />
-            </div>
-            <Button
-              onClick={() => {
-                if (!newRequestContent.trim()) {
-                  toast({ title: "Error", description: "Please enter your accountability request", variant: "destructive" });
-                  return;
-                }
-                createRequestMutation.mutate(newRequestContent);
-              }}
-              disabled={createRequestMutation.isPending || !newRequestContent.trim()}
-              className="w-full bg-ministry-gold-exact hover:bg-yellow-400 text-black font-black text-lg py-6 rounded-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] border-2 border-black transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] uppercase tracking-wide"
-              data-testid="button-share-request"
-            >
-              {createRequestMutation.isPending ? 'Posting...' : 'Share Request'}
-            </Button>
-          </CardContent>
-        </Card>
+        {/* ── SEARCH + SORT PILLS ─────────────────────────────────────────── */}
+        <div className="flex gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black" />
+            <Input
+              placeholder="SEARCH..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 border-2 border-black bg-[#FDD000] rounded-sm text-black placeholder:text-black/50 placeholder:font-medium placeholder:text-xs placeholder:tracking-wide font-medium text-sm"
+            />
+          </div>
+          <div className="flex gap-1">
+            {([
+              { value: 'newest',      label: 'New' },
+              { value: 'oldest',      label: 'Old' },
+              { value: 'my_posts',    label: 'Mine' },
+              { value: 'my_assisted', label: 'Helped' },
+            ] as const).map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => setSortBy(opt.value)}
+                className="px-3 py-2 rounded-sm text-[10px] font-black uppercase tracking-wide transition-all flex-shrink-0"
+                style={{
+                  background: sortBy === opt.value ? "#FDD000" : "rgba(255,255,255,0.07)",
+                  color:      sortBy === opt.value ? "#000"    : "rgba(255,255,255,0.4)",
+                  border:     sortBy === opt.value ? "1px solid #000" : "1px solid transparent",
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
+        {/* ── REQUESTS ───────────────────────────────────────────────────── */}
         <div className="space-y-4">
           {requests.length === 0 ? (
-            <Card className="bg-ministry-gold-exact border-2 border-black rounded-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              <CardContent className="text-center py-12">
-                <Shield className="h-12 w-12 text-black mx-auto mb-4" />
-                <p className="text-black font-medium">No accountability requests yet. Be the first to share!</p>
-              </CardContent>
-            </Card>
-          ) : (
-            requests.map((request) => (
-              <Card
-                key={request.id}
-                data-request-id={request.id}
-                className={`liquid-black-white border-2 rounded-sm shadow-[4px_4px_0px_0px_rgba(253,208,0,1)] ${
-                  highlightedRequest === request.id
-                    ? 'border-[#FDD000] ring-2 ring-[#FDD000] ring-opacity-70'
-                    : 'border-ministry-gold-exact'
-                }`}
+            <div className="text-center py-12 rounded-sm" style={{ background: "#0d0d0d", border: "1px solid #222" }}>
+              <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "rgba(253,208,0,0.1)" }}>
+                <Shield className="w-7 h-7 text-[#FDD000]" />
+              </div>
+              <h3 className="text-white font-black text-lg uppercase tracking-tight mb-2">Stand in the Gap</h3>
+              <p className="text-sm max-w-xs mx-auto mb-5" style={{ color: "rgba(255,255,255,0.4)" }}>
+                No requests yet. Every man has battles. Be the first to bring yours here — your brothers will show up.
+              </p>
+              <button
+                onClick={() => { setShowComposeForm(true); formRef.current?.scrollIntoView({ behavior: 'smooth' }); }}
+                className="px-6 py-2.5 rounded-sm font-black uppercase tracking-wide text-black text-sm"
+                style={{ background: "#FDD000", border: "2px solid #000" }}
               >
-                <CardHeader className="relative z-10">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 flex-wrap">
+                Post First Request
+              </button>
+            </div>
+          ) : (
+            requests.map((request) => {
+              const isOwner  = currentUser?.id === request.userId;
+              const isAssister = currentUser?.id === request.assistedById;
+
+              return (
+                <div
+                  key={request.id}
+                  data-request-id={request.id}
+                  className="rounded-sm overflow-hidden"
+                  style={{
+                    background: "#0d0d0d",
+                    border: highlightedRequest === request.id ? "2px solid #FDD000" : "1px solid #1e1e1e",
+                    boxShadow: highlightedRequest === request.id ? "0 0 20px rgba(253,208,0,0.2)" : "none",
+                  }}
+                >
+                  {/* Post header */}
+                  <div className="px-4 pt-4 pb-2 flex items-start justify-between">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {request.isAnonymous ? (
+                        <span className="text-white font-medium">Anonymous</span>
+                      ) : (
                         <Link href={`/users/${request.user.id}`}>
-                          <span className="text-white font-medium hover:text-ministry-gold-exact cursor-pointer transition-colors">
+                          <span className="text-white font-medium hover:text-[#FDD000] cursor-pointer transition-colors">
                             {request.user.firstName} {request.user.lastName}
                           </span>
                         </Link>
-                        <Badge className="bg-ministry-gold-exact text-black font-semibold">Accountability Request</Badge>
-                        {request.assistedById && (
-                          <Badge className="bg-ministry-gold-exact text-black font-semibold">
-                            <CheckCircle className="h-3 w-3 mr-1" />Assisted
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-white/50">{formatTimeAgo(request.createdAt)}</p>
+                      )}
+                      <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full" style={{ background: "rgba(253,208,0,0.1)", color: "#FDD000" }}>
+                        {request.assistedById ? "✓ Being Helped" : "Needs Accountability"}
+                      </span>
                     </div>
-                    {(currentUser?.id === request.userId || isMod) && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          if (window.confirm('Delete this request? This cannot be undone.'))
-                            deleteRequestMutation.mutate(request.id);
-                        }}
-                        className="text-red-400 hover:text-red-300 hover:bg-red-900/20 p-1 h-auto"
-                        disabled={deleteRequestMutation.isPending}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </CardHeader>
-
-                <CardContent className="space-y-4 relative z-10">
-                  <div className="bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-sm p-3">
-                    <p className="text-black leading-relaxed whitespace-pre-wrap">
-                      <MentionText text={request.content} />
-                    </p>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <span className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
+                        {formatTimeAgo(request.createdAt)}
+                      </span>
+                      {(isOwner || isMod) && confirmDeleteId !== request.id && (
+                        <button onClick={() => setConfirmDeleteId(request.id)} className="p-1 text-red-400/50 hover:text-red-400 transition-colors ml-1">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
-                  <Separator className="bg-ministry-gold-exact/30" />
+                  {/* Delete confirmation */}
+                  {confirmDeleteId === request.id && (
+                    <div className="px-4 pb-2">
+                      <DeleteConfirm
+                        label="Delete Request"
+                        onConfirm={() => deleteRequestMutation.mutate(request.id)}
+                        onCancel={() => setConfirmDeleteId(null)}
+                      />
+                    </div>
+                  )}
+
+                  {/* Content */}
+                  <div className="px-4 pb-3">
+                    <div className="rounded-sm p-3" style={{ background: "#fff", border: "2px solid #000" }}>
+                      <p className="text-black leading-relaxed whitespace-pre-wrap text-sm">
+                        <MentionText text={request.content} />
+                      </p>
+                    </div>
+                  </div>
 
                   {/* Assist row */}
-                  <div className="flex items-center gap-3 flex-wrap">
+                  <div className="px-4 pb-3">
                     {request.assistedById ? (
-                      <>
-                        <div className="flex items-center gap-2 text-white">
-                          <CheckCircle className="h-4 w-4 text-ministry-gold-exact" />
-                          <span className="text-sm font-medium">
-                            Accountability accepted by{' '}
-                            {request.assister
-                              ? `${request.assister.firstName || ''} ${request.assister.lastName || ''}`.trim()
-                              : 'a brother'}
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <div
+                          className="flex items-center gap-2 px-3 py-2 rounded-sm flex-1"
+                          style={{ background: "rgba(253,208,0,0.08)", border: "1px solid rgba(253,208,0,0.2)" }}
+                        >
+                          <CheckCircle className="w-4 h-4 text-[#FDD000] flex-shrink-0" />
+                          <span className="text-sm font-medium text-white">
+                            {isAssister
+                              ? "You're holding this brother accountable"
+                              : `${request.assister ? `${request.assister.firstName} ${request.assister.lastName}`.trim() : 'A brother'} is holding him accountable`
+                            }
                           </span>
                         </div>
-                        {currentUser?.id === request.assistedById && (
-                          <Button
+                        {isAssister && (
+                          <button
                             onClick={() => unassistMutation.mutate(request.id)}
                             disabled={unassistMutation.isPending}
-                            size="sm"
-                            className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                            className="text-xs font-bold text-white/40 hover:text-white/70 transition-colors"
                           >
-                            {unassistMutation.isPending ? 'Processing...' : 'Unassist'}
-                          </Button>
+                            Unassist
+                          </button>
                         )}
-                      </>
-                    ) : currentUser?.id !== request.userId ? (
+                      </div>
+                    ) : isOwner ? (
+                      <div
+                        className="flex items-center gap-2 px-3 py-2 rounded-sm"
+                        style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+                      >
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#FDD000] animate-pulse flex-shrink-0" />
+                        <span className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
+                          Your brothers see this — someone will step up soon.
+                        </span>
+                      </div>
+                    ) : (
                       <Button
                         onClick={() => assistMutation.mutate(request.id)}
                         disabled={assistMutation.isPending}
-                        className="bg-ministry-gold-exact text-black hover:bg-yellow-400 font-bold rounded-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                        className="w-full font-black text-black rounded-sm border-2 border-black uppercase tracking-wide"
+                        style={{ background: "#FDD000", boxShadow: "3px 3px 0px 0px rgba(0,0,0,1)" }}
                         data-testid={`button-assist-${request.id}`}
                       >
-                        <HandHelping className="h-4 w-4 mr-2" />
-                        {assistMutation.isPending ? 'Processing...' : 'Assist'}
+                        <HandHelping className="w-4 h-4 mr-2" />
+                        {assistMutation.isPending ? 'Processing...' : 'Step Up — I Got Him'}
                       </Button>
-                    ) : (
-                      <span className="text-white/60 text-sm italic">Waiting for someone to assist...</span>
                     )}
                   </div>
 
-                  <Separator className="bg-ministry-gold-exact/20" />
+                  {/* Reactions */}
+                  <div className="px-4 pb-3 flex items-center gap-2 flex-wrap" style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "12px" }}>
 
-                  {/* Reactions row */}
-                  <div className="flex items-center gap-1 flex-wrap">
                     {/* Amen */}
-                    <button
-                      onClick={() => amenMutation.mutate(request.id)}
-                      disabled={amenMutation.isPending}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border-2 border-black text-xs font-bold transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${
-                        request.amenedByMe
-                          ? 'bg-ministry-gold-exact text-black'
-                          : 'bg-transparent text-white hover:bg-ministry-gold-exact hover:text-black'
-                      }`}
-                    >
+                    <ReactionBtn active={request.amenedByMe} onClick={() => amenMutation.mutate(request.id)} disabled={amenMutation.isPending}>
                       <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill={request.amenedByMe ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
                         <path d="M12 2L8 8H4l4 4-1.5 6L12 15l5.5 3L16 12l4-4h-4L12 2z" />
                       </svg>
@@ -588,18 +719,15 @@ export default function UnderFire() {
                           <span>{request.amenCount}</span>
                         </ReactorList>
                       )}
-                      Amen
-                    </button>
+                      <span>Amen</span>
+                    </ReactionBtn>
 
-                    {/* Oh Me */}
-                    <button
+                    {/* Oh Me — "I'm struggling with this too" */}
+                    <ReactionBtn
+                      active={request.ohMeByMe}
                       onClick={() => ohMeMutation.mutate(request.id)}
                       disabled={ohMeMutation.isPending}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border-2 border-black text-xs font-bold transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${
-                        request.ohMeByMe
-                          ? 'bg-red-500 text-white border-red-700'
-                          : 'bg-transparent text-white hover:bg-red-500 hover:text-white hover:border-red-700'
-                      }`}
+                      activeStyle={{ background: "#ef4444", color: "#fff", borderColor: "#b91c1c" }}
                     >
                       <Flame className={`w-3.5 h-3.5 ${request.ohMeByMe ? 'fill-current' : ''}`} />
                       {request.ohMeCount > 0 && (
@@ -612,52 +740,64 @@ export default function UnderFire() {
                           <span>{request.ohMeCount}</span>
                         </ReactorList>
                       )}
-                      Oh Me
-                    </button>
+                      <span title="I'm struggling with this too">Oh Me</span>
+                    </ReactionBtn>
 
-                    {/* Got Your 6 (only when assisted and not your own post) */}
+                    {/* Got Your 6 — only when assisted */}
                     {request.assistedById && currentUser?.id !== request.userId && (
-                      <button
-                        onClick={() => supportMutation.mutate(request.id)}
-                        disabled={supportMutation.isPending}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border-2 border-black text-xs font-bold transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${
-                          request.gotYour6ByMe
-                            ? 'bg-ministry-gold-exact text-black'
-                            : 'bg-transparent text-white hover:bg-ministry-gold-exact hover:text-black'
-                        }`}
-                      >
-                        <Shield className="h-3.5 w-3.5" />
-                        <span>Got Your 6</span>
-                        {(request.supportCount ?? 0) > 0 && (
-                          <span className="opacity-80">{request.supportCount}</span>
-                        )}
-                      </button>
+                      <ReactionBtn active={request.gotYour6ByMe} onClick={() => supportMutation.mutate(request.id)} disabled={supportMutation.isPending}>
+                        <Shield className="w-3.5 h-3.5" />
+                        {(request.supportCount ?? 0) > 0 && <span>{request.supportCount}</span>}
+                        <span title="I support this partnership">Got Your 6</span>
+                      </ReactionBtn>
                     )}
 
-                    {/* Comments toggle */}
+                    {/* Comments */}
                     <button
                       onClick={() => toggleComments(request.id)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm border-2 border-black text-xs font-bold bg-transparent text-white hover:bg-white/10 transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ml-auto"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm border-2 border-black text-xs font-bold text-white/50 hover:text-white hover:bg-white/10 transition-all ml-auto"
+                      style={{ boxShadow: "2px 2px 0px 0px rgba(0,0,0,1)" }}
                     >
-                      <MessageSquare className="h-3.5 w-3.5" />
+                      <MessageSquare className="w-3.5 h-3.5" />
                       {request.commentCount} {request.commentCount === 1 ? 'Comment' : 'Comments'}
+                      {expandedComments.has(request.id)
+                        ? <ChevronUp className="w-3 h-3" />
+                        : <ChevronDown className="w-3 h-3" />
+                      }
                     </button>
                   </div>
 
-                  {/* Comments section — stable top-level component, no focus loss */}
+                  {/* Comments section */}
                   {expandedComments.has(request.id) && (
-                    <CommentsSection
-                      requestId={request.id}
-                      currentUserId={currentUser?.id}
-                      isMod={isMod}
-                    />
+                    <div className="px-4 pb-4">
+                      <CommentsSection
+                        requestId={request.id}
+                        currentUserId={currentUser?.id}
+                        isMod={isMod}
+                      />
+                    </div>
                   )}
-                </CardContent>
-              </Card>
-            ))
+                </div>
+              );
+            })
           )}
         </div>
       </div>
+
+      {/* ── FLOATING COMPOSE BUTTON (mobile) ───────────────────────────────── */}
+      {!showComposeForm && (
+        <button
+          onClick={() => {
+            setShowComposeForm(true);
+            setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+          }}
+          className="fixed bottom-24 right-4 w-14 h-14 rounded-full flex items-center justify-center z-40 shadow-lg transition-all active:scale-95 md:hidden"
+          style={{ background: "#FDD000", border: "3px solid #000", boxShadow: "3px 3px 0px 0px rgba(0,0,0,1)" }}
+          aria-label="Post accountability request"
+        >
+          <Plus className="w-6 h-6 text-black" strokeWidth={3} />
+        </button>
+      )}
     </div>
   );
 }
