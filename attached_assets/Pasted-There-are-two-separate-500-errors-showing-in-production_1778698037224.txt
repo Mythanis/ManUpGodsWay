@@ -1,0 +1,32 @@
+There are two separate 500 errors showing in production logs. Please fix both.
+Issue 1 — daily_app_reminders table error:
+The logs show:
+DrizzleQueryError: Failed query: select "id", "user_id", "enabled", "reminder_time", "timezone", "updated_at" from "daily_app_reminders"
+This means the daily_app_reminders table exists but is either missing a column or has a schema mismatch in production. Run this against the production DB and compare to what the Drizzle schema expects:
+sqlSELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_name = 'daily_app_reminders'
+ORDER BY ordinal_position;
+Run any pending migrations to bring the production schema up to date with the current Drizzle schema definition.
+Issue 2 — GET /api/discussions returning 500:
+The client logs only show the end result. The actual error is in the server-side console. Please:
+
+Search the server logs for the line immediately before or after the discussions 500 — it will be a Drizzle error or a JavaScript exception with the real message
+Run this against the production DB to check the discussions table schema:
+
+sqlSELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_name = 'discussions'
+ORDER BY ordinal_position;
+
+Open server/storage.ts, find getDiscussions(), and compare every column referenced in the Drizzle query to what actually exists in production. Any column in the query that doesn't exist in the table will throw a 500.
+Also check server/routes.ts — find the GET /api/discussions handler and make sure it has a proper try/catch that logs error.message to the console. If it doesn't, add one temporarily so the real error surfaces:
+
+typescript} catch (error: any) {
+  console.error('[Discussions] GET error:', error.message, error.cause?.message);
+  res.status(500).json({ error: error.message });
+}
+
+After adding that logging, trigger one more load of the community page and check the server console — the actual failing query and column name will appear.
+
+Most likely root cause: A DB migration added a column to the discussions table (possibly is_anonymous, a reaction column, or a relation) that ran locally but never ran in production. The Drizzle query references it, production DB doesn't have it, instant 500.
