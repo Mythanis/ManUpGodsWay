@@ -14725,6 +14725,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { content, isAnonymous } = req.body;
+      console.log('[DEBUG accountability] req.body:', JSON.stringify(req.body));
       
       if (!content || !content.trim()) {
         return res.status(400).json({ message: "Content is required" });
