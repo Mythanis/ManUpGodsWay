@@ -126,13 +126,12 @@ export default function DiscussionCard({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch replies when expanded with real-time updates
+  // Fetch replies when expanded
   const { data: replies = [] } = useQuery({
     queryKey: ["/api/discussions", discussion.id, "replies"],
     enabled: showReplies,
     retry: false,
-    refetchInterval: showReplies ? 3000 : false, // Real-time updates every 3 seconds when expanded
-    refetchIntervalInBackground: true,
+    staleTime: 30000,
   });
 
 

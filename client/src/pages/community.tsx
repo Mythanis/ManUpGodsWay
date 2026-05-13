@@ -281,8 +281,7 @@ export default function Community() {
   }>({
     queryKey: ["/api/community/stats"],
     retry: false,
-    refetchInterval: 10000, // Refetch every 10 seconds for live updates
-    refetchIntervalInBackground: true, // Continue refetching when tab is not focused
+    staleTime: 60000,
   });
 
   const { data: discussions = [], isLoading } = useQuery<any[]>({
