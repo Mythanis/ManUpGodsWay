@@ -8526,7 +8526,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllDailyReminders(): Promise<DailyAppReminder[]> {
-    return db.select().from(dailyAppReminders);
+    try {
+      return await db.select().from(dailyAppReminders);
+    } catch {
+      // Retry once after a brief pause to recover from transient Neon connection drops
+      await new Promise(r => setTimeout(r, 500));
+      return db.select().from(dailyAppReminders);
+    }
   }
 
   // ─── Food Intake ───────────────────────────────────────────────────────────

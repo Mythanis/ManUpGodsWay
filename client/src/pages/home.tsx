@@ -615,22 +615,12 @@ export default function Home() {
       return response.json();
     },
     retry: false,
-    refetchInterval: 10000, // Real-time updates for study recommendations
-    refetchIntervalInBackground: true,
+    staleTime: 1000 * 60 * 5,
   });
 
-  // Fetch recent community discussions for live feed
-  const { data: recentDiscussions = [], isLoading: feedLoading } = useQuery<any[]>({
-    queryKey: ["/api/discussions", "home-feed"],
-    queryFn: async () => {
-      const response = await fetch('/api/discussions?sortBy=recent&limit=1', { credentials: 'include' });
-      if (!response.ok) throw new Error('Failed to fetch discussions');
-      const data = await response.json();
-      return data.discussions ?? data;
-    },
-    retry: false,
-    refetchInterval: 60000,
-  });
+  // recentDiscussions and newestDiscussion both fetched the same endpoint — use newestDiscussion for both
+  const recentDiscussions: any[] = newestDiscussion ?? [];
+  const feedLoading = false;
 
   // Fetch system settings for homepage tagline
   const { data: systemSettings } = useQuery({
