@@ -90,12 +90,30 @@ export default function Community() {
   const { data: discussions = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/discussions", sortBy, searchQuery || undefined],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      params.append("sortBy", sortBy);
-      if (searchQuery) params.append("search", searchQuery);
-      const res = await fetch(`/api/discussions?${params}`, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch discussions");
-      return res.json();
+      const report = (msg: string) => {
+        fetch("/api/client-errors", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ message: msg, href: window.location.href }),
+        }).catch(() => {});
+      };
+      try {
+        const params = new URLSearchParams();
+        params.append("sortBy", sortBy);
+        if (searchQuery) params.append("search", searchQuery);
+        const res = await fetch(`/api/discussions?${params}`, { credentials: "include" });
+        if (!res.ok) {
+          report(`discussions fetch not-ok: ${res.status} ${res.statusText}`);
+          throw new Error(`Failed to fetch discussions: ${res.status}`);
+        }
+        const data = await res.json();
+        report(`discussions ok: isArray=${Array.isArray(data)} count=${Array.isArray(data) ? data.length : typeof data}`);
+        return data;
+      } catch (e: any) {
+        report(`discussions queryFn threw: ${e?.message}`);
+        throw e;
+      }
     },
     retry: 1,
     staleTime: 30_000,
